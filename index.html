@@ -133,150 +133,165 @@
   <div id="terminal-overlay" class="terminal-overlay" role="dialog" aria-modal="true" aria-label="Refinement Terminal" aria-hidden="true">
     <div class="terminal-frame">
 
-      <div class="terminal-titlebar">
+      <header class="terminal-titlebar">
         <span class="tt-title">LUMON · MACRODATA REFINEMENT TERMINAL</span>
         <button type="button" id="btn-return-desk" class="btn-return">⎋ ESC · RETURN TO DESK</button>
+      </header>
+
+      <div class="cli-statline">
+        <span id="subject-designation">SUBJECT #4229</span>
+        <span id="refinement-tier">TIER: UNINITIALIZED</span>
+        <span id="prestige-multiplier">x1.0</span>
+        <span id="quota-cumulative">XP 0000</span>
+        <span class="accent" id="allocation-credits">CR 0000</span>
+        <span id="live-clock">--:--:--</span>
+        <span id="clock-date" class="muted">---</span>
       </div>
 
-      <div class="terminal-body" id="terminal-body">
+      <nav class="terminal-tabbar" role="tablist" aria-label="MDR application modules">
+        <button type="button" class="tab-btn active" role="tab" id="tab-btn-data-matrix" data-tab="data-matrix" aria-selected="true" aria-controls="tab-data-matrix">[01 // DATA_MATRIX]</button>
+        <button type="button" class="tab-btn" role="tab" id="tab-btn-resourcing" data-tab="resourcing" aria-selected="false" aria-controls="tab-resourcing">[02 // RESOURCING]</button>
+        <button type="button" class="tab-btn" role="tab" id="tab-btn-compliance" data-tab="compliance" aria-selected="false" aria-controls="tab-compliance">[03 // COMPLIANCE]</button>
+        <button type="button" class="tab-btn" role="tab" id="tab-btn-utilities" data-tab="utilities" aria-selected="false" aria-controls="tab-utilities">[04 // UTILITIES]</button>
+        <button type="button" class="tab-btn tab-btn-log" id="btn-toggle-log" title="Alt+L">[ALT+L // TERMINAL_OUTPUT]</button>
+      </nav>
 
-        <pre class="cli-banner" aria-hidden="true">  ╔══════════════════════════════════════════════╗
-  ║  LUMON INDUSTRIES  ·  WELLNESS COMPLIANCE OS   ║
-  ╚══════════════════════════════════════════════╝</pre>
+      <p id="compliance-advisory" class="cli-advisory hidden" role="alert"></p>
 
-        <div class="cli-statline">
-          <span id="subject-designation">SUBJECT #4229</span>
-          <span id="refinement-tier">TIER: UNINITIALIZED</span>
-          <span id="prestige-multiplier">x1.0</span>
-          <span id="quota-cumulative">XP 0000</span>
-          <span class="accent" id="allocation-credits">CR 0000</span>
-          <span id="live-clock">--:--:--</span>
-          <span id="clock-date" class="muted">---</span>
-        </div>
+      <div class="terminal-workspace">
 
-        <!-- refinement data node -->
-        <section class="cli-block">
-          <p class="cli-h">// REFINEMENT NODE</p>
-          <div id="mdr-data-node" data-avatar-stage="raw" data-state="baseline" data-dominant="frolic">
-            <div id="mdr-grid-bg" class="mdr-grid-bg" aria-hidden="true"></div>
-            <div class="mdr-quadrants" aria-hidden="true">
-              <div class="quad quad-wo" id="quad-wo"><span class="quad-label">WO</span><span class="quad-val">00</span></div>
-              <div class="quad quad-fc" id="quad-fc"><span class="quad-label">FC</span><span class="quad-val">00</span></div>
-              <div class="quad quad-dr" id="quad-dr"><span class="quad-label">DR</span><span class="quad-val">00</span></div>
-              <div class="quad quad-ma" id="quad-ma"><span class="quad-label">MA</span><span class="quad-val">00</span></div>
+        <main class="terminal-main" id="terminal-main">
+
+          <!-- TAB 01: DATA_MATRIX -->
+          <section class="tab-panel active" id="tab-data-matrix" role="tabpanel" aria-labelledby="tab-btn-data-matrix">
+            <div class="matrix-workspace">
+              <div id="mdr-data-node" data-avatar-stage="raw" data-state="baseline" data-dominant="frolic">
+                <div id="mdr-grid-bg" class="mdr-grid-bg" aria-hidden="true"></div>
+                <div class="mdr-quadrants" aria-hidden="true">
+                  <div class="quad quad-wo" id="quad-wo"><span class="quad-label">WO</span><span class="quad-val">00</span></div>
+                  <div class="quad quad-fc" id="quad-fc"><span class="quad-label">FC</span><span class="quad-val">00</span></div>
+                  <div class="quad quad-dr" id="quad-dr"><span class="quad-label">DR</span><span class="quad-val">00</span></div>
+                  <div class="quad quad-ma" id="quad-ma"><span class="quad-label">MA</span><span class="quad-val">00</span></div>
+                </div>
+                <div class="mdr-crosshair" aria-hidden="true"></div>
+              </div>
+              <p class="matrix-meta"><span id="avatar-temper-label">STAGE: RAW DATASET</span> · <span id="tempers-readout">DOMINANT: FROLIC</span> · <span id="mdr-status-label">NODE: BASELINE</span></p>
             </div>
-            <div class="mdr-crosshair" aria-hidden="true"></div>
-          </div>
-          <p class="cli-sub"><span id="avatar-temper-label">STAGE: RAW DATASET</span> · <span id="tempers-readout">DOMINANT TEMPER: FROLIC</span> · <span id="mdr-status-label">NODE: BASELINE</span></p>
-        </section>
 
-        <!-- vital metrics (ASCII bars) -->
-        <section class="cli-block">
-          <p class="cli-h">// VITAL METRICS</p>
-          <div class="cli-metric"><span class="cli-key">FLUID_EFFICIENCY</span><span class="cli-bar" id="fluid-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="fluid-value">0%</span></div>
-          <div class="cli-metric"><span class="cli-key">QUOTA_PROGRESSION</span><span class="cli-bar" id="quota-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="quota-value">0%</span></div>
-          <div class="cli-metric"><span class="cli-key">COMPLIANCE_STANDING</span><span class="cli-bar" id="compliance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="compliance-value">0%</span></div>
-          <div class="cli-metric"><span class="cli-key">SUSTENANCE_COMPONENT</span><span class="cli-bar" id="sustenance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="sustenance-value">0%</span></div>
-          <p id="compliance-freeze-notice" class="cli-note hidden">◈ EGG BAR ACTIVE — DECAY SUSPENDED</p>
-        </section>
+            <div class="temper-bars">
+              <p class="cli-h">// TEMPER SORTING BINS</p>
+              <div class="temper-bar-row temper-wo"><span class="temper-key">WOE</span><span class="cli-bar" id="temper-woe-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-woe-val">0%</span></div>
+              <div class="temper-bar-row temper-fc"><span class="temper-key">FROLIC</span><span class="cli-bar" id="temper-frolic-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-frolic-val">0%</span></div>
+              <div class="temper-bar-row temper-dr"><span class="temper-key">DREAD</span><span class="cli-bar" id="temper-dread-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-dread-val">0%</span></div>
+              <div class="temper-bar-row temper-ma"><span class="temper-key">MALICE</span><span class="cli-bar" id="temper-malice-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-malice-val">0%</span></div>
+            </div>
 
-        <!-- active file + milestones -->
-        <section class="cli-block">
-          <p class="cli-h">// ACTIVE FILE</p>
-          <div class="cli-metric"><span class="cli-key" id="file-designation">FILE-0001</span><span class="cli-bar" id="file-bar">[░░░░░░░░░░░░░░]</span><span class="cli-pct" id="file-value">0%</span></div>
-          <p class="cli-sub" id="milestone-line">MILESTONES: [ ]10% [ ]25% [ ]75% [ ]100%</p>
-          <div id="inventory-badges" class="inventory-badges"></div>
-        </section>
+            <div class="matrix-footer">
+              <div class="cli-metric compact"><span class="cli-key" id="file-designation">FILE-0001</span><span class="cli-bar" id="file-bar">[░░░░░░░░░░░░░░]</span><span class="cli-pct" id="file-value">0%</span></div>
+              <p class="cli-sub" id="milestone-line">MILESTONES: [ ]10% [ ]25% [ ]75% [ ]100%</p>
+              <div id="inventory-badges" class="inventory-badges"></div>
+            </div>
+          </section>
 
-        <!-- compliance advisory -->
-        <p id="compliance-advisory" class="cli-advisory hidden" role="alert"></p>
+          <!-- TAB 02: RESOURCING -->
+          <section class="tab-panel" id="tab-resourcing" role="tabpanel" aria-labelledby="tab-btn-resourcing" hidden>
+            <p class="cli-h">// FLUID_EFFICIENCY · SUSTENANCE_COMPONENT</p>
+            <div class="cli-metric"><span class="cli-key">FLUID_EFFICIENCY</span><span class="cli-bar" id="fluid-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="fluid-value">0%</span></div>
+            <div class="cli-metric"><span class="cli-key">SUSTENANCE_COMPONENT</span><span class="cli-bar" id="sustenance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="sustenance-value">0%</span></div>
 
-        <!-- interaction deck (CLI commands) -->
-        <section class="cli-block">
-          <p class="cli-h">// INTERACTION DECK — SELECT COMMAND</p>
+            <div class="cli-cmd">
+              <span class="cli-cmd-label">&gt; HYDRATE_UNIT</span>
+              <span class="cli-cmd-stat">TODAY · <span id="fluid-intake-today">0</span>/2000ml</span>
+              <span class="cli-cmd-actions">
+                <button type="button" id="btn-rehydrate-250" class="btn-cli">+250</button>
+                <button type="button" id="btn-rehydrate-500" class="btn-cli">+500</button>
+                <input type="number" id="fluid-intake-input" min="0" step="50" placeholder="ml" aria-label="Fluid ml">
+                <button type="button" id="btn-rehydrate-unit" class="btn-cli btn-cli-go">LOG</button>
+              </span>
+            </div>
 
-          <div class="cli-cmd">
-            <span class="cli-cmd-label">&gt; HYDRATE_UNIT</span>
-            <span class="cli-cmd-stat">FLUID · <span id="fluid-intake-today">0</span>/2000ml</span>
-            <span class="cli-cmd-actions">
-              <button type="button" id="btn-rehydrate-250" class="btn-cli">+250</button>
-              <button type="button" id="btn-rehydrate-500" class="btn-cli">+500</button>
-              <input type="number" id="fluid-intake-input" min="0" step="50" placeholder="ml" aria-label="Fluid ml">
-              <button type="button" id="btn-rehydrate-unit" class="btn-cli btn-cli-go">LOG</button>
-            </span>
-          </div>
+            <div class="cli-cmd">
+              <span class="cli-cmd-label">&gt; SUSTENANCE</span>
+              <span class="cli-cmd-stat">TODAY · <span id="sustenance-today">0</span>/3 comp</span>
+              <span class="cli-cmd-actions">
+                <button type="button" class="btn-cli sustenance-preset" data-level="18">SMALL</button>
+                <button type="button" class="btn-cli sustenance-preset" data-level="34">STD</button>
+                <button type="button" class="btn-cli sustenance-preset" data-level="52">LARGE</button>
+              </span>
+            </div>
+          </section>
 
-          <div class="cli-cmd">
-            <span class="cli-cmd-label">&gt; LOG_ACTIVITY</span>
-            <span class="cli-cmd-stat">STEPS · <span id="activity-units-today">0</span>/8000u</span>
-            <span class="cli-cmd-actions">
-              <button type="button" class="btn-cli activity-preset" data-units="1000">1K</button>
-              <button type="button" class="btn-cli activity-preset" data-units="2500">2.5K</button>
-              <button type="button" class="btn-cli activity-preset" data-units="5000">5K</button>
-              <input type="number" id="activity-units-input" min="0" step="100" placeholder="u" aria-label="Activity units">
-              <button type="button" id="btn-log-activity" class="btn-cli btn-cli-go">LOG</button>
-            </span>
-          </div>
+          <!-- TAB 03: COMPLIANCE -->
+          <section class="tab-panel" id="tab-compliance" role="tabpanel" aria-labelledby="tab-btn-compliance" hidden>
+            <p class="cli-h">// QUOTA_PROGRESSION · COMPLIANCE INJECTION</p>
+            <div class="cli-metric"><span class="cli-key">QUOTA_PROGRESSION</span><span class="cli-bar" id="quota-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="quota-value">0%</span></div>
+            <div class="cli-metric"><span class="cli-key">COMPLIANCE_STANDING</span><span class="cli-bar" id="compliance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="compliance-value">0%</span></div>
+            <p id="compliance-freeze-notice" class="cli-note hidden">◈ EGG BAR ACTIVE — DECAY SUSPENDED</p>
 
-          <div class="cli-cmd">
-            <span class="cli-cmd-label">&gt; AM_INJECTION</span>
-            <span class="cli-cmd-stat">MEDS · <span id="morning-dose-time">NOT RECORDED</span> <em id="morning-window-indicator"></em></span>
-            <span class="cli-cmd-actions"><button type="button" id="btn-administer-morning" class="btn-cli btn-cli-go">ADMINISTER</button></span>
-          </div>
+            <div class="cli-cmd">
+              <span class="cli-cmd-label">&gt; LOG_ACTIVITY</span>
+              <span class="cli-cmd-stat">TODAY · <span id="activity-units-today">0</span>/8000u</span>
+              <span class="cli-cmd-actions">
+                <button type="button" class="btn-cli activity-preset" data-units="1000">1K</button>
+                <button type="button" class="btn-cli activity-preset" data-units="2500">2.5K</button>
+                <button type="button" class="btn-cli activity-preset" data-units="5000">5K</button>
+                <input type="number" id="activity-units-input" min="0" step="100" placeholder="u" aria-label="Activity units">
+                <button type="button" id="btn-log-activity" class="btn-cli btn-cli-go">LOG</button>
+              </span>
+            </div>
 
-          <div class="cli-cmd">
-            <span class="cli-cmd-label">&gt; PM_INJECTION</span>
-            <span class="cli-cmd-stat">MEDS · <span id="compliance-dose-time">NOT RECORDED</span> <em id="afternoon-window-indicator"></em></span>
-            <span class="cli-cmd-actions"><button type="button" id="btn-administer-dose" class="btn-cli btn-cli-go">ADMINISTER</button></span>
-          </div>
+            <div class="cli-cmd">
+              <span class="cli-cmd-label">&gt; AM_INJECTION</span>
+              <span class="cli-cmd-stat"><span id="morning-dose-time">NOT RECORDED</span> <em id="morning-window-indicator"></em></span>
+              <span class="cli-cmd-actions"><button type="button" id="btn-administer-morning" class="btn-cli btn-cli-go">ADMINISTER</button></span>
+            </div>
 
-          <div class="cli-cmd">
-            <span class="cli-cmd-label">&gt; SUSTENANCE</span>
-            <span class="cli-cmd-stat">FOOD · <span id="sustenance-today">0</span>/3 comp</span>
-            <span class="cli-cmd-actions">
-              <button type="button" class="btn-cli sustenance-preset" data-level="18">SMALL</button>
-              <button type="button" class="btn-cli sustenance-preset" data-level="34">STD</button>
-              <button type="button" class="btn-cli sustenance-preset" data-level="52">LARGE</button>
-            </span>
-          </div>
+            <div class="cli-cmd">
+              <span class="cli-cmd-label">&gt; PM_INJECTION</span>
+              <span class="cli-cmd-stat"><span id="compliance-dose-time">NOT RECORDED</span> <em id="afternoon-window-indicator"></em></span>
+              <span class="cli-cmd-actions"><button type="button" id="btn-administer-dose" class="btn-cli btn-cli-go">ADMINISTER</button></span>
+            </div>
+          </section>
 
-          <div class="cli-cmd cli-cmd-util">
-            <span class="cli-cmd-label">&gt; UTILITIES</span>
-            <span class="cli-cmd-actions">
-              <button type="button" id="btn-incentives" class="btn-cli">INCENTIVES</button>
-              <button type="button" id="btn-procurement" class="btn-cli">PROCUREMENT</button>
-              <button type="button" id="btn-archival" class="btn-cli">ARCHIVAL</button>
-              <button type="button" id="btn-orientation" class="btn-cli">? ORIENT</button>
-            </span>
-          </div>
-        </section>
+          <!-- TAB 04: UTILITIES -->
+          <section class="tab-panel" id="tab-utilities" role="tabpanel" aria-labelledby="tab-btn-utilities" hidden>
+            <p class="cli-h">// EMPLOYEE SUBSYSTEMS</p>
+            <div class="util-grid">
+              <button type="button" id="btn-incentives" class="util-card"><span class="util-id">INC-01</span><span class="util-name">INCENTIVES</span><span class="util-desc">Spend allocation credits</span></button>
+              <button type="button" id="btn-procurement" class="util-card"><span class="util-id">PRC-02</span><span class="util-name">PROCUREMENT</span><span class="util-desc">Palettes &amp; geometries</span></button>
+              <button type="button" id="btn-archival" class="util-card"><span class="util-id">ARC-03</span><span class="util-name">ARCHIVAL</span><span class="util-desc">Encrypted sync protocol</span></button>
+              <button type="button" id="btn-orientation" class="util-card"><span class="util-id">ORI-04</span><span class="util-name">ORIENTATION</span><span class="util-desc">Employee briefing</span></button>
+            </div>
 
-        <!-- finger trap (milestone widget) -->
-        <section id="finger-trap-widget" class="cli-block hidden">
-          <p class="cli-h">// CHINESE FINGER TRAP</p>
-          <button type="button" id="btn-finger-trap" class="btn-cli btn-cli-go">TAP TO STRUGGLE</button>
-          <span id="finger-trap-count" class="cli-sub">0 STRUGGLES</span>
-        </section>
+            <section id="finger-trap-widget" class="util-widget hidden">
+              <p class="cli-h">// CHINESE FINGER TRAP</p>
+              <button type="button" id="btn-finger-trap" class="btn-cli btn-cli-go">TAP TO STRUGGLE</button>
+              <span id="finger-trap-count" class="cli-sub">0 STRUGGLES</span>
+            </section>
 
-        <!-- laser crystal (cosmetic) -->
-        <section id="laser-crystal-footer" class="cli-block hidden" aria-hidden="true">
-          <p class="cli-h">// REFINER OF THE QUARTER</p>
-          <pre class="crystal-ascii">   /\\
+            <section id="laser-crystal-footer" class="util-widget hidden" aria-hidden="true">
+              <p class="cli-h">// REFINER OF THE QUARTER</p>
+              <pre class="crystal-ascii">   /\\
   /  \\
  /____\\
  \\    /
   \\  /
    \\/</pre>
-        </section>
+            </section>
+          </section>
 
-        <!-- output log -->
-        <section class="cli-block">
-          <p class="cli-h">// OUTPUT LOG</p>
+        </main>
+
+        <aside class="terminal-log-sidebar open" id="log-sidebar" aria-label="Terminal output log">
+          <div class="log-sidebar-head">
+            <span class="cli-h">// TERMINAL_OUTPUT</span>
+            <button type="button" id="btn-close-log" class="btn-close-log" aria-label="Close log panel">×</button>
+          </div>
           <ol id="activity-log-list" class="activity-log-list" reversed>
             <li class="log-entry log-entry--init">STREAM INITIALIZED</li>
           </ol>
           <span class="cli-cursor" aria-hidden="true">_</span>
-        </section>
+        </aside>
 
       </div>
     </div>
@@ -324,7 +339,7 @@
         <div class="orientation-page active" data-page="1">
           <p class="orient-heading">WELCOME, INNIE.</p>
           <p class="orient-body">You are <strong>SUBJECT #4229</strong>. This window is a live <strong>Innie-Cam</strong> feed of your workspace on Floor 7. Leave it open during your day.</p>
-          <p class="orient-body">Click the <strong>CRT monitor</strong> on the desk to zoom into your Refinement Terminal. Press <strong>ESC</strong> to return to the passive camera view.</p>
+          <p class="orient-body">Click the <strong>CRT monitor</strong> to open your Refinement Terminal. Use the <strong>tab bar</strong> to switch between Data Matrix, Resourcing, Compliance, and Utilities modules. Press <strong>Alt+L</strong> to toggle the output log. Press <strong>ESC</strong> to return to the camera view.</p>
         </div>
         <div class="orientation-page" data-page="2">
           <p class="orient-heading">DAILY PROTOCOLS</p>

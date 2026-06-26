@@ -98,6 +98,8 @@ let burstTimer = null, digitTimer = null;
 let prestigeInProgress = false;
 let orientPage = 1;
 let lastDominantTemper = null;
+let activeTab = 'data-matrix';
+let logSidebarOpen = true;
 const ORIENT_PAGES = 3;
 
 const FIELD_ROWS = 6, FIELD_COLS = 13;
@@ -478,11 +480,36 @@ function openTerminal(){
   document.body.dataset.view = 'terminal';
   const o = document.getElementById('terminal-overlay');
   o.classList.add('active'); o.setAttribute('aria-hidden','false');
+  switchTab(activeTab);
+  toggleLogSidebar(logSidebarOpen);
 }
 function closeTerminal(){
   document.body.dataset.view = 'desk';
   const o = document.getElementById('terminal-overlay');
   o.classList.remove('active'); o.setAttribute('aria-hidden','true');
+}
+
+// ─── tab navigation ────────────────────────────────────────────────
+function switchTab(tabId){
+  activeTab = tabId;
+  document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+    const on = btn.dataset.tab === tabId;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  document.querySelectorAll('.tab-panel').forEach(panel => {
+    const on = panel.id === `tab-${tabId}`;
+    panel.classList.toggle('active', on);
+    panel.hidden = !on;
+  });
+}
+
+function toggleLogSidebar(force){
+  logSidebarOpen = force !== undefined ? force : !logSidebarOpen;
+  const sidebar = document.getElementById('log-sidebar');
+  const toggleBtn = document.getElementById('btn-toggle-log');
+  sidebar.classList.toggle('open', logSidebarOpen);
+  toggleBtn?.classList.toggle('active', logSidebarOpen);
 }
 
 // ─── render helpers ────────────────────────────────────────────────
@@ -500,7 +527,11 @@ function renderTempers(){
   const dom = dominantTemper(t);
   document.getElementById('mdr-data-node').dataset.dominant = dom;
   setQuad('quad-wo', t.woe); setQuad('quad-fc', t.frolic); setQuad('quad-dr', t.dread); setQuad('quad-ma', t.malice);
-  document.getElementById('tempers-readout').textContent = `DOMINANT TEMPER: ${TEMPER_NAMES[dom]}`;
+  document.getElementById('tempers-readout').textContent = `DOMINANT: ${TEMPER_NAMES[dom]}`;
+  setMetric('temper-woe-bar', 'temper-woe-val', t.woe);
+  setMetric('temper-frolic-bar', 'temper-frolic-val', t.frolic);
+  setMetric('temper-dread-bar', 'temper-dread-val', t.dread);
+  setMetric('temper-malice-bar', 'temper-malice-val', t.malice);
   if (dom !== lastDominantTemper){ if (lastDominantTemper !== null) pushLog(`TEMPER SHIFT → ${TEMPER_NAMES[dom]}`); lastDominantTemper = dom; }
 }
 function renderMilestoneLine(){
@@ -723,7 +754,18 @@ function bindEventListeners(){
   // view toggle
   document.getElementById('crt-monitor').addEventListener('click', openTerminal);
   document.getElementById('btn-return-desk').addEventListener('click', closeTerminal);
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.body.dataset.view === 'terminal') closeTerminal(); });
+  document.addEventListener('keydown', (e) => {
+    if (document.body.dataset.view !== 'terminal') return;
+    if (e.key === 'Escape') closeTerminal();
+    if (e.altKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); toggleLogSidebar(); }
+  });
+
+  // tab bar
+  document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+  document.getElementById('btn-toggle-log')?.addEventListener('click', () => toggleLogSidebar());
+  document.getElementById('btn-close-log')?.addEventListener('click', () => toggleLogSidebar(false));
 
   // habit endpoints
   document.getElementById('btn-administer-morning').addEventListener('click', administerMorningDose);
@@ -807,6 +849,8 @@ async function init(){
 
   buildScene();
   render();
+  switchTab('data-matrix');
+  toggleLogSidebar(true);
   bindEventListeners();
   startClock();
 
