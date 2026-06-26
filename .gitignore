@@ -1,0 +1,9 @@
+# Dependencies
+node_modules/
+
+# Archival server data
+server/data/
+
+# OS
+.DS_Store
+Thumbs.db

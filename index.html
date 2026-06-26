@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" data-palette="lumon-default">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Lumon Terminal">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Lumon Wellness Compliance Terminal</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="lumon-terminal" class="app">
+    <header id="terminal-header">
+      <p class="terminal-title">LUMON INDUSTRIES — WELLNESS COMPLIANCE TERMINAL</p>
+      <div class="header-row">
+        <span id="subject-designation">SUBJECT #4229</span>
+        <span id="refinement-tier">TIER: UNINITIALIZED</span>
+      </div>
+      <div class="header-row header-actions">
+        <span id="quota-cumulative">QUOTA: 0000</span>
+        <span id="allocation-credits">CREDITS: 0000</span>
+        <button type="button" id="btn-procurement" class="btn-secondary">PROCUREMENT</button>
+        <button type="button" id="btn-archival" class="btn-secondary">ARCHIVAL</button>
+      </div>
+    </header>
+
+    <p id="session-notice" class="session-notice">WELLNESS COMPLIANCE TERMINAL — SESSION INITIALIZED</p>
+
+    <div id="mdr-viewport">
+      <div id="mdr-data-node" data-tier="0" data-state="baseline" data-geometry="hex-core">
+        <svg id="mdr-wireframe" viewBox="0 0 100 100" aria-label="Macrodata refinement node">
+          <polygon class="mdr-ring" points="50,8 88,30 88,70 50,92 12,70 12,30" />
+          <rect class="mdr-core" x="35" y="35" width="30" height="30" />
+          <line class="mdr-axis" x1="50" y1="10" x2="50" y2="90" />
+          <line class="mdr-axis" x1="10" y1="50" x2="90" y2="50" />
+          <g class="mdr-geometry-extra" hidden></g>
+        </svg>
+        <div id="mdr-pulse-ring" aria-hidden="true"></div>
+      </div>
+      <p id="mdr-status-label">NODE STATUS: BASELINE</p>
+    </div>
+
+    <section id="metrics-compliance-panel" aria-label="Compliance metrics">
+      <div class="metric-row">
+        <label for="fluid-efficiency-bar">FLUID EFFICIENCY</label>
+        <div id="fluid-efficiency-bar" class="metric-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+          <div class="metric-bar-fill"></div>
+        </div>
+        <span id="fluid-efficiency-value" class="metric-value">100%</span>
+      </div>
+      <div class="metric-row">
+        <label for="quota-progression-bar">QUOTA PROGRESSION</label>
+        <div id="quota-progression-bar" class="metric-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+          <div class="metric-bar-fill"></div>
+        </div>
+        <span id="quota-progression-value" class="metric-value">100%</span>
+      </div>
+      <div class="metric-row">
+        <label for="compliance-standing-bar">COMPLIANCE STANDING</label>
+        <div id="compliance-standing-bar" class="metric-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+          <div class="metric-bar-fill"></div>
+        </div>
+        <span id="compliance-standing-value" class="metric-value">100%</span>
+      </div>
+    </section>
+
+    <div id="compliance-advisory" class="compliance-advisory hidden" role="alert"></div>
+
+    <section id="interaction-deck" aria-label="Compliance logging">
+      <div id="fluid-intake-section" class="deck-section">
+        <h2 class="section-label">FLUID INTAKE PROTOCOL</h2>
+        <div class="input-row">
+          <button type="button" id="btn-rehydrate-250" class="btn-preset">+250 ML</button>
+          <button type="button" id="btn-rehydrate-500" class="btn-preset">+500 ML</button>
+          <input type="number" id="fluid-intake-input" min="0" step="50" placeholder="ML" aria-label="Fluid intake milliliters">
+          <button type="button" id="btn-rehydrate-unit" class="btn-primary">REHYDRATE UNIT</button>
+        </div>
+        <p class="deck-stat">TODAY FLUID INTAKE: <span id="fluid-intake-today">0</span> ML</p>
+      </div>
+
+      <div id="activity-section" class="deck-section">
+        <h2 class="section-label">PHYSICAL ACTIVITY PROTOCOL</h2>
+        <div class="input-row">
+          <div class="activity-presets">
+            <button type="button" class="btn-preset activity-preset" data-units="1000">+1000</button>
+            <button type="button" class="btn-preset activity-preset" data-units="2500">+2500</button>
+            <button type="button" class="btn-preset activity-preset" data-units="5000">+5000</button>
+          </div>
+          <input type="number" id="activity-units-input" min="0" step="100" placeholder="UNITS" aria-label="Activity units">
+          <button type="button" id="btn-log-activity" class="btn-primary">LOG PHYSICAL ACTIVITY</button>
+        </div>
+        <p class="deck-stat">TODAY ACTIVITY UNITS: <span id="activity-units-today">0</span></p>
+      </div>
+
+      <div id="compliance-section" class="deck-section">
+        <h2 class="section-label">COMPLIANCE DOSE PROTOCOL</h2>
+        <button type="button" id="btn-administer-dose" class="btn-primary btn-full">ADMINISTER COMPLIANCE DOSE</button>
+        <p class="deck-stat">LAST DOSE: <span id="compliance-dose-time">NOT RECORDED</span></p>
+      </div>
+    </section>
+
+    <aside id="procurement-drawer" class="drawer hidden" aria-label="Lumon Procurement">
+      <div class="drawer-header">
+        <h2>LUMON PROCUREMENT</h2>
+        <button type="button" id="btn-close-procurement" class="btn-close" aria-label="Close procurement">×</button>
+      </div>
+      <section class="procurement-section">
+        <h3>DEPARTMENT PALETTES</h3>
+        <div id="palette-catalog" class="catalog"></div>
+      </section>
+      <section class="procurement-section">
+        <h3>NODE GEOMETRIES</h3>
+        <div id="geometry-catalog" class="catalog"></div>
+      </section>
+    </aside>
+
+    <aside id="archival-sync-panel" class="drawer hidden" aria-label="Archival transmission">
+      <div class="drawer-header">
+        <h2>ARCHIVAL TRANSMISSION</h2>
+        <button type="button" id="btn-close-archival" class="btn-close" aria-label="Close archival panel">×</button>
+      </div>
+      <p class="drawer-note">Optional. Terminal operates fully offline without archival protocol.</p>
+      <label class="toggle-row">
+        <input type="checkbox" id="archival-enabled">
+        <span>ENABLE ARCHIVAL PROTOCOL</span>
+      </label>
+      <label class="field-label" for="archival-endpoint">ARCHIVAL ENDPOINT</label>
+      <input type="url" id="archival-endpoint" placeholder="https://example.com/api" class="field-input">
+      <label class="field-label" for="archival-hash">ARCHIVAL HASH</label>
+      <div class="hash-row">
+        <code id="archival-hash">—</code>
+        <button type="button" id="btn-copy-hash" class="btn-secondary">COPY</button>
+        <button type="button" id="btn-regenerate-hash" class="btn-secondary">REGENERATE</button>
+      </div>
+      <label class="field-label" for="archival-passphrase">PASSPHRASE (OPTIONAL)</label>
+      <input type="password" id="archival-passphrase" class="field-input" autocomplete="off">
+      <button type="button" id="btn-transmit-record" class="btn-primary btn-full">TRANSMIT RECORD</button>
+      <p id="archival-status" class="archival-status"></p>
+    </aside>
+
+    <div id="conflict-modal" class="modal hidden" role="dialog" aria-labelledby="conflict-title">
+      <div class="modal-content">
+        <h2 id="conflict-title">ARCHIVAL CONFLICT DETECTED</h2>
+        <p>Local and archival records diverge. Select resolution protocol.</p>
+        <div class="modal-actions">
+          <button type="button" id="btn-retain-local" class="btn-primary">RETAIN LOCAL RECORD</button>
+          <button type="button" id="btn-accept-archival" class="btn-primary">ACCEPT ARCHIVAL RECORD</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
