@@ -28,9 +28,11 @@ const TIER_NAMES      = ['UNINITIALIZED','ACTIVE REFINEMENT','ELEVATED THROUGHPU
 const TIER_THRESHOLDS = [0,100,300,600];
 
 const AVATAR_STAGES = [
-  { id:'raw',         label:'RAW DATASET',          minXp:0    },
-  { id:'fenced',      label:'FENCED MATRIX',         minXp:501  },
-  { id:'singularity', label:'COMPLIANT SINGULARITY', minXp:1501 },
+  { id:'ghost',       label:'LATENT SIGNAL',          minPct:0   },
+  { id:'raw',         label:'RAW DATASET',            minPct:10  },
+  { id:'fenced',      label:'FENCED MATRIX',          minPct:25  },
+  { id:'singularity', label:'COMPLIANT SINGULARITY',  minPct:75  },
+  { id:'caricature',  label:'CUSTOM CARICATURE',      minPct:100 },
 ];
 
 const MILESTONES = [
@@ -255,7 +257,11 @@ function checkMilestones(){
     }
   }
 }
-function onMilestoneUnlocked(ms){ pushLog(`MILESTONE UNLOCKED: ${ms.name}`); if (ms.id === 'mde') triggerMDE(); }
+function onMilestoneUnlocked(ms){
+  pushLog(`MILESTONE UNLOCKED: ${ms.name}`);
+  if (ms.id === 'mde') triggerMDE();
+  renderAvatar();
+}
 
 // ─── MDE ───────────────────────────────────────────────────────────
 function triggerMDE(){
@@ -294,6 +300,7 @@ function applyPrestigeCycle(){
   state.metrics = { fluidEfficiency:100, quotaProgression:100, complianceStanding:100, sustenanceLevel:100 };
   state.dailyLog = freshDailyLog();
   state.fileState = { fileNumber: state.subject.filesCompleted + 1, quota:0, milestonesHit:[] };
+  pushLog(`NEW FILE ASSIGNED — SUBJECT AVATAR RESET`);
 }
 function freshDailyLog(){
   return { date:todayKey(), fluidIntakeMl:0, activityUnits:0, sustenanceUnits:0, morningDoseAt:null, morningPenaltyApplied:false, complianceDoseAt:null, compliancePenaltyApplied:false, sustenanceWarned:false, quotasAwarded:0 };
@@ -367,11 +374,52 @@ export function deriveTempers(s){
 }
 function dominantTemper(t){ return Object.entries(t).sort((a,b)=>b[1]-a[1])[0][0]; }
 function deriveAvatarStage(){
-  if (state.fileState.milestonesHit.includes('caricature')) return { id:'caricature', label:'CUSTOM CARICATURE' };
-  const xp = state.subject.cumulativeQuota;
-  let stage = AVATAR_STAGES[0];
-  for (const st of AVATAR_STAGES){ if (xp >= st.minXp) stage = st; }
-  return stage;
+  const pct = fileProgressPct();
+  const hits = state.fileState.milestonesHit;
+  if (hits.includes('caricature') || pct >= 100) return AVATAR_STAGES[4];
+  if (hits.includes('mde') || pct >= 75) return AVATAR_STAGES[3];
+  if (hits.includes('finger-trap') || pct >= 25) return AVATAR_STAGES[2];
+  if (hits.includes('eraser') || pct >= 10) return AVATAR_STAGES[1];
+  return AVATAR_STAGES[0];
+}
+
+function deriveAvatarUnlocks(){
+  const hits = state.fileState.milestonesHit;
+  const inv = state.incentives.inventory;
+  const u = [];
+  if (hits.includes('eraser'))      u.push('eraser');
+  if (hits.includes('finger-trap'))  u.push('trap');
+  if (hits.includes('mde'))          u.push('mde');
+  if (hits.includes('caricature'))   u.push('caricature');
+  if (inv.includes('laser-crystal')) u.push('crystal');
+  if (inv.includes('coffee-cozy'))   u.push('cozy');
+  return u.join(' ');
+}
+
+function renderAvatar(){
+  const avatar = deriveAvatarStage();
+  const pct = fileProgressPct();
+  const el = document.getElementById('mdr-avatar');
+  const node = document.getElementById('mdr-data-node');
+  if (!el) return;
+
+  const opacity = clamp(0.08 + (pct / 100) * 0.92, 0.08, 1);
+  const scale   = clamp(0.5 + (pct / 100) * 0.5, 0.5, 1);
+  const variant = (state.fileState.fileNumber - 1) % 4;
+
+  el.style.setProperty('--avatar-opacity', opacity.toFixed(3));
+  el.style.setProperty('--avatar-scale', scale.toFixed(3));
+  el.dataset.stage = avatar.id;
+  el.dataset.fileVariant = String(variant);
+  el.dataset.unlock = deriveAvatarUnlocks();
+
+  const badge = el.querySelector('.av-file-badge');
+  if (badge) badge.textContent = `F-${String(state.fileState.fileNumber).padStart(4,'0')}`;
+
+  if (node) node.dataset.avatarStage = avatar.id;
+
+  const visLabel = document.getElementById('avatar-visibility-label');
+  if (visLabel) visLabel.textContent = `VISIBILITY: ${Math.round(opacity * 100)}%`;
 }
 export function recalculateRefinementTier(s){
   const q = s.subject.cumulativeQuota; let tier = 0;
@@ -632,6 +680,8 @@ function render(){
   document.getElementById('avatar-temper-label').textContent = `STAGE: ${avatar.label}`;
   document.getElementById('mdr-status-label').textContent = NODE_STATUS[nodeState];
   const cam = document.getElementById('cam-ambient'); if (cam) cam.textContent = CAM_STATUS[nodeState];
+
+  renderAvatar();
 
   renderTempers();
   renderMilestoneLine();

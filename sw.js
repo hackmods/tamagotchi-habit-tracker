@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lumon-terminal-v6';
+const CACHE_NAME = 'lumon-terminal-v7';
 const SHELL = [
   './',
   './index.html',

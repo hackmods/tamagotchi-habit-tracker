@@ -165,7 +165,7 @@
           <!-- TAB 01: DATA_MATRIX -->
           <section class="tab-panel active" id="tab-data-matrix" role="tabpanel" aria-labelledby="tab-btn-data-matrix">
             <div class="matrix-workspace">
-              <div id="mdr-data-node" data-avatar-stage="raw" data-state="baseline" data-dominant="frolic">
+              <div id="mdr-data-node" data-avatar-stage="ghost" data-state="baseline" data-dominant="frolic">
                 <div id="mdr-grid-bg" class="mdr-grid-bg" aria-hidden="true"></div>
                 <div class="mdr-quadrants" aria-hidden="true">
                   <div class="quad quad-wo" id="quad-wo"><span class="quad-label">WO</span><span class="quad-val">00</span></div>
@@ -173,9 +173,31 @@
                   <div class="quad quad-dr" id="quad-dr"><span class="quad-label">DR</span><span class="quad-val">00</span></div>
                   <div class="quad quad-ma" id="quad-ma"><span class="quad-label">MA</span><span class="quad-val">00</span></div>
                 </div>
+                <div id="mdr-avatar" class="mdr-avatar" data-stage="ghost" data-file-variant="0" aria-label="Refinement subject avatar">
+                  <svg class="mdr-avatar-svg" viewBox="0 0 32 44" shape-rendering="crispEdges" aria-hidden="true">
+                    <rect class="av-halo" x="4" y="2" width="24" height="36" fill="none" stroke="#ff8fc4" stroke-width="1" opacity="0"/>
+                    <rect class="av-frame" x="6" y="4" width="20" height="32" fill="none" stroke="#ffb000" stroke-width="1" opacity="0"/>
+                    <g class="av-body">
+                      <rect class="av-suit" x="10" y="18" width="12" height="14"/>
+                      <rect class="av-shirt" x="14" y="18" width="4" height="8"/>
+                      <rect class="av-tie" x="14" y="18" width="4" height="7"/>
+                      <rect class="av-head" x="12" y="8" width="8" height="9"/>
+                      <rect class="av-hair" x="11" y="6" width="10" height="4"/>
+                      <rect class="av-eye-l" x="13" y="11" width="2" height="2"/>
+                      <rect class="av-eye-r" x="17" y="11" width="2" height="2"/>
+                      <rect class="av-leg-l" x="11" y="32" width="4" height="8"/>
+                      <rect class="av-leg-r" x="17" y="32" width="4" height="8"/>
+                    </g>
+                    <g class="av-accessory av-eraser"><rect x="22" y="22" width="4" height="6"/><rect x="22" y="20" width="4" height="2"/></g>
+                    <g class="av-accessory av-trap"><rect x="8" y="20" width="3" height="8"/><rect x="21" y="20" width="3" height="8"/></g>
+                    <g class="av-accessory av-cozy"><rect x="6" y="24" width="3" height="4"/><rect x="5" y="22" width="5" height="2"/></g>
+                    <g class="av-accessory av-crystal"><polygon points="16,2 20,6 16,10 12,6"/></g>
+                    <text class="av-file-badge" x="16" y="42" text-anchor="middle">F-0001</text>
+                  </svg>
+                </div>
                 <div class="mdr-crosshair" aria-hidden="true"></div>
               </div>
-              <p class="matrix-meta"><span id="avatar-temper-label">STAGE: RAW DATASET</span> · <span id="tempers-readout">DOMINANT: FROLIC</span> · <span id="mdr-status-label">NODE: BASELINE</span></p>
+              <p class="matrix-meta"><span id="avatar-temper-label">STAGE: LATENT SIGNAL</span> · <span id="avatar-visibility-label">VISIBILITY: 8%</span> · <span id="tempers-readout">DOMINANT: FROLIC</span> · <span id="mdr-status-label">NODE: BASELINE</span></p>
             </div>
 
             <div class="temper-bars">
