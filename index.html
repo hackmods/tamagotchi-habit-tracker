@@ -20,29 +20,77 @@
   <div class="scanlines" aria-hidden="true"></div>
 
   <div id="lumon-terminal" class="app">
+
+    <!-- ═══ HEADER ═══════════════════════════════════════════════════ -->
     <header id="terminal-header" class="panel">
-      <div class="header-brand">
-        <span class="lumon-mark" aria-hidden="true">◆</span>
-        <p class="terminal-title">LUMON INDUSTRIES</p>
-        <p class="terminal-subtitle">MACRODATA REFINEMENT — WELLNESS FLOOR</p>
+      <div class="header-top-row">
+        <div class="header-brand">
+          <span class="lumon-mark" aria-hidden="true">◆</span>
+          <div>
+            <p class="terminal-title">LUMON INDUSTRIES</p>
+            <p class="terminal-subtitle">MDR WELLNESS FLOOR — INNIE TERMINAL</p>
+          </div>
+        </div>
+        <div id="clock-block" class="clock-block" aria-live="polite" aria-label="Current time">
+          <span id="live-clock" class="live-clock">--:--:--</span>
+          <span id="clock-date" class="clock-date">---</span>
+        </div>
       </div>
-      <div class="header-grid">
+      <div class="header-stats-row">
         <span id="subject-designation" class="header-stat">SUBJECT #4229</span>
         <span id="refinement-tier" class="header-stat">TIER: UNINITIALIZED</span>
-        <span id="prestige-multiplier" class="header-stat">MULTIPLIER: ×1.0</span>
         <span id="quota-cumulative" class="header-stat">LIFETIME XP: 0000</span>
-        <span id="allocation-credits" class="header-stat">CREDITS: 0000</span>
+        <span id="allocation-credits" class="header-stat accent">CREDITS: 0000</span>
+        <span id="prestige-multiplier" class="header-stat">×1.0 MULTIPLIER</span>
       </div>
       <div class="header-actions">
+        <button type="button" id="btn-orientation" class="btn-secondary btn-help">? ORIENTATION</button>
         <button type="button" id="btn-incentives" class="btn-secondary">INCENTIVES</button>
         <button type="button" id="btn-procurement" class="btn-secondary">PROCUREMENT</button>
         <button type="button" id="btn-archival" class="btn-secondary">ARCHIVAL</button>
       </div>
     </header>
 
-    <p id="session-notice" class="session-notice">COMPUTE CLUSTER ONLINE — REFINEMENT SESSION ACTIVE</p>
+    <!-- ═══ PROTOCOL STATUS BAR ══════════════════════════════════════ -->
+    <div id="protocol-status-bar" class="protocol-status-bar panel" aria-label="Daily protocol status">
+      <div class="protocol-slot" id="proto-morning" data-status="pending">
+        <span class="proto-icon">☀</span>
+        <span class="proto-label">MORNING DOSE</span>
+        <span class="proto-window">07:00–10:00</span>
+        <span class="proto-state" id="proto-morning-state">PENDING</span>
+      </div>
+      <div class="protocol-slot" id="proto-fluid" data-status="pending">
+        <span class="proto-icon">◈</span>
+        <span class="proto-label">FLUID</span>
+        <span class="proto-window">TARGET 2000ML</span>
+        <span class="proto-state" id="proto-fluid-state">0 ML</span>
+      </div>
+      <div class="protocol-slot" id="proto-activity" data-status="pending">
+        <span class="proto-icon">▲</span>
+        <span class="proto-label">ACTIVITY</span>
+        <span class="proto-window">TARGET 8000</span>
+        <span class="proto-state" id="proto-activity-state">0</span>
+      </div>
+      <div class="protocol-slot" id="proto-afternoon" data-status="pending">
+        <span class="proto-icon">◑</span>
+        <span class="proto-label">AFTERNOON DOSE</span>
+        <span class="proto-window">11:00–14:00</span>
+        <span class="proto-state" id="proto-afternoon-state">PENDING</span>
+      </div>
+      <div class="protocol-slot" id="proto-fullday" data-status="pending">
+        <span class="proto-icon">★</span>
+        <span class="proto-label">FULL COMPLIANCE</span>
+        <span class="proto-window">ALL PROTOCOLS</span>
+        <span class="proto-state" id="proto-fullday-state">INCOMPLETE</span>
+      </div>
+    </div>
 
+    <p id="session-notice" class="session-notice">WELLNESS COMPLIANCE TERMINAL — SESSION INITIALIZED</p>
+
+    <!-- ═══ COMPUTE GRID ═════════════════════════════════════════════ -->
     <div class="compute-grid">
+
+      <!-- File progress / left rail -->
       <aside id="file-progress-panel" class="panel" aria-label="File progression">
         <h2 class="panel-label">ACTIVE FILE</h2>
         <p id="file-designation" class="file-id">FILE-0001</p>
@@ -50,15 +98,45 @@
           <div id="file-progress-fill" class="file-bar-fill"></div>
         </div>
         <p id="file-progress-value" class="file-pct">0% REFINED</p>
+
         <ol id="milestone-track" class="milestone-track" aria-label="Milestone rewards">
-          <li class="milestone" data-milestone="10"><span class="milestone-pct">10%</span><span class="milestone-name">ERASER</span></li>
-          <li class="milestone" data-milestone="25"><span class="milestone-pct">25%</span><span class="milestone-name">FINGER TRAP</span></li>
-          <li class="milestone" data-milestone="75"><span class="milestone-pct">75%</span><span class="milestone-name">MDE</span></li>
-          <li class="milestone" data-milestone="100"><span class="milestone-pct">100%</span><span class="milestone-name">PORTRAIT</span></li>
+          <li class="milestone" data-milestone="10">
+            <span class="milestone-pip"></span>
+            <span class="milestone-pct">10%</span>
+            <span class="milestone-name">ERASER</span>
+          </li>
+          <li class="milestone" data-milestone="25">
+            <span class="milestone-pip"></span>
+            <span class="milestone-pct">25%</span>
+            <span class="milestone-name">FINGER TRAP</span>
+          </li>
+          <li class="milestone" data-milestone="75">
+            <span class="milestone-pip"></span>
+            <span class="milestone-pct">75%</span>
+            <span class="milestone-name">MDE</span>
+          </li>
+          <li class="milestone" data-milestone="100">
+            <span class="milestone-pip"></span>
+            <span class="milestone-pct">100%</span>
+            <span class="milestone-name">PORTRAIT</span>
+          </li>
         </ol>
+
+        <div class="earn-guide" aria-label="How to earn XP">
+          <p class="earn-title">EARN XP + CREDITS</p>
+          <ul class="earn-list">
+            <li>Morning dose <em>+25 XP +5 CR</em></li>
+            <li>2000 ml fluid <em>+25 XP +5 CR</em></li>
+            <li>8000 activity <em>+25 XP +5 CR</em></li>
+            <li>Afternoon dose <em>+25 XP +5 CR</em></li>
+            <li>All four done <em>+25 XP +5 CR</em></li>
+          </ul>
+        </div>
+
         <div id="inventory-badges" class="inventory-badges" aria-label="Unlocked items"></div>
       </aside>
 
+      <!-- MDR data node / centre -->
       <main id="mdr-viewport" class="panel">
         <p class="viewport-label">DATA NODE — TEMPER STATE</p>
         <div id="mdr-data-node" data-avatar-stage="raw" data-state="baseline" data-tier="0" data-geometry="hex-core">
@@ -80,7 +158,7 @@
             </svg>
           </div>
           <div id="avatar-caricature" class="avatar-layer" hidden aria-hidden="true">
-            <svg class="caricature-face" viewBox="0 0 100 100" aria-label="Refiner caricature portrait">
+            <svg class="caricature-face" viewBox="0 0 100 100" aria-label="Refiner portrait">
               <ellipse cx="50" cy="52" rx="32" ry="36" fill="none" stroke="currentColor" stroke-width="2"/>
               <circle cx="38" cy="46" r="3" fill="currentColor"/>
               <circle cx="62" cy="46" r="3" fill="currentColor"/>
@@ -99,10 +177,11 @@
         <p id="mdr-status-label">NODE STATUS: BASELINE</p>
         <div id="finger-trap-widget" class="finger-trap hidden" aria-label="Lumon finger trap">
           <button type="button" id="btn-finger-trap" class="finger-trap-btn">FINGER TRAP — TAP TO STRUGGLE</button>
-          <p id="finger-trap-count" class="finger-trap-count">0</p>
+          <p id="finger-trap-count" class="finger-trap-count">0 STRUGGLES</p>
         </div>
       </main>
 
+      <!-- Vital metrics / right rail -->
       <section id="metrics-compliance-panel" class="panel" aria-label="Compliance metrics">
         <h2 class="panel-label">VITAL METRICS</h2>
         <div class="metric-row">
@@ -126,48 +205,98 @@
           </div>
           <span id="compliance-standing-value" class="metric-value">100%</span>
         </div>
-        <p id="compliance-freeze-notice" class="freeze-notice hidden">EGG BAR PROTOCOL — STANDING DECAY SUSPENDED</p>
+        <p id="compliance-freeze-notice" class="freeze-notice hidden">◈ EGG BAR ACTIVE — DECAY SUSPENDED</p>
+
+        <div class="metrics-legend">
+          <p class="legend-title">METRIC DECAY</p>
+          <p class="legend-item">Fluid drops 15% every 4 hrs if not replenished.</p>
+          <p class="legend-item">Standing drops if fluid &lt;30% or dose missed.</p>
+        </div>
       </section>
     </div>
 
+    <!-- ═══ ADVISORY BANNER ══════════════════════════════════════════ -->
     <div id="compliance-advisory" class="compliance-advisory hidden" role="alert"></div>
 
+    <!-- ═══ INTERACTION DECK ═════════════════════════════════════════ -->
     <section id="interaction-deck" class="panel" aria-label="Compliance logging">
+
+      <!-- Morning medication -->
+      <div id="morning-dose-section" class="deck-section">
+        <div class="section-header">
+          <h2 class="section-label">☀ MORNING PROTOCOL</h2>
+          <span class="section-window" id="morning-window-indicator">WINDOW: 07:00–10:00</span>
+        </div>
+        <p class="section-guide">Take your morning medication. Log it before 10:00 to earn XP and credits.</p>
+        <button type="button" id="btn-administer-morning" class="btn-primary btn-full btn-dose-morning">ADMINISTER MORNING DOSE</button>
+        <p class="deck-stat">LAST MORNING DOSE: <span id="morning-dose-time">NOT RECORDED</span></p>
+        <p class="earn-inline">REWARD: +25 XP +5 CREDITS — if logged before 10:00</p>
+      </div>
+
+      <!-- Fluid intake -->
       <div id="fluid-intake-section" class="deck-section">
-        <h2 class="section-label">FLUID INTAKE PROTOCOL</h2>
+        <div class="section-header">
+          <h2 class="section-label">◈ FLUID INTAKE PROTOCOL</h2>
+          <span class="section-window">TARGET: 2000 ML / DAY</span>
+        </div>
+        <p class="section-guide">Log your water intake. Fluid Efficiency decays every 4 hours — keep it above 30%.</p>
         <div class="input-row">
           <button type="button" id="btn-rehydrate-250" class="btn-preset">+250 ML</button>
           <button type="button" id="btn-rehydrate-500" class="btn-preset">+500 ML</button>
           <input type="number" id="fluid-intake-input" min="0" step="50" placeholder="ML" aria-label="Fluid intake milliliters">
           <button type="button" id="btn-rehydrate-unit" class="btn-primary">REHYDRATE UNIT</button>
         </div>
-        <p class="deck-stat">TODAY FLUID INTAKE: <span id="fluid-intake-today">0</span> ML</p>
+        <p class="deck-stat">TODAY: <span id="fluid-intake-today">0</span> / 2000 ML</p>
+        <p class="earn-inline">REWARD: +25 XP +5 CREDITS — when 2000 ML reached</p>
       </div>
 
+      <!-- Activity -->
       <div id="activity-section" class="deck-section">
-        <h2 class="section-label">PHYSICAL ACTIVITY PROTOCOL</h2>
+        <div class="section-header">
+          <h2 class="section-label">▲ PHYSICAL ACTIVITY PROTOCOL</h2>
+          <span class="section-window">TARGET: 8000 UNITS / DAY</span>
+        </div>
+        <p class="section-guide">Log steps, exercise, or any movement. 1000 units ≈ 1000 steps or 10 minutes activity.</p>
         <div class="input-row">
           <div class="activity-presets">
-            <button type="button" class="btn-preset activity-preset" data-units="1000">+1000</button>
-            <button type="button" class="btn-preset activity-preset" data-units="2500">+2500</button>
-            <button type="button" class="btn-preset activity-preset" data-units="5000">+5000</button>
+            <button type="button" class="btn-preset activity-preset" data-units="1000">1K</button>
+            <button type="button" class="btn-preset activity-preset" data-units="2500">2.5K</button>
+            <button type="button" class="btn-preset activity-preset" data-units="5000">5K</button>
+            <button type="button" class="btn-preset activity-preset" data-units="8000">8K</button>
           </div>
           <input type="number" id="activity-units-input" min="0" step="100" placeholder="UNITS" aria-label="Activity units">
-          <button type="button" id="btn-log-activity" class="btn-primary">LOG PHYSICAL ACTIVITY</button>
+          <button type="button" id="btn-log-activity" class="btn-primary">LOG ACTIVITY</button>
         </div>
-        <p class="deck-stat">TODAY ACTIVITY UNITS: <span id="activity-units-today">0</span></p>
+        <p class="deck-stat">TODAY: <span id="activity-units-today">0</span> / 8000 UNITS</p>
+        <p class="earn-inline">REWARD: +25 XP +5 CREDITS — when 8000 reached</p>
       </div>
 
+      <!-- Afternoon / compliance dose -->
       <div id="compliance-section" class="deck-section">
-        <h2 class="section-label">COMPLIANCE DOSE PROTOCOL</h2>
-        <button type="button" id="btn-administer-dose" class="btn-primary btn-full">ADMINISTER COMPLIANCE DOSE</button>
-        <p class="deck-stat">LAST DOSE: <span id="compliance-dose-time">NOT RECORDED</span></p>
+        <div class="section-header">
+          <h2 class="section-label">◑ AFTERNOON PROTOCOL</h2>
+          <span class="section-window" id="afternoon-window-indicator">WINDOW: 11:00–14:00</span>
+        </div>
+        <p class="section-guide">Take your afternoon medication. Advisory starts at 11:00. A −20 standing penalty applies if not logged by 14:00.</p>
+        <button type="button" id="btn-administer-dose" class="btn-primary btn-full btn-dose-afternoon">ADMINISTER AFTERNOON DOSE</button>
+        <p class="deck-stat">LAST AFTERNOON DOSE: <span id="compliance-dose-time">NOT RECORDED</span></p>
+        <p class="earn-inline">REWARD: +25 XP +5 CREDITS — if logged before 14:00</p>
       </div>
+
     </section>
 
+    <!-- ═══ ACTIVITY LOG ══════════════════════════════════════════════ -->
+    <section id="activity-log-panel" class="panel" aria-label="Activity log">
+      <h2 class="panel-label">ACTIVITY LOG</h2>
+      <ol id="activity-log-list" class="activity-log-list" reversed>
+        <li class="log-entry log-entry--init">SESSION INITIALIZED</li>
+      </ol>
+    </section>
+
+    <!-- ═══ LASER CRYSTAL FOOTER ═════════════════════════════════════ -->
     <footer id="laser-crystal-footer" class="laser-crystal hidden" aria-hidden="true">
       <div class="crystal-stage">
-        <svg class="crystal-cube" viewBox="0 0 60 60" aria-label="Refiner of the Quarter crystal">
+        <svg class="crystal-cube" viewBox="0 0 60 60">
           <polygon points="30,8 52,20 52,40 30,52 8,40 8,20" fill="none" stroke="currentColor" stroke-width="1.5"/>
           <polygon points="30,8 52,20 30,32 8,20" fill="none" stroke="currentColor" stroke-width="1"/>
           <polygon points="52,20 52,40 30,52 30,32" fill="none" stroke="currentColor" stroke-width="1"/>
@@ -176,20 +305,85 @@
       </div>
     </footer>
 
+    <!-- ═══ DRAWERS ═══════════════════════════════════════════════════ -->
+
+    <!-- Orientation / help -->
+    <div id="orientation-modal" class="orientation-modal hidden" role="dialog" aria-modal="true" aria-labelledby="orientation-title">
+      <div class="orientation-inner">
+        <div class="orientation-header">
+          <h2 id="orientation-title" class="orientation-title">◆ EMPLOYEE ORIENTATION</h2>
+          <button type="button" id="btn-close-orientation" class="btn-close" aria-label="Close orientation">×</button>
+        </div>
+
+        <div class="orientation-pages">
+
+          <div class="orientation-page active" data-page="1">
+            <p class="orient-heading">WELCOME, INNIE.</p>
+            <p class="orient-body">You are <strong>SUBJECT #4229</strong>. This terminal monitors your Wellness Compliance. Your work here is important. Your work here is enough. Do not ask what it means.</p>
+            <p class="orient-body">Complete your <strong>daily protocols</strong> to earn <strong>Refinement XP</strong> and <strong>Credits</strong>. These may be redeemed for Employee Incentives at Lumon's discretion.</p>
+          </div>
+
+          <div class="orientation-page" data-page="2">
+            <p class="orient-heading">YOUR DAILY PROTOCOLS</p>
+            <table class="orient-table">
+              <thead><tr><th>PROTOCOL</th><th>WINDOW</th><th>REWARD</th></tr></thead>
+              <tbody>
+                <tr><td>☀ Morning Dose</td><td>By 10:00</td><td>+25 XP +5 CR</td></tr>
+                <tr><td>◈ Fluid Intake</td><td>2000 ml / day</td><td>+25 XP +5 CR</td></tr>
+                <tr><td>▲ Activity</td><td>8000 units / day</td><td>+25 XP +5 CR</td></tr>
+                <tr><td>◑ Afternoon Dose</td><td>By 14:00</td><td>+25 XP +5 CR</td></tr>
+                <tr><td>★ All Four</td><td>Bonus</td><td>+25 XP +5 CR</td></tr>
+              </tbody>
+            </table>
+            <p class="orient-note">Missing the afternoon dose after 14:00 reduces Compliance Standing by 20 points.</p>
+          </div>
+
+          <div class="orientation-page" data-page="3">
+            <p class="orient-heading">SPENDING CREDITS</p>
+            <p class="orient-body">Credits are spent in the <strong>INCENTIVES</strong> drawer. Approved items include:</p>
+            <ul class="orient-list">
+              <li><strong>Coffee Cozy</strong> (50 CR) — Button skin</li>
+              <li><strong>Melon Bar</strong> (100 CR) — Pastel palette</li>
+              <li><strong>Pre-Waffle Egg Bar</strong> (200 CR) — Freezes decay 24 h</li>
+              <li><strong>Laser Crystal</strong> (350 CR) — Spinning trophy footer</li>
+            </ul>
+            <p class="orient-body">The <strong>PROCUREMENT</strong> drawer lets you unlock colour palettes and node geometries for additional credits.</p>
+          </div>
+
+          <div class="orientation-page" data-page="4">
+            <p class="orient-heading">FILE PROGRESSION &amp; PRESTIGE</p>
+            <p class="orient-body">Your daily completions fill the <strong>Active File</strong> bar. Milestones unlock rewards as the file refines. At 100% a <strong>Waffle Party</strong> is held — your Subject number increments and all future XP gains receive a permanent ×1.5 multiplier.</p>
+            <p class="orient-body">Your node avatar evolves as Lifetime XP grows: Raw Dataset → Fenced Matrix → Compliant Singularity → Caricature.</p>
+            <p class="orient-note">This orientation may be accessed again at any time via the <strong>? ORIENTATION</strong> button.</p>
+          </div>
+
+        </div>
+
+        <div class="orientation-nav">
+          <button type="button" id="btn-orient-prev" class="btn-secondary" disabled>← PREV</button>
+          <span id="orient-page-indicator" class="orient-page-num">1 / 4</span>
+          <button type="button" id="btn-orient-next" class="btn-secondary">NEXT →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Incentives -->
     <aside id="incentives-drawer" class="drawer hidden" aria-label="Employee incentives">
       <div class="drawer-header">
         <h2>EMPLOYEE INCENTIVES</h2>
         <button type="button" id="btn-close-incentives" class="btn-close" aria-label="Close incentives">×</button>
       </div>
-      <p class="drawer-note">Procurement authorized by Lumon Wellness Division.</p>
+      <p class="drawer-note">Spend Credits on items approved by the Lumon Wellness Division. Credits are earned by completing daily protocols.</p>
       <div id="incentives-catalog" class="catalog"></div>
     </aside>
 
+    <!-- Procurement -->
     <aside id="procurement-drawer" class="drawer hidden" aria-label="Lumon Procurement">
       <div class="drawer-header">
         <h2>LUMON PROCUREMENT</h2>
         <button type="button" id="btn-close-procurement" class="btn-close" aria-label="Close procurement">×</button>
       </div>
+      <p class="drawer-note">Unlock department palettes and MDR node geometries using Credits.</p>
       <section class="procurement-section">
         <h3>DEPARTMENT PALETTES</h3>
         <div id="palette-catalog" class="catalog"></div>
@@ -200,12 +394,13 @@
       </section>
     </aside>
 
+    <!-- Archival -->
     <aside id="archival-sync-panel" class="drawer hidden" aria-label="Archival transmission">
       <div class="drawer-header">
         <h2>ARCHIVAL TRANSMISSION</h2>
         <button type="button" id="btn-close-archival" class="btn-close" aria-label="Close archival panel">×</button>
       </div>
-      <p class="drawer-note">Optional. Terminal operates fully offline without archival protocol.</p>
+      <p class="drawer-note">Optional encrypted cross-device sync. Terminal operates fully offline without this.</p>
       <label class="toggle-row">
         <input type="checkbox" id="archival-enabled">
         <span>ENABLE ARCHIVAL PROTOCOL</span>
@@ -216,7 +411,7 @@
       <div class="hash-row">
         <code id="archival-hash">—</code>
         <button type="button" id="btn-copy-hash" class="btn-secondary">COPY</button>
-        <button type="button" id="btn-regenerate-hash" class="btn-secondary">REGENERATE</button>
+        <button type="button" id="btn-regenerate-hash" class="btn-secondary">REGEN</button>
       </div>
       <label class="field-label" for="archival-passphrase">PASSPHRASE (OPTIONAL)</label>
       <input type="password" id="archival-passphrase" class="field-input" autocomplete="off">
@@ -224,6 +419,7 @@
       <p id="archival-status" class="archival-status"></p>
     </aside>
 
+    <!-- Conflict modal -->
     <div id="conflict-modal" class="modal hidden" role="dialog" aria-labelledby="conflict-title">
       <div class="modal-content">
         <h2 id="conflict-title">ARCHIVAL CONFLICT DETECTED</h2>
@@ -235,14 +431,17 @@
       </div>
     </div>
 
+    <!-- MDE fullscreen -->
     <div id="mde-overlay" class="fullscreen-event hidden" role="dialog" aria-label="Music Dance Experience">
       <div class="mde-content">
         <p class="mde-title">MUSIC DANCE EXPERIENCE</p>
         <p class="mde-sub">WELLNESS INCENTIVE — 60 SECONDS</p>
         <div id="mde-node" class="mde-node"></div>
+        <p class="mde-timer" id="mde-countdown">60</p>
       </div>
     </div>
 
+    <!-- Waffle Party fullscreen -->
     <div id="waffle-overlay" class="fullscreen-event hidden" role="dialog" aria-label="Waffle Party">
       <div class="waffle-scene">
         <div class="waffle-plate" aria-hidden="true">
@@ -256,7 +455,8 @@
     </div>
 
     <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
-  </div>
+
+  </div><!-- /.app -->
 
   <script type="module" src="app.js"></script>
 </body>
