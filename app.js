@@ -1,12 +1,12 @@
 import {
   generateSyncCode,
   pushState,
-  pullState,
   syncNow,
 } from './sync.js';
 
 const STATE_KEY = 'lumon-compliance-state';
 const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
+const FILE_TARGET = 1000;
 const QUOTA_FLAGS = { FLUID: 1, ACTIVITY: 2, DOSE: 4, FULL_DAY: 8 };
 
 const TIER_NAMES = [
@@ -17,6 +17,19 @@ const TIER_NAMES = [
 ];
 
 const TIER_THRESHOLDS = [0, 100, 300, 600];
+
+const AVATAR_STAGES = [
+  { id: 'raw', label: 'RAW DATASET', minXp: 0 },
+  { id: 'fenced', label: 'FENCED MATRIX', minXp: 501 },
+  { id: 'singularity', label: 'COMPLIANT SINGULARITY', minXp: 1501 },
+];
+
+const MILESTONES = [
+  { pct: 10, id: 'eraser', name: 'LUMON ERASER', badge: 'ERASER' },
+  { pct: 25, id: 'finger-trap', name: 'FINGER TRAP', badge: 'TRAP' },
+  { pct: 75, id: 'mde', name: 'MDE', badge: 'MDE' },
+  { pct: 100, id: 'caricature', name: 'CARICATURE', badge: 'FACE' },
+];
 
 const NODE_STATUS = {
   baseline: 'NODE STATUS: BASELINE',
@@ -40,12 +53,26 @@ const GEOMETRY_CATALOG = [
   { id: 'fractal-split', name: 'FRACTAL SPLIT', cost: 40 },
 ];
 
+const INCENTIVES_CATALOG = [
+  { id: 'coffee-cozy', name: 'LUMON COFFEE COZY', cost: 50, type: 'skin', desc: 'REHYDRATE UNIT SKIN' },
+  { id: 'melon-bar', name: 'THE MELON BAR', cost: 100, type: 'palette', desc: 'PASTEL ACCENT PALETTE' },
+  { id: 'egg-bar', name: 'PRE-WAFFLE EGG BAR', cost: 200, type: 'consumable', desc: 'FREEZE COMPLIANCE DECAY 24H' },
+  { id: 'laser-crystal', name: 'LASER-ETCHED CRYSTAL', cost: 350, type: 'cosmetic', desc: 'REFINER OF THE QUARTER' },
+];
+
 const DEFAULT_STATE = {
   subject: {
-    id: '4229',
+    subjectNumber: 4229,
     cumulativeQuota: 0,
     allocationCredits: 0,
     refinementTier: 0,
+    prestigeMultiplier: 1,
+    filesCompleted: 0,
+  },
+  fileState: {
+    fileNumber: 1,
+    quota: 0,
+    milestonesHit: [],
   },
   metrics: {
     fluidEfficiency: 100,
@@ -59,6 +86,12 @@ const DEFAULT_STATE = {
     complianceDoseAt: null,
     compliancePenaltyApplied: false,
     quotasAwarded: 0,
+  },
+  incentives: {
+    inventory: [],
+    activeSkin: null,
+    complianceFreezeUntil: null,
+    fingerTrapTaps: 0,
   },
   lastSavedAt: new Date().toISOString(),
   unlockedPalettes: ['lumon-default'],
@@ -79,6 +112,9 @@ let state = null;
 let debugTimeOverride = null;
 let pushDebounceTimer = null;
 let pendingConflict = null;
+let mdeTimer = null;
+let waffleTimer = null;
+let prestigeInProgress = false;
 
 function clamp(n, min, max) {
   return Math.min(max, Math.max(min, n));
@@ -97,6 +133,14 @@ function now() {
     return d;
   }
   return new Date();
+}
+
+function subjectId() {
+  return String(state.subject.subjectNumber);
+}
+
+function fileProgressPct() {
+  return clamp((state.fileState.quota / FILE_TARGET) * 100, 0, 100);
 }
 
 function deepMerge(target, source) {
@@ -125,7 +169,25 @@ function migrateState(raw) {
   }
 
   const merged = deepMerge(structuredClone(DEFAULT_STATE), raw);
-  merged.subject.id = '4229';
+
+  if (merged.subject.id && !merged.subject.subjectNumber) {
+    merged.subject.subjectNumber = parseInt(merged.subject.id, 10) || 4229;
+  }
+  delete merged.subject.id;
+
+  if (!merged.fileState) {
+    merged.fileState = { fileNumber: 1, quota: 0, milestonesHit: [] };
+  }
+  if (!merged.incentives) {
+    merged.incentives = structuredClone(DEFAULT_STATE.incentives);
+  }
+  if (!merged.subject.prestigeMultiplier) {
+    merged.subject.prestigeMultiplier = 1;
+  }
+  if (!merged.subject.filesCompleted) {
+    merged.subject.filesCompleted = 0;
+  }
+
   return merged;
 }
 
@@ -181,6 +243,11 @@ function schedulePush() {
   }, 2000);
 }
 
+function isComplianceFrozen(s = state) {
+  const until = s?.incentives?.complianceFreezeUntil;
+  return until && new Date(until) > new Date();
+}
+
 export function applyElapsedTime(s, elapsedMs) {
   if (elapsedMs <= 0) return;
 
@@ -191,13 +258,15 @@ export function applyElapsedTime(s, elapsedMs) {
     100
   );
 
-  const hours = elapsedMs / (60 * 60 * 1000);
-  if (s.metrics.fluidEfficiency < 30) {
-    s.metrics.complianceStanding = clamp(
-      s.metrics.complianceStanding - hours,
-      0,
-      100
-    );
+  if (!isComplianceFrozen(s)) {
+    const hours = elapsedMs / (60 * 60 * 1000);
+    if (s.metrics.fluidEfficiency < 30) {
+      s.metrics.complianceStanding = clamp(
+        s.metrics.complianceStanding - hours,
+        0,
+        100
+      );
+    }
   }
 }
 
@@ -246,6 +315,97 @@ function evaluateQuotaTargets(log) {
   return awards;
 }
 
+function addQuotaXp(amount) {
+  if (amount <= 0 || prestigeInProgress) return;
+  const boosted = Math.round(amount * state.subject.prestigeMultiplier);
+  state.subject.cumulativeQuota += boosted;
+  state.fileState.quota += boosted;
+  checkMilestones();
+  if (state.fileState.quota >= FILE_TARGET) {
+    completeFile();
+  }
+  recalculateRefinementTier(state);
+}
+
+function checkMilestones() {
+  const pct = fileProgressPct();
+  for (const ms of MILESTONES) {
+    if (pct >= ms.pct && !state.fileState.milestonesHit.includes(ms.id)) {
+      state.fileState.milestonesHit.push(ms.id);
+      onMilestoneUnlocked(ms);
+    }
+  }
+}
+
+function onMilestoneUnlocked(ms) {
+  if (ms.id === 'mde') {
+    triggerMDE();
+  }
+}
+
+function triggerMDE() {
+  const overlay = document.getElementById('mde-overlay');
+  const node = document.getElementById('mdr-data-node');
+  overlay.classList.remove('hidden');
+  node.classList.add('mde-active');
+  clearTimeout(mdeTimer);
+  mdeTimer = setTimeout(() => {
+    overlay.classList.add('hidden');
+    node.classList.remove('mde-active');
+  }, 60_000);
+}
+
+function completeFile() {
+  if (prestigeInProgress) return;
+  prestigeInProgress = true;
+  if (!state.fileState.milestonesHit.includes('caricature')) {
+    state.fileState.milestonesHit.push('caricature');
+  }
+  triggerWaffleParty();
+}
+
+function triggerWaffleParty() {
+  const overlay = document.getElementById('waffle-overlay');
+  const nextEl = document.getElementById('waffle-subject-next');
+  const nextNum = state.subject.subjectNumber + 1;
+  nextEl.textContent = `NEXT ASSIGNMENT: SUBJECT #${nextNum}`;
+  overlay.classList.remove('hidden');
+
+  clearTimeout(waffleTimer);
+  waffleTimer = setTimeout(() => {
+    overlay.classList.add('hidden');
+    applyPrestigeCycle();
+    prestigeInProgress = false;
+    saveState();
+    render();
+  }, 4500);
+}
+
+function applyPrestigeCycle() {
+  state.subject.subjectNumber += 1;
+  state.subject.filesCompleted += 1;
+  state.subject.prestigeMultiplier = Math.round(state.subject.prestigeMultiplier * 1.5 * 10) / 10;
+
+  state.metrics.fluidEfficiency = 100;
+  state.metrics.quotaProgression = 100;
+  state.metrics.complianceStanding = 100;
+
+  state.dailyLog = {
+    date: todayKey(),
+    fluidIntakeMl: 0,
+    activityUnits: 0,
+    complianceDoseAt: null,
+    compliancePenaltyApplied: false,
+    quotasAwarded: 0,
+  };
+
+  state.fileState = {
+    fileNumber: state.subject.filesCompleted + 1,
+    quota: 0,
+    milestonesHit: [],
+  };
+}
+
 export function checkMidnightReset(s) {
   const today = todayKey();
   if (!s.dailyLog.date) {
@@ -255,8 +415,8 @@ export function checkMidnightReset(s) {
   if (s.dailyLog.date === today) return;
 
   const awards = evaluateQuotaTargets(s.dailyLog);
-  s.subject.cumulativeQuota += awards.quota;
   s.subject.allocationCredits += awards.credits;
+  addQuotaXp(awards.quota);
 
   s.dailyLog = {
     date: today,
@@ -280,7 +440,7 @@ export function checkComplianceGrace(s) {
 
   const minutes = now().getHours() * 60 + now().getMinutes();
 
-  if (minutes >= 14 * 60 && !s.dailyLog.compliancePenaltyApplied) {
+  if (minutes >= 14 * 60 && !s.dailyLog.compliancePenaltyApplied && !isComplianceFrozen()) {
     s.metrics.complianceStanding = clamp(s.metrics.complianceStanding - 20, 0, 100);
     s.dailyLog.compliancePenaltyApplied = true;
   }
@@ -308,6 +468,18 @@ export function deriveNodeState(s) {
     return 'optimal';
   }
   return 'baseline';
+}
+
+function deriveAvatarStage() {
+  if (state.fileState.milestonesHit.includes('caricature')) {
+    return { id: 'caricature', label: 'CUSTOM CARICATURE' };
+  }
+  const xp = state.subject.cumulativeQuota;
+  let stage = AVATAR_STAGES[0];
+  for (const s of AVATAR_STAGES) {
+    if (xp >= s.minXp) stage = s;
+  }
+  return stage;
 }
 
 export function recalculateRefinementTier(s) {
@@ -367,11 +539,8 @@ export function administerComplianceDose() {
 
 function evaluateDailyQuotas() {
   const awards = evaluateQuotaTargets(state.dailyLog);
-  state.subject.cumulativeQuota += awards.quota;
   state.subject.allocationCredits += awards.credits;
-  if (awards.quota > 0) {
-    recalculateRefinementTier(state);
-  }
+  addQuotaXp(awards.quota);
 }
 
 function updateMetricBar(id, valueId, value, label) {
@@ -385,8 +554,41 @@ function updateMetricBar(id, valueId, value, label) {
   document.getElementById(valueId).textContent = `${pct}%`;
 }
 
+function renderScatterCloud() {
+  const cloud = document.getElementById('scatter-cloud');
+  if (!cloud) return;
+  cloud.innerHTML = '';
+  const digits = '0123456789';
+  for (let i = 0; i < 18; i++) {
+    const span = document.createElement('span');
+    span.className = 'scatter-digit';
+    span.textContent = digits[Math.floor(Math.random() * 10)];
+    span.style.left = `${10 + Math.random() * 80}%`;
+    span.style.top = `${10 + Math.random() * 80}%`;
+    span.style.animationDelay = `${Math.random() * 0.4}s`;
+    cloud.appendChild(span);
+  }
+}
+
+function renderAvatarLayers(stageId) {
+  const layers = {
+    raw: document.getElementById('avatar-raw'),
+    fenced: document.getElementById('avatar-fenced'),
+    singularity: document.getElementById('avatar-singularity'),
+    caricature: document.getElementById('avatar-caricature'),
+  };
+  for (const [id, el] of Object.entries(layers)) {
+    if (!el) continue;
+    const show = id === stageId;
+    el.hidden = !show;
+    el.setAttribute('aria-hidden', show ? 'false' : 'true');
+  }
+  if (stageId === 'raw') renderScatterCloud();
+}
+
 function renderGeometryExtras(geometry) {
   const g = document.querySelector('.mdr-geometry-extra');
+  if (!g) return;
   g.innerHTML = '';
   g.hidden = geometry === 'hex-core';
 
@@ -411,9 +613,62 @@ function renderGeometryExtras(geometry) {
   }
 }
 
+function renderMilestones() {
+  const pct = fileProgressPct();
+  document.querySelectorAll('.milestone').forEach((el) => {
+    const threshold = Number(el.dataset.milestone);
+    const hit = state.fileState.milestonesHit.some((id) => {
+      const ms = MILESTONES.find((m) => m.id === id);
+      return ms && ms.pct === threshold;
+    });
+    el.classList.toggle('unlocked', hit || pct >= threshold);
+  });
+
+  const badges = document.getElementById('inventory-badges');
+  const badgeIds = [
+    ...state.fileState.milestonesHit.map((id) => MILESTONES.find((m) => m.id === id)?.badge).filter(Boolean),
+    ...state.incentives.inventory.map((id) => INCENTIVES_CATALOG.find((i) => i.id === id)?.name.split(' ')[0]),
+  ];
+  badges.innerHTML = [...new Set(badgeIds)]
+    .map((b) => `<span class="badge">${b}</span>`)
+    .join('');
+}
+
+function renderIncentives() {
+  const el = document.getElementById('incentives-catalog');
+  if (!el) return;
+
+  el.innerHTML = INCENTIVES_CATALOG.map((item) => {
+    const owned = state.incentives.inventory.includes(item.id);
+    const active =
+      (item.id === 'coffee-cozy' && state.incentives.activeSkin === 'coffee-cozy') ||
+      (item.id === 'melon-bar' && state.activePalette === 'melon-bar');
+    const canBuy = state.subject.allocationCredits >= item.cost;
+    let btn = '';
+    if (owned) {
+      if (item.type === 'skin' || item.type === 'palette') {
+        btn = active
+          ? '<span class="catalog-item-info">EQUIPPED</span>'
+          : `<button type="button" data-equip-incentive="${item.id}">EQUIP</button>`;
+      } else if (item.type === 'consumable') {
+        btn = `<button type="button" data-use-incentive="${item.id}">CONSUME</button>`;
+      } else {
+        btn = '<span class="catalog-item-info">ACQUIRED</span>';
+      }
+    } else {
+      btn = `<button type="button" data-buy-incentive="${item.id}" ${canBuy ? '' : 'disabled'}>ACQUIRE — ${item.cost}</button>`;
+    }
+    return `<div class="catalog-item ${active ? 'active' : ''}">
+      <span class="catalog-item-info">${item.name} — ${item.cost} CR<br><small>${item.desc}</small></span>
+      ${btn}
+    </div>`;
+  }).join('');
+}
+
 function renderProcurement() {
   const paletteEl = document.getElementById('palette-catalog');
   const geometryEl = document.getElementById('geometry-catalog');
+  if (!paletteEl || !geometryEl) return;
 
   paletteEl.innerHTML = PALETTE_CATALOG.map((item) => {
     const owned = state.unlockedPalettes.includes(item.id);
@@ -448,13 +703,24 @@ function renderProcurement() {
 
 function render() {
   document.documentElement.dataset.palette = state.activePalette;
+  document.body.dataset.skin = state.incentives.activeSkin || '';
 
+  document.getElementById('subject-designation').textContent = `SUBJECT #${subjectId()}`;
   document.getElementById('refinement-tier').textContent =
     `TIER: ${TIER_NAMES[state.subject.refinementTier]}`;
+  document.getElementById('prestige-multiplier').textContent =
+    `MULTIPLIER: ×${state.subject.prestigeMultiplier.toFixed(1)}`;
   document.getElementById('quota-cumulative').textContent =
-    `QUOTA: ${String(state.subject.cumulativeQuota).padStart(4, '0')}`;
+    `LIFETIME XP: ${String(state.subject.cumulativeQuota).padStart(4, '0')}`;
   document.getElementById('allocation-credits').textContent =
     `CREDITS: ${String(state.subject.allocationCredits).padStart(4, '0')}`;
+
+  const filePct = Math.round(fileProgressPct());
+  document.getElementById('file-designation').textContent =
+    `FILE-${String(state.fileState.fileNumber).padStart(4, '0')}`;
+  document.getElementById('file-progress-fill').style.width = `${filePct}%`;
+  document.getElementById('file-progress-bar').setAttribute('aria-valuenow', String(filePct));
+  document.getElementById('file-progress-value').textContent = `${filePct}% REFINED`;
 
   updateMetricBar('fluid-efficiency-bar', 'fluid-efficiency-value', state.metrics.fluidEfficiency, 'Fluid efficiency');
   updateMetricBar('quota-progression-bar', 'quota-progression-value', state.metrics.quotaProgression, 'Quota progression');
@@ -468,15 +734,44 @@ function render() {
     ? new Date(state.dailyLog.complianceDoseAt).toLocaleString()
     : 'NOT RECORDED';
 
-  const nodeState = deriveNodeState(state);
+  const freezeNotice = document.getElementById('compliance-freeze-notice');
+  if (isComplianceFrozen()) {
+    freezeNotice.classList.remove('hidden');
+  } else {
+    freezeNotice.classList.add('hidden');
+  }
+
+  const avatar = deriveAvatarStage();
   const node = document.getElementById('mdr-data-node');
-  node.dataset.state = nodeState;
+  node.dataset.avatarStage = avatar.id;
+  node.dataset.state = deriveNodeState(state);
   node.dataset.tier = String(state.subject.refinementTier);
   node.dataset.geometry = state.activeGeometry;
-  document.getElementById('mdr-status-label').textContent = NODE_STATUS[nodeState];
+  document.getElementById('avatar-temper-label').textContent = `TEMPER: ${avatar.label}`;
+  document.getElementById('mdr-status-label').textContent = NODE_STATUS[node.dataset.state];
 
+  renderAvatarLayers(avatar.id);
   renderGeometryExtras(state.activeGeometry);
+  renderMilestones();
+  renderIncentives();
   renderProcurement();
+
+  const fingerTrap = document.getElementById('finger-trap-widget');
+  if (state.fileState.milestonesHit.includes('finger-trap')) {
+    fingerTrap.classList.remove('hidden');
+    document.getElementById('finger-trap-count').textContent = state.incentives.fingerTrapTaps;
+  } else {
+    fingerTrap.classList.add('hidden');
+  }
+
+  const crystal = document.getElementById('laser-crystal-footer');
+  if (state.incentives.inventory.includes('laser-crystal')) {
+    crystal.classList.remove('hidden');
+    crystal.setAttribute('aria-hidden', 'false');
+  } else {
+    crystal.classList.add('hidden');
+    crystal.setAttribute('aria-hidden', 'true');
+  }
 
   document.getElementById('archival-enabled').checked = state.sync.enabled;
   document.getElementById('archival-endpoint').value = state.sync.apiBase || '';
@@ -506,6 +801,7 @@ function openDrawer(id) {
 }
 
 function closeDrawers() {
+  document.getElementById('incentives-drawer').classList.add('hidden');
   document.getElementById('procurement-drawer').classList.add('hidden');
   document.getElementById('archival-sync-panel').classList.add('hidden');
   document.getElementById('drawer-backdrop').classList.add('hidden');
@@ -529,6 +825,48 @@ function acquireGeometry(id) {
   state.subject.allocationCredits -= item.cost;
   state.unlockedGeometries.push(id);
   state.activeGeometry = id;
+  saveState();
+  render();
+}
+
+function acquireIncentive(id) {
+  const item = INCENTIVES_CATALOG.find((i) => i.id === id);
+  if (!item || state.incentives.inventory.includes(id)) return;
+  if (state.subject.allocationCredits < item.cost) return;
+  state.subject.allocationCredits -= item.cost;
+  state.incentives.inventory.push(id);
+  if (item.type === 'skin') state.incentives.activeSkin = id;
+  if (item.type === 'palette') {
+    state.activePalette = 'melon-bar';
+    if (!state.unlockedPalettes.includes('melon-bar')) {
+      state.unlockedPalettes.push('melon-bar');
+    }
+  }
+  if (item.type === 'cosmetic') {
+    /* laser crystal shows via render */
+  }
+  saveState();
+  render();
+}
+
+function equipIncentive(id) {
+  const item = INCENTIVES_CATALOG.find((i) => i.id === id);
+  if (!item || !state.incentives.inventory.includes(id)) return;
+  if (item.type === 'skin') {
+    state.incentives.activeSkin = state.incentives.activeSkin === id ? null : id;
+  }
+  if (item.id === 'melon-bar') {
+    state.activePalette = state.activePalette === 'melon-bar' ? 'lumon-default' : 'melon-bar';
+  }
+  saveState();
+  render();
+}
+
+function useIncentive(id) {
+  if (id !== 'egg-bar' || !state.incentives.inventory.includes(id)) return;
+  const until = new Date();
+  until.setHours(until.getHours() + 24);
+  state.incentives.complianceFreezeUntil = until.toISOString();
   saveState();
   render();
 }
@@ -571,11 +909,28 @@ function bindEventListeners() {
     btn.addEventListener('click', () => logPhysicalActivity(Number(btn.dataset.units)));
   });
 
+  document.getElementById('btn-incentives').addEventListener('click', () => openDrawer('incentives-drawer'));
   document.getElementById('btn-procurement').addEventListener('click', () => openDrawer('procurement-drawer'));
   document.getElementById('btn-archival').addEventListener('click', () => openDrawer('archival-sync-panel'));
+  document.getElementById('btn-close-incentives').addEventListener('click', closeDrawers);
   document.getElementById('btn-close-procurement').addEventListener('click', closeDrawers);
   document.getElementById('btn-close-archival').addEventListener('click', closeDrawers);
   document.getElementById('drawer-backdrop').addEventListener('click', closeDrawers);
+
+  document.getElementById('btn-finger-trap')?.addEventListener('click', () => {
+    state.incentives.fingerTrapTaps += 1;
+    saveState();
+    render();
+  });
+
+  document.getElementById('incentives-catalog').addEventListener('click', (e) => {
+    const buy = e.target.dataset.buyIncentive;
+    const equip = e.target.dataset.equipIncentive;
+    const use = e.target.dataset.useIncentive;
+    if (buy) acquireIncentive(buy);
+    if (equip) equipIncentive(equip);
+    if (use) useIncentive(use);
+  });
 
   document.getElementById('palette-catalog').addEventListener('click', (e) => {
     const buy = e.target.dataset.buyPalette;
@@ -693,10 +1048,6 @@ async function init() {
   render();
   bindEventListeners();
   setInterval(() => tick(), 60_000);
-
-  if (!state.sync.code) {
-    /* generated on demand */
-  }
 
   registerServiceWorker();
 }
