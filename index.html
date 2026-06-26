@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b0c10">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="MDR Terminal">
+  <meta name="apple-mobile-web-app-title" content="Innie-Cam">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Lumon MDR — Innie Terminal Feed</title>
+  <title>Lumon Innie-Cam — Floor 7 / MDR</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -16,428 +16,348 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-view="desk">
 
-  <!-- ═══ CRT DISPLAY ARTIFACTS (decorative, GPU-only animations) ═══ -->
+  <!-- ═══ CRT DISPLAY ARTIFACTS (decorative, GPU-only) ════════════════ -->
   <div class="crt" aria-hidden="true">
     <div class="crt-scanlines"></div>
     <div class="crt-flicker"></div>
     <div class="crt-vignette"></div>
   </div>
 
-  <div id="lumon-terminal" class="app">
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- VIEW 1 — PASSIVE CAMERA MONITOR (the Lofi MDR office scene)      -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <main id="office-scene" class="office-scene" aria-label="Innie-Cam workspace feed">
 
-    <!-- ═══ HEADER / FEED BAR ════════════════════════════════════════ -->
-    <header id="terminal-header" class="panel">
-      <div class="header-top-row">
-        <div class="header-brand">
-          <span class="lumon-mark" aria-hidden="true">◆</span>
-          <div class="brand-text">
-            <p class="terminal-title">LUMON MDR</p>
-            <p class="terminal-subtitle">INNIE TERMINAL FEED — LIVE</p>
+    <div class="scene-stage">
+
+      <!-- ceiling light matrix -->
+      <div class="ceiling" aria-hidden="true">
+        <div class="ceiling-grid" id="ceiling-grid"></div>
+      </div>
+
+      <!-- back + side partition walls -->
+      <div class="wall wall-back" aria-hidden="true"></div>
+      <div class="wall wall-left" aria-hidden="true"></div>
+      <div class="wall wall-right" aria-hidden="true"></div>
+
+      <!-- green carpet floor -->
+      <div class="floor" aria-hidden="true"><div class="floor-grain"></div></div>
+
+      <!-- the workstation cluster -->
+      <div class="workstation">
+
+        <!-- employee standing at the partition (pixel sprite) -->
+        <div class="employee" aria-hidden="true">
+          <svg class="employee-svg" viewBox="0 0 16 28" shape-rendering="crispEdges">
+            <!-- hair -->
+            <rect x="5" y="0" width="6" height="2" fill="#2b2218"/>
+            <rect x="4" y="1" width="8" height="2" fill="#3a2e20"/>
+            <!-- face -->
+            <rect x="5" y="2" width="6" height="4" fill="#d8a98a"/>
+            <rect x="5" y="2" width="1" height="4" fill="#3a2e20"/>
+            <rect x="10" y="2" width="1" height="4" fill="#3a2e20"/>
+            <!-- neck -->
+            <rect x="6" y="6" width="4" height="1" fill="#c79877"/>
+            <!-- suit shoulders/torso -->
+            <rect x="3" y="7" width="10" height="11" fill="#1c2738"/>
+            <rect x="3" y="7" width="10" height="1" fill="#2a3850"/>
+            <!-- white shirt + tie -->
+            <rect x="7" y="7" width="2" height="7" fill="#e9eef2"/>
+            <rect x="7" y="7" width="2" height="6" fill="#7a1f2b"/>
+            <rect x="7" y="7" width="2" height="1" fill="#9c2a38"/>
+            <!-- arms -->
+            <rect x="3" y="8" width="2" height="9" fill="#161f2d"/>
+            <rect x="11" y="8" width="2" height="9" fill="#161f2d"/>
+            <!-- hands -->
+            <rect x="3" y="17" width="2" height="2" fill="#d8a98a"/>
+            <rect x="11" y="17" width="2" height="2" fill="#d8a98a"/>
+            <!-- trousers -->
+            <rect x="4" y="18" width="8" height="8" fill="#13161c"/>
+            <rect x="7" y="18" width="2" height="8" fill="#0c0e12"/>
+            <!-- shoes -->
+            <rect x="4" y="26" width="3" height="2" fill="#0a0a0a"/>
+            <rect x="9" y="26" width="3" height="2" fill="#0a0a0a"/>
+          </svg>
+        </div>
+
+        <!-- dark green privacy partition -->
+        <div class="partition" aria-hidden="true"></div>
+
+        <!-- the white desk -->
+        <div class="desk" aria-hidden="true">
+          <div class="desk-top"></div>
+          <div class="desk-leg desk-leg-l"></div>
+          <div class="desk-leg desk-leg-r"></div>
+          <div class="desk-drawers"></div>
+        </div>
+
+        <!-- desk lamp -->
+        <div class="desk-lamp" aria-hidden="true"></div>
+
+        <!-- refinement input device (the trackball/handset) -->
+        <div class="refine-device" aria-hidden="true"></div>
+
+        <!-- office chairs -->
+        <div class="chair chair-l" aria-hidden="true"><div class="chair-back"></div><div class="chair-seat"></div><div class="chair-base"></div></div>
+        <div class="chair chair-r" aria-hidden="true"><div class="chair-back"></div><div class="chair-seat"></div><div class="chair-base"></div></div>
+
+        <!-- THE CRT MONITOR — clickable, zooms to terminal -->
+        <button type="button" id="crt-monitor" class="crt-monitor" aria-label="Open Refinement Terminal">
+          <span class="crt-bezel">
+            <span class="crt-screen">
+              <span class="crt-drift" id="cam-drift" aria-hidden="true"></span>
+              <span class="crt-logo" aria-hidden="true">LUMON</span>
+            </span>
+          </span>
+          <span class="crt-stand"></span>
+          <span class="crt-prompt">▶ CLICK TO REFINE</span>
+        </button>
+
+      </div>
+
+      <!-- camera HUD overlay -->
+      <div class="cam-hud" aria-hidden="true">
+        <span class="cam-rec"><span class="cam-rec-dot"></span>REC</span>
+        <span class="cam-feed-id">INNIE-CAM · FLOOR 7 · MDR</span>
+        <span class="cam-clock" id="cam-clock">--:--:--</span>
+      </div>
+      <div class="cam-ambient" id="cam-ambient" aria-hidden="true">STATUS: NOMINAL</div>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <!-- VIEW 2 — REFINEMENT TERMINAL OVERLAY (retro CLI)                 -->
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div id="terminal-overlay" class="terminal-overlay" role="dialog" aria-modal="true" aria-label="Refinement Terminal" aria-hidden="true">
+    <div class="terminal-frame">
+
+      <div class="terminal-titlebar">
+        <span class="tt-title">LUMON · MACRODATA REFINEMENT TERMINAL</span>
+        <button type="button" id="btn-return-desk" class="btn-return">⎋ ESC · RETURN TO DESK</button>
+      </div>
+
+      <div class="terminal-body" id="terminal-body">
+
+        <pre class="cli-banner" aria-hidden="true">  ╔══════════════════════════════════════════════╗
+  ║  LUMON INDUSTRIES  ·  WELLNESS COMPLIANCE OS   ║
+  ╚══════════════════════════════════════════════╝</pre>
+
+        <div class="cli-statline">
+          <span id="subject-designation">SUBJECT #4229</span>
+          <span id="refinement-tier">TIER: UNINITIALIZED</span>
+          <span id="prestige-multiplier">x1.0</span>
+          <span id="quota-cumulative">XP 0000</span>
+          <span class="accent" id="allocation-credits">CR 0000</span>
+          <span id="live-clock">--:--:--</span>
+          <span id="clock-date" class="muted">---</span>
+        </div>
+
+        <!-- refinement data node -->
+        <section class="cli-block">
+          <p class="cli-h">// REFINEMENT NODE</p>
+          <div id="mdr-data-node" data-avatar-stage="raw" data-state="baseline" data-dominant="frolic">
+            <div id="mdr-grid-bg" class="mdr-grid-bg" aria-hidden="true"></div>
+            <div class="mdr-quadrants" aria-hidden="true">
+              <div class="quad quad-wo" id="quad-wo"><span class="quad-label">WO</span><span class="quad-val">00</span></div>
+              <div class="quad quad-fc" id="quad-fc"><span class="quad-label">FC</span><span class="quad-val">00</span></div>
+              <div class="quad quad-dr" id="quad-dr"><span class="quad-label">DR</span><span class="quad-val">00</span></div>
+              <div class="quad quad-ma" id="quad-ma"><span class="quad-label">MA</span><span class="quad-val">00</span></div>
+            </div>
+            <div class="mdr-crosshair" aria-hidden="true"></div>
           </div>
-          <span class="rec-dot" aria-hidden="true" title="Live feed"></span>
-        </div>
-        <div id="clock-block" class="clock-block" aria-live="polite" aria-label="Current time">
-          <span id="live-clock" class="live-clock">--:--:--</span>
-          <span id="clock-date" class="clock-date">---</span>
-        </div>
-      </div>
+          <p class="cli-sub"><span id="avatar-temper-label">STAGE: RAW DATASET</span> · <span id="tempers-readout">DOMINANT TEMPER: FROLIC</span> · <span id="mdr-status-label">NODE: BASELINE</span></p>
+        </section>
 
-      <div class="header-stats-row">
-        <span id="subject-designation" class="header-stat">SUBJECT #4229</span>
-        <span id="refinement-tier" class="header-stat">TIER: UNINITIALIZED</span>
-        <span id="quota-cumulative" class="header-stat">LIFETIME XP: 0000</span>
-        <span id="allocation-credits" class="header-stat accent">CREDITS: 0000</span>
-        <span id="prestige-multiplier" class="header-stat">×1.0 MULT</span>
-      </div>
+        <!-- vital metrics (ASCII bars) -->
+        <section class="cli-block">
+          <p class="cli-h">// VITAL METRICS</p>
+          <div class="cli-metric"><span class="cli-key">FLUID_EFFICIENCY</span><span class="cli-bar" id="fluid-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="fluid-value">0%</span></div>
+          <div class="cli-metric"><span class="cli-key">QUOTA_PROGRESSION</span><span class="cli-bar" id="quota-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="quota-value">0%</span></div>
+          <div class="cli-metric"><span class="cli-key">COMPLIANCE_STANDING</span><span class="cli-bar" id="compliance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="compliance-value">0%</span></div>
+          <div class="cli-metric"><span class="cli-key">SUSTENANCE_COMPONENT</span><span class="cli-bar" id="sustenance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="sustenance-value">0%</span></div>
+          <p id="compliance-freeze-notice" class="cli-note hidden">◈ EGG BAR ACTIVE — DECAY SUSPENDED</p>
+        </section>
 
-      <div class="header-actions">
-        <button type="button" id="btn-orientation" class="btn-secondary btn-help">? ORIENTATION</button>
-        <button type="button" id="btn-incentives" class="btn-secondary">INCENTIVES</button>
-        <button type="button" id="btn-procurement" class="btn-secondary">PROCUREMENT</button>
-        <button type="button" id="btn-archival" class="btn-secondary">ARCHIVAL</button>
-      </div>
-    </header>
+        <!-- active file + milestones -->
+        <section class="cli-block">
+          <p class="cli-h">// ACTIVE FILE</p>
+          <div class="cli-metric"><span class="cli-key" id="file-designation">FILE-0001</span><span class="cli-bar" id="file-bar">[░░░░░░░░░░░░░░]</span><span class="cli-pct" id="file-value">0%</span></div>
+          <p class="cli-sub" id="milestone-line">MILESTONES: [ ]10% [ ]25% [ ]75% [ ]100%</p>
+          <div id="inventory-badges" class="inventory-badges"></div>
+        </section>
 
-    <!-- ═══ PROTOCOL STATUS BAR ══════════════════════════════════════ -->
-    <div id="protocol-status-bar" class="protocol-status-bar panel" aria-label="Daily protocol status">
-      <div class="protocol-slot" id="proto-injection" data-status="pending">
-        <span class="proto-icon">✚</span>
-        <span class="proto-label">INJECTION</span>
-        <span class="proto-window">AM + PM</span>
-        <span class="proto-state" id="proto-injection-state">0 / 2</span>
-      </div>
-      <div class="protocol-slot" id="proto-fluid" data-status="pending">
-        <span class="proto-icon">◈</span>
-        <span class="proto-label">FLUID</span>
-        <span class="proto-window">2000 ML</span>
-        <span class="proto-state" id="proto-fluid-state">0 ML</span>
-      </div>
-      <div class="protocol-slot" id="proto-activity" data-status="pending">
-        <span class="proto-icon">▲</span>
-        <span class="proto-label">ACTIVITY</span>
-        <span class="proto-window">8000 U</span>
-        <span class="proto-state" id="proto-activity-state">0</span>
-      </div>
-      <div class="protocol-slot" id="proto-sustenance" data-status="pending">
-        <span class="proto-icon">◧</span>
-        <span class="proto-label">SUSTENANCE</span>
-        <span class="proto-window">3 COMP</span>
-        <span class="proto-state" id="proto-sustenance-state">0 / 3</span>
-      </div>
-      <div class="protocol-slot" id="proto-fullday" data-status="pending">
-        <span class="proto-icon">★</span>
-        <span class="proto-label">FULL COMPLIANCE</span>
-        <span class="proto-window">ALL</span>
-        <span class="proto-state" id="proto-fullday-state">0 / 4</span>
+        <!-- compliance advisory -->
+        <p id="compliance-advisory" class="cli-advisory hidden" role="alert"></p>
+
+        <!-- interaction deck (CLI commands) -->
+        <section class="cli-block">
+          <p class="cli-h">// INTERACTION DECK — SELECT COMMAND</p>
+
+          <div class="cli-cmd">
+            <span class="cli-cmd-label">&gt; HYDRATE_UNIT</span>
+            <span class="cli-cmd-stat">FLUID · <span id="fluid-intake-today">0</span>/2000ml</span>
+            <span class="cli-cmd-actions">
+              <button type="button" id="btn-rehydrate-250" class="btn-cli">+250</button>
+              <button type="button" id="btn-rehydrate-500" class="btn-cli">+500</button>
+              <input type="number" id="fluid-intake-input" min="0" step="50" placeholder="ml" aria-label="Fluid ml">
+              <button type="button" id="btn-rehydrate-unit" class="btn-cli btn-cli-go">LOG</button>
+            </span>
+          </div>
+
+          <div class="cli-cmd">
+            <span class="cli-cmd-label">&gt; LOG_ACTIVITY</span>
+            <span class="cli-cmd-stat">STEPS · <span id="activity-units-today">0</span>/8000u</span>
+            <span class="cli-cmd-actions">
+              <button type="button" class="btn-cli activity-preset" data-units="1000">1K</button>
+              <button type="button" class="btn-cli activity-preset" data-units="2500">2.5K</button>
+              <button type="button" class="btn-cli activity-preset" data-units="5000">5K</button>
+              <input type="number" id="activity-units-input" min="0" step="100" placeholder="u" aria-label="Activity units">
+              <button type="button" id="btn-log-activity" class="btn-cli btn-cli-go">LOG</button>
+            </span>
+          </div>
+
+          <div class="cli-cmd">
+            <span class="cli-cmd-label">&gt; AM_INJECTION</span>
+            <span class="cli-cmd-stat">MEDS · <span id="morning-dose-time">NOT RECORDED</span> <em id="morning-window-indicator"></em></span>
+            <span class="cli-cmd-actions"><button type="button" id="btn-administer-morning" class="btn-cli btn-cli-go">ADMINISTER</button></span>
+          </div>
+
+          <div class="cli-cmd">
+            <span class="cli-cmd-label">&gt; PM_INJECTION</span>
+            <span class="cli-cmd-stat">MEDS · <span id="compliance-dose-time">NOT RECORDED</span> <em id="afternoon-window-indicator"></em></span>
+            <span class="cli-cmd-actions"><button type="button" id="btn-administer-dose" class="btn-cli btn-cli-go">ADMINISTER</button></span>
+          </div>
+
+          <div class="cli-cmd">
+            <span class="cli-cmd-label">&gt; SUSTENANCE</span>
+            <span class="cli-cmd-stat">FOOD · <span id="sustenance-today">0</span>/3 comp</span>
+            <span class="cli-cmd-actions">
+              <button type="button" class="btn-cli sustenance-preset" data-level="18">SMALL</button>
+              <button type="button" class="btn-cli sustenance-preset" data-level="34">STD</button>
+              <button type="button" class="btn-cli sustenance-preset" data-level="52">LARGE</button>
+            </span>
+          </div>
+
+          <div class="cli-cmd cli-cmd-util">
+            <span class="cli-cmd-label">&gt; UTILITIES</span>
+            <span class="cli-cmd-actions">
+              <button type="button" id="btn-incentives" class="btn-cli">INCENTIVES</button>
+              <button type="button" id="btn-procurement" class="btn-cli">PROCUREMENT</button>
+              <button type="button" id="btn-archival" class="btn-cli">ARCHIVAL</button>
+              <button type="button" id="btn-orientation" class="btn-cli">? ORIENT</button>
+            </span>
+          </div>
+        </section>
+
+        <!-- finger trap (milestone widget) -->
+        <section id="finger-trap-widget" class="cli-block hidden">
+          <p class="cli-h">// CHINESE FINGER TRAP</p>
+          <button type="button" id="btn-finger-trap" class="btn-cli btn-cli-go">TAP TO STRUGGLE</button>
+          <span id="finger-trap-count" class="cli-sub">0 STRUGGLES</span>
+        </section>
+
+        <!-- laser crystal (cosmetic) -->
+        <section id="laser-crystal-footer" class="cli-block hidden" aria-hidden="true">
+          <p class="cli-h">// REFINER OF THE QUARTER</p>
+          <pre class="crystal-ascii">   /\\
+  /  \\
+ /____\\
+ \\    /
+  \\  /
+   \\/</pre>
+        </section>
+
+        <!-- output log -->
+        <section class="cli-block">
+          <p class="cli-h">// OUTPUT LOG</p>
+          <ol id="activity-log-list" class="activity-log-list" reversed>
+            <li class="log-entry log-entry--init">STREAM INITIALIZED</li>
+          </ol>
+          <span class="cli-cursor" aria-hidden="true">_</span>
+        </section>
+
       </div>
     </div>
+  </div>
 
-    <p id="session-notice" class="session-notice">REFINEMENT CONSOLE — STREAM INITIALIZED</p>
+  <!-- ═══ DRAWERS / MODALS (shared across views) ══════════════════════ -->
 
-    <!-- ═══ COMPUTE GRID ═════════════════════════════════════════════ -->
-    <div class="compute-grid">
+  <aside id="incentives-drawer" class="drawer hidden" aria-label="Employee incentives">
+    <div class="drawer-header"><h2>EMPLOYEE INCENTIVES</h2><button type="button" id="btn-close-incentives" class="btn-close" aria-label="Close">×</button></div>
+    <p class="drawer-note">Spend Credits on items approved by the Lumon Wellness Division.</p>
+    <div id="incentives-catalog" class="catalog"></div>
+  </aside>
 
-      <!-- LEFT RAIL — file progression -->
-      <aside id="file-progress-panel" class="panel" aria-label="File progression">
-        <h2 class="panel-label">ACTIVE FILE</h2>
-        <p id="file-designation" class="file-id">FILE-0001</p>
-        <div id="file-progress-bar" class="file-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-          <div id="file-progress-fill" class="file-bar-fill"></div>
-        </div>
-        <p id="file-progress-value" class="file-pct">0% REFINED</p>
+  <aside id="procurement-drawer" class="drawer hidden" aria-label="Lumon Procurement">
+    <div class="drawer-header"><h2>LUMON PROCUREMENT</h2><button type="button" id="btn-close-procurement" class="btn-close" aria-label="Close">×</button></div>
+    <p class="drawer-note">Unlock department palettes and refinement node geometries with Credits.</p>
+    <section class="procurement-section"><h3>DEPARTMENT PALETTES</h3><div id="palette-catalog" class="catalog"></div></section>
+    <section class="procurement-section"><h3>NODE GEOMETRIES</h3><div id="geometry-catalog" class="catalog"></div></section>
+  </aside>
 
-        <ol id="milestone-track" class="milestone-track" aria-label="Milestone rewards">
-          <li class="milestone" data-milestone="10"><span class="milestone-pip"></span><span class="milestone-pct">10%</span><span class="milestone-name">ERASER</span></li>
-          <li class="milestone" data-milestone="25"><span class="milestone-pip"></span><span class="milestone-pct">25%</span><span class="milestone-name">FINGER TRAP</span></li>
-          <li class="milestone" data-milestone="75"><span class="milestone-pip"></span><span class="milestone-pct">75%</span><span class="milestone-name">MDE</span></li>
-          <li class="milestone" data-milestone="100"><span class="milestone-pip"></span><span class="milestone-pct">100%</span><span class="milestone-name">PORTRAIT</span></li>
-        </ol>
+  <aside id="archival-sync-panel" class="drawer hidden" aria-label="Archival transmission">
+    <div class="drawer-header"><h2>ARCHIVAL TRANSMISSION</h2><button type="button" id="btn-close-archival" class="btn-close" aria-label="Close">×</button></div>
+    <p class="drawer-note">Optional encrypted cross-device sync. Terminal operates fully offline without this.</p>
+    <label class="toggle-row"><input type="checkbox" id="archival-enabled"><span>ENABLE ARCHIVAL PROTOCOL</span></label>
+    <label class="field-label" for="archival-endpoint">ARCHIVAL ENDPOINT</label>
+    <input type="url" id="archival-endpoint" placeholder="https://example.com/api" class="field-input">
+    <label class="field-label" for="archival-hash">ARCHIVAL HASH</label>
+    <div class="hash-row"><code id="archival-hash">—</code><button type="button" id="btn-copy-hash" class="btn-secondary">COPY</button><button type="button" id="btn-regenerate-hash" class="btn-secondary">REGEN</button></div>
+    <label class="field-label" for="archival-passphrase">PASSPHRASE (OPTIONAL)</label>
+    <input type="password" id="archival-passphrase" class="field-input" autocomplete="off">
+    <button type="button" id="btn-transmit-record" class="btn-primary btn-full">TRANSMIT RECORD</button>
+    <p id="archival-status" class="archival-status"></p>
+  </aside>
 
-        <div class="earn-guide" aria-label="How to earn XP">
-          <p class="earn-title">EARN XP + CREDITS</p>
-          <ul class="earn-list">
-            <li>AM injection <em>+25/+5</em></li>
-            <li>2000 ml fluid <em>+25/+5</em></li>
-            <li>8000 activity <em>+25/+5</em></li>
-            <li>PM injection <em>+25/+5</em></li>
-            <li>3 sustenance <em>+25/+5</em></li>
-            <li>All complete <em>+25/+5</em></li>
-          </ul>
-        </div>
-
-        <div id="inventory-badges" class="inventory-badges" aria-label="Unlocked items"></div>
-      </aside>
-
-      <!-- CENTRE — MDR data refinement node -->
-      <main id="mdr-viewport" class="panel">
-        <p class="viewport-label">MACRODATA REFINEMENT — LIVE NODE</p>
-
-        <div id="mdr-data-node" data-avatar-stage="raw" data-state="baseline" data-dominant="frolic" data-tier="0">
-          <!-- ambient drifting number field (built by JS) -->
-          <div id="mdr-grid-bg" class="mdr-grid-bg" aria-hidden="true"></div>
-
-          <!-- Four Tempers sorting bins -->
-          <div class="mdr-quadrants" aria-hidden="true">
-            <div class="quad quad-wo" id="quad-wo"><span class="quad-label">WO</span><span class="quad-val">00</span></div>
-            <div class="quad quad-fc" id="quad-fc"><span class="quad-label">FC</span><span class="quad-val">00</span></div>
-            <div class="quad quad-dr" id="quad-dr"><span class="quad-label">DR</span><span class="quad-val">00</span></div>
-            <div class="quad quad-ma" id="quad-ma"><span class="quad-label">MA</span><span class="quad-val">00</span></div>
-          </div>
-
-          <div id="mdr-pulse-ring" aria-hidden="true"></div>
-          <div class="mdr-crosshair" aria-hidden="true"></div>
-        </div>
-
-        <p id="avatar-temper-label">STAGE: RAW DATASET</p>
-        <p id="tempers-readout" class="tempers-readout">DOMINANT TEMPER: FROLIC</p>
-        <p id="mdr-status-label">NODE STATUS: BASELINE</p>
-
-        <div id="finger-trap-widget" class="finger-trap hidden" aria-label="Lumon finger trap">
-          <button type="button" id="btn-finger-trap" class="finger-trap-btn">FINGER TRAP — TAP TO STRUGGLE</button>
-          <p id="finger-trap-count" class="finger-trap-count">0 STRUGGLES</p>
-        </div>
-      </main>
-
-      <!-- RIGHT RAIL — vital metrics / temper inputs -->
-      <section id="metrics-compliance-panel" class="panel" aria-label="Compliance metrics">
-        <h2 class="panel-label">VITAL METRICS</h2>
-        <div class="metric-row">
-          <label for="fluid-efficiency-bar">FLUID EFFICIENCY</label>
-          <div id="fluid-efficiency-bar" class="metric-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="metric-bar-fill"></div></div>
-          <span id="fluid-efficiency-value" class="metric-value">100%</span>
-        </div>
-        <div class="metric-row">
-          <label for="quota-progression-bar">QUOTA PROGRESSION</label>
-          <div id="quota-progression-bar" class="metric-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="metric-bar-fill"></div></div>
-          <span id="quota-progression-value" class="metric-value">100%</span>
-        </div>
-        <div class="metric-row">
-          <label for="compliance-standing-bar">COMPLIANCE STANDING</label>
-          <div id="compliance-standing-bar" class="metric-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="metric-bar-fill"></div></div>
-          <span id="compliance-standing-value" class="metric-value">100%</span>
-        </div>
-        <div class="metric-row">
-          <label for="sustenance-bar">SUSTENANCE COMPONENT</label>
-          <div id="sustenance-bar" class="metric-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="metric-bar-fill"></div></div>
-          <span id="sustenance-value" class="metric-value">100%</span>
-        </div>
-        <p id="compliance-freeze-notice" class="freeze-notice hidden">◈ EGG BAR ACTIVE — DECAY SUSPENDED</p>
-
-        <div class="metrics-legend">
-          <p class="legend-title">SORTING ENGINE</p>
-          <p class="legend-item">Fluid decays 15% / 4 hrs. Sustenance decays 15% / 6 hrs.</p>
-          <p class="legend-item">Low sustenance spikes WOE + DREAD in the node.</p>
-        </div>
-      </section>
+  <div id="conflict-modal" class="modal hidden" role="dialog" aria-labelledby="conflict-title">
+    <div class="modal-content"><h2 id="conflict-title">ARCHIVAL CONFLICT DETECTED</h2><p>Local and archival records diverge. Select resolution protocol.</p>
+      <div class="modal-actions"><button type="button" id="btn-retain-local" class="btn-primary">RETAIN LOCAL RECORD</button><button type="button" id="btn-accept-archival" class="btn-primary">ACCEPT ARCHIVAL RECORD</button></div>
     </div>
+  </div>
 
-    <!-- ═══ ADVISORY ═════════════════════════════════════════════════ -->
-    <div id="compliance-advisory" class="compliance-advisory hidden" role="alert"></div>
-
-    <!-- ═══ INTERACTION DECK ═════════════════════════════════════════ -->
-    <section id="interaction-deck" class="panel" aria-label="Refinement logging">
-
-      <!-- Compliance Injection Routine (consolidated meds) -->
-      <div id="injection-section" class="deck-section">
-        <div class="section-header">
-          <h2 class="section-label">✚ COMPLIANCE INJECTION ROUTINE</h2>
-          <span class="section-window" id="injection-window-indicator">AM 07:00–10:00 · PM 11:00–14:00</span>
+  <div id="orientation-modal" class="orientation-modal hidden" role="dialog" aria-modal="true" aria-labelledby="orientation-title">
+    <div class="orientation-inner">
+      <div class="orientation-header"><h2 id="orientation-title">◆ EMPLOYEE ORIENTATION</h2><button type="button" id="btn-close-orientation" class="btn-close" aria-label="Close">×</button></div>
+      <div class="orientation-pages">
+        <div class="orientation-page active" data-page="1">
+          <p class="orient-heading">WELCOME, INNIE.</p>
+          <p class="orient-body">You are <strong>SUBJECT #4229</strong>. This window is a live <strong>Innie-Cam</strong> feed of your workspace on Floor 7. Leave it open during your day.</p>
+          <p class="orient-body">Click the <strong>CRT monitor</strong> on the desk to zoom into your Refinement Terminal. Press <strong>ESC</strong> to return to the passive camera view.</p>
         </div>
-        <p class="section-guide">Administer both daily injections. Each window grants XP + credits. A missed PM injection after 14:00 reduces Compliance Standing by 20.</p>
-        <div class="injection-grid">
-          <div class="injection-cell">
-            <button type="button" id="btn-administer-morning" class="btn-primary btn-full btn-dose-morning">☀ AM INJECTION</button>
-            <p class="deck-stat">AM: <span id="morning-dose-time">NOT RECORDED</span></p>
-            <p class="deck-sub" id="morning-window-indicator">WINDOW: 07:00–10:00</p>
-          </div>
-          <div class="injection-cell">
-            <button type="button" id="btn-administer-dose" class="btn-primary btn-full btn-dose-afternoon">◑ PM INJECTION</button>
-            <p class="deck-stat">PM: <span id="compliance-dose-time">NOT RECORDED</span></p>
-            <p class="deck-sub" id="afternoon-window-indicator">WINDOW: 11:00–14:00</p>
-          </div>
+        <div class="orientation-page" data-page="2">
+          <p class="orient-heading">DAILY PROTOCOLS</p>
+          <table class="orient-table"><thead><tr><th>ENDPOINT</th><th>COMMAND</th><th>REWARD</th></tr></thead>
+          <tbody>
+            <tr><td>FLUID</td><td>HYDRATE_UNIT (2000ml)</td><td>+25 / +5</td></tr>
+            <tr><td>QUOTA</td><td>LOG_ACTIVITY (8000u)</td><td>+25 / +5</td></tr>
+            <tr><td>COMPLIANCE</td><td>AM + PM INJECTION</td><td>+25 / +5</td></tr>
+            <tr><td>SUSTENANCE</td><td>SUSTENANCE (3 comp)</td><td>+25 / +5</td></tr>
+            <tr><td>ALL</td><td>full compliance bonus</td><td>+25 / +5</td></tr>
+          </tbody></table>
+          <p class="orient-note">PM injection missed after 14:00 reduces Compliance Standing by 20.</p>
         </div>
-        <p class="earn-inline">REWARD: +25 XP +5 CREDITS per injection logged in window</p>
-      </div>
-
-      <!-- Fluid -->
-      <div id="fluid-intake-section" class="deck-section">
-        <div class="section-header">
-          <h2 class="section-label">◈ FLUID INTAKE PROTOCOL</h2>
-          <span class="section-window">TARGET: 2000 ML</span>
-        </div>
-        <p class="section-guide">Log water intake. Fluid Efficiency decays every 4 hours — keep it above 30%.</p>
-        <div class="input-row">
-          <button type="button" id="btn-rehydrate-250" class="btn-preset">+250 ML</button>
-          <button type="button" id="btn-rehydrate-500" class="btn-preset">+500 ML</button>
-          <input type="number" id="fluid-intake-input" min="0" step="50" placeholder="ML" aria-label="Fluid intake milliliters">
-          <button type="button" id="btn-rehydrate-unit" class="btn-primary">REHYDRATE UNIT</button>
-        </div>
-        <p class="deck-stat">TODAY: <span id="fluid-intake-today">0</span> / 2000 ML</p>
-        <p class="earn-inline">REWARD: +25 XP +5 CREDITS at 2000 ML</p>
-      </div>
-
-      <!-- Activity -->
-      <div id="activity-section" class="deck-section">
-        <div class="section-header">
-          <h2 class="section-label">▲ PHYSICAL ACTIVITY PROTOCOL</h2>
-          <span class="section-window">TARGET: 8000 UNITS</span>
-        </div>
-        <p class="section-guide">Log steps or movement. 1000 units ≈ 1000 steps or 10 minutes of activity.</p>
-        <div class="input-row">
-          <div class="activity-presets">
-            <button type="button" class="btn-preset activity-preset" data-units="1000">1K</button>
-            <button type="button" class="btn-preset activity-preset" data-units="2500">2.5K</button>
-            <button type="button" class="btn-preset activity-preset" data-units="5000">5K</button>
-            <button type="button" class="btn-preset activity-preset" data-units="8000">8K</button>
-          </div>
-          <input type="number" id="activity-units-input" min="0" step="100" placeholder="UNITS" aria-label="Activity units">
-          <button type="button" id="btn-log-activity" class="btn-primary">LOG ACTIVITY</button>
-        </div>
-        <p class="deck-stat">TODAY: <span id="activity-units-today">0</span> / 8000 UNITS</p>
-        <p class="earn-inline">REWARD: +25 XP +5 CREDITS at 8000 UNITS</p>
-      </div>
-
-      <!-- Sustenance Component (NEW temperament input) -->
-      <div id="sustenance-section" class="deck-section">
-        <div class="section-header">
-          <h2 class="section-label">◧ SUSTENANCE COMPONENT</h2>
-          <span class="section-window">TARGET: 3 COMPONENTS</span>
-        </div>
-        <p class="section-guide">Log nutritional intake. Sustenance feeds the temper engine — when it runs low the node spikes WOE and DREAD.</p>
-        <div class="input-row">
-          <div class="activity-presets">
-            <button type="button" class="btn-preset sustenance-preset" data-level="18">SMALL ◦</button>
-            <button type="button" class="btn-preset sustenance-preset" data-level="34">STANDARD ◧</button>
-            <button type="button" class="btn-preset sustenance-preset" data-level="52">LARGE ⬛</button>
-          </div>
-          <button type="button" id="btn-log-sustenance" class="btn-primary">LOG COMPONENT</button>
-        </div>
-        <p class="deck-stat">TODAY: <span id="sustenance-today">0</span> / 3 COMPONENTS</p>
-        <p class="earn-inline">REWARD: +25 XP +5 CREDITS at 3 COMPONENTS</p>
-      </div>
-
-    </section>
-
-    <!-- ═══ ACTIVITY / STATE LOG ═════════════════════════════════════ -->
-    <section id="activity-log-panel" class="panel" aria-label="State log">
-      <h2 class="panel-label">STATE LOG</h2>
-      <ol id="activity-log-list" class="activity-log-list" reversed>
-        <li class="log-entry log-entry--init">STREAM INITIALIZED</li>
-      </ol>
-    </section>
-
-    <!-- ═══ LASER CRYSTAL FOOTER ═════════════════════════════════════ -->
-    <footer id="laser-crystal-footer" class="laser-crystal hidden" aria-hidden="true">
-      <div class="crystal-stage">
-        <svg class="crystal-cube" viewBox="0 0 60 60">
-          <polygon points="30,8 52,20 52,40 30,52 8,40 8,20" fill="none" stroke="currentColor" stroke-width="1.5"/>
-          <polygon points="30,8 52,20 30,32 8,20" fill="none" stroke="currentColor" stroke-width="1"/>
-          <polygon points="52,20 52,40 30,52 30,32" fill="none" stroke="currentColor" stroke-width="1"/>
-        </svg>
-        <p class="crystal-label">REFINER OF THE QUARTER</p>
-      </div>
-    </footer>
-
-    <!-- ═══ ORIENTATION MODAL ════════════════════════════════════════ -->
-    <div id="orientation-modal" class="orientation-modal hidden" role="dialog" aria-modal="true" aria-labelledby="orientation-title">
-      <div class="orientation-inner panel">
-        <div class="orientation-header">
-          <h2 id="orientation-title" class="orientation-title">◆ EMPLOYEE ORIENTATION</h2>
-          <button type="button" id="btn-close-orientation" class="btn-close" aria-label="Close orientation">×</button>
-        </div>
-        <div class="orientation-pages">
-          <div class="orientation-page active" data-page="1">
-            <p class="orient-heading">WELCOME, INNIE.</p>
-            <p class="orient-body">You are <strong>SUBJECT #4229</strong>. This terminal is a live feed of your Innie workspace. Leave it open in the background during your day — the Macrodata Refinement node refines continuously.</p>
-            <p class="orient-body">Complete <strong>daily protocols</strong> to earn <strong>Refinement XP</strong> and <strong>Credits</strong>, redeemable for Employee Incentives.</p>
-          </div>
-          <div class="orientation-page" data-page="2">
-            <p class="orient-heading">DAILY PROTOCOLS</p>
-            <table class="orient-table">
-              <thead><tr><th>PROTOCOL</th><th>TARGET</th><th>REWARD</th></tr></thead>
-              <tbody>
-                <tr><td>✚ AM Injection</td><td>By 10:00</td><td>+25 / +5</td></tr>
-                <tr><td>◈ Fluid</td><td>2000 ml</td><td>+25 / +5</td></tr>
-                <tr><td>▲ Activity</td><td>8000 units</td><td>+25 / +5</td></tr>
-                <tr><td>✚ PM Injection</td><td>By 14:00</td><td>+25 / +5</td></tr>
-                <tr><td>◧ Sustenance</td><td>3 components</td><td>+25 / +5</td></tr>
-                <tr><td>★ All complete</td><td>Bonus</td><td>+25 / +5</td></tr>
-              </tbody>
-            </table>
-            <p class="orient-note">Missing the PM injection after 14:00 reduces Compliance Standing by 20.</p>
-          </div>
-          <div class="orientation-page" data-page="3">
-            <p class="orient-heading">THE FOUR TEMPERS</p>
-            <p class="orient-body">The node sorts your state into four bins: <strong>WO</strong> (Woe), <strong>FC</strong> (Frolic), <strong>DR</strong> (Dread), <strong>MA</strong> (Malice). Healthy metrics raise Frolic. Low sustenance, missed injections, and depleted fluid raise Woe, Dread, and Malice.</p>
-            <p class="orient-body">Each time you log an action the node performs a <strong>refinement burst</strong>, sorting numbers into their quadrant before settling.</p>
-          </div>
-          <div class="orientation-page" data-page="4">
-            <p class="orient-heading">SPENDING + PRESTIGE</p>
-            <p class="orient-body"><strong>INCENTIVES</strong> spends credits on perks. <strong>PROCUREMENT</strong> unlocks palettes + node geometries.</p>
-            <p class="orient-body">Daily completions fill the <strong>Active File</strong>. At 100% a <strong>Waffle Party</strong> increments your Subject number and grants a permanent ×1.5 XP multiplier.</p>
-            <p class="orient-note">Reopen this anytime via <strong>? ORIENTATION</strong>.</p>
-          </div>
-        </div>
-        <div class="orientation-nav">
-          <button type="button" id="btn-orient-prev" class="btn-secondary" disabled>← PREV</button>
-          <span id="orient-page-indicator" class="orient-page-num">1 / 4</span>
-          <button type="button" id="btn-orient-next" class="btn-secondary">NEXT →</button>
+        <div class="orientation-page" data-page="3">
+          <p class="orient-heading">THE FOUR TEMPERS</p>
+          <p class="orient-body">The node sorts your state into <strong>WO</strong> (Woe), <strong>FC</strong> (Frolic), <strong>DR</strong> (Dread), <strong>MA</strong> (Malice). Healthy metrics raise Frolic; low sustenance and missed injections raise Woe and Dread.</p>
+          <p class="orient-body">Daily completions fill the <strong>Active File</strong>. At 100% a <strong>Waffle Party</strong> grants a permanent ×1.5 XP multiplier.</p>
         </div>
       </div>
+      <div class="orientation-nav"><button type="button" id="btn-orient-prev" class="btn-secondary" disabled>← PREV</button><span id="orient-page-indicator" class="orient-page-num">1 / 3</span><button type="button" id="btn-orient-next" class="btn-secondary">NEXT →</button></div>
     </div>
+  </div>
 
-    <!-- ═══ INCENTIVES DRAWER ════════════════════════════════════════ -->
-    <aside id="incentives-drawer" class="drawer hidden" aria-label="Employee incentives">
-      <div class="drawer-header">
-        <h2>EMPLOYEE INCENTIVES</h2>
-        <button type="button" id="btn-close-incentives" class="btn-close" aria-label="Close incentives">×</button>
-      </div>
-      <p class="drawer-note">Spend Credits on items approved by the Lumon Wellness Division. Credits are earned by completing daily protocols.</p>
-      <div id="incentives-catalog" class="catalog"></div>
-    </aside>
+  <!-- fullscreen events -->
+  <div id="mde-overlay" class="fullscreen-event hidden" role="dialog" aria-label="Music Dance Experience">
+    <div class="mde-content"><p class="mde-title">MUSIC DANCE EXPERIENCE</p><p class="mde-sub">WELLNESS INCENTIVE — 60 SECONDS</p><div id="mde-node" class="mde-node"></div><p class="mde-timer" id="mde-countdown">60</p></div>
+  </div>
 
-    <!-- ═══ PROCUREMENT DRAWER ═══════════════════════════════════════ -->
-    <aside id="procurement-drawer" class="drawer hidden" aria-label="Lumon Procurement">
-      <div class="drawer-header">
-        <h2>LUMON PROCUREMENT</h2>
-        <button type="button" id="btn-close-procurement" class="btn-close" aria-label="Close procurement">×</button>
-      </div>
-      <p class="drawer-note">Unlock department palettes and MDR node geometries using Credits.</p>
-      <section class="procurement-section">
-        <h3>DEPARTMENT PALETTES</h3>
-        <div id="palette-catalog" class="catalog"></div>
-      </section>
-      <section class="procurement-section">
-        <h3>NODE GEOMETRIES</h3>
-        <div id="geometry-catalog" class="catalog"></div>
-      </section>
-    </aside>
+  <div id="waffle-overlay" class="fullscreen-event hidden" role="dialog" aria-label="Waffle Party">
+    <div class="waffle-scene"><div class="waffle-plate" aria-hidden="true"><div class="waffle-grid"></div><div class="milk-goblet"></div></div><p class="waffle-title">WAFFLE PARTY</p><p class="waffle-sub">FILE COMPLETE — PRESTIGE CYCLE INITIATED</p><p id="waffle-subject-next" class="waffle-next"></p></div>
+  </div>
 
-    <!-- ═══ ARCHIVAL DRAWER ══════════════════════════════════════════ -->
-    <aside id="archival-sync-panel" class="drawer hidden" aria-label="Archival transmission">
-      <div class="drawer-header">
-        <h2>ARCHIVAL TRANSMISSION</h2>
-        <button type="button" id="btn-close-archival" class="btn-close" aria-label="Close archival panel">×</button>
-      </div>
-      <p class="drawer-note">Optional encrypted cross-device sync. Terminal operates fully offline without this.</p>
-      <label class="toggle-row">
-        <input type="checkbox" id="archival-enabled">
-        <span>ENABLE ARCHIVAL PROTOCOL</span>
-      </label>
-      <label class="field-label" for="archival-endpoint">ARCHIVAL ENDPOINT</label>
-      <input type="url" id="archival-endpoint" placeholder="https://example.com/api" class="field-input">
-      <label class="field-label" for="archival-hash">ARCHIVAL HASH</label>
-      <div class="hash-row">
-        <code id="archival-hash">—</code>
-        <button type="button" id="btn-copy-hash" class="btn-secondary">COPY</button>
-        <button type="button" id="btn-regenerate-hash" class="btn-secondary">REGEN</button>
-      </div>
-      <label class="field-label" for="archival-passphrase">PASSPHRASE (OPTIONAL)</label>
-      <input type="password" id="archival-passphrase" class="field-input" autocomplete="off">
-      <button type="button" id="btn-transmit-record" class="btn-primary btn-full">TRANSMIT RECORD</button>
-      <p id="archival-status" class="archival-status"></p>
-    </aside>
-
-    <!-- ═══ CONFLICT MODAL ═══════════════════════════════════════════ -->
-    <div id="conflict-modal" class="modal hidden" role="dialog" aria-labelledby="conflict-title">
-      <div class="modal-content panel">
-        <h2 id="conflict-title">ARCHIVAL CONFLICT DETECTED</h2>
-        <p>Local and archival records diverge. Select resolution protocol.</p>
-        <div class="modal-actions">
-          <button type="button" id="btn-retain-local" class="btn-primary">RETAIN LOCAL RECORD</button>
-          <button type="button" id="btn-accept-archival" class="btn-primary">ACCEPT ARCHIVAL RECORD</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ MDE FULLSCREEN ═══════════════════════════════════════════ -->
-    <div id="mde-overlay" class="fullscreen-event hidden" role="dialog" aria-label="Music Dance Experience">
-      <div class="mde-content">
-        <p class="mde-title">MUSIC DANCE EXPERIENCE</p>
-        <p class="mde-sub">WELLNESS INCENTIVE — 60 SECONDS</p>
-        <div id="mde-node" class="mde-node"></div>
-        <p class="mde-timer" id="mde-countdown">60</p>
-      </div>
-    </div>
-
-    <!-- ═══ WAFFLE PARTY FULLSCREEN ══════════════════════════════════ -->
-    <div id="waffle-overlay" class="fullscreen-event hidden" role="dialog" aria-label="Waffle Party">
-      <div class="waffle-scene">
-        <div class="waffle-plate" aria-hidden="true">
-          <div class="waffle-grid"></div>
-          <div class="milk-goblet"></div>
-        </div>
-        <p class="waffle-title">WAFFLE PARTY</p>
-        <p class="waffle-sub">FILE COMPLETE — PRESTIGE CYCLE INITIATED</p>
-        <p id="waffle-subject-next" class="waffle-next"></p>
-      </div>
-    </div>
-
-    <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
-
-  </div><!-- /.app -->
+  <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
 
   <script type="module" src="app.js"></script>
 </body>
