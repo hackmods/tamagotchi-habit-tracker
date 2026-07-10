@@ -1,0 +1,8 @@
+.git
+.github
+node_modules
+server/data
+deploy.tar
+.git-status.txt
+README.md
+docs

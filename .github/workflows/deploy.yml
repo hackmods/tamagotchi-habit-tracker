@@ -1,0 +1,197 @@
+name: Build and Deploy to CapRover
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Validate static assets
+        run: |
+          set -euo pipefail
+          required=(
+            index.html
+            styles.css
+            app.js
+            sync.js
+            sw.js
+            manifest.webmanifest
+            Dockerfile
+            captain-definition
+            nginx.conf
+            icons/icon-192.png
+            icons/icon-512.png
+            icons/apple-touch-icon.png
+          )
+          for f in "${required[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Missing required file: $f"
+              exit 1
+            fi
+          done
+          echo "All required static assets present."
+
+      - name: Docker build smoke
+        run: |
+          docker build -t lumon-terminal:ci .
+          docker run --rm lumon-terminal:ci nginx -t
+
+  deploy:
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Validate CapRover secrets
+        env:
+          CAPROVER_SERVER: ${{ secrets.CAPROVER_SERVER }}
+          CAPROVER_APP_NAME: ${{ secrets.CAPROVER_APP_NAME }}
+          CAPROVER_APP_TOKEN: ${{ secrets.CAPROVER_APP_TOKEN }}
+          CAPROVER_PASSWORD: ${{ secrets.CAPROVER_PASSWORD }}
+        run: |
+          if [ -z "$CAPROVER_SERVER" ] || [ -z "$CAPROVER_APP_NAME" ]; then
+            echo "::error::CAPROVER_SERVER and CAPROVER_APP_NAME secrets must be set."
+            exit 1
+          fi
+          if [ -z "$CAPROVER_APP_TOKEN" ] && [ -z "$CAPROVER_PASSWORD" ]; then
+            echo "::error::Set CAPROVER_APP_TOKEN or CAPROVER_PASSWORD for deploy auth."
+            exit 1
+          fi
+          APP="$(echo "$CAPROVER_APP_NAME" | tr -d '[:space:]')"
+          if [[ "$APP" == *"."* ]] || [[ "$APP" == *"://"* ]]; then
+            echo "::error::CAPROVER_APP_NAME must be the short app name (e.g. lumon-terminal), not a URL."
+            exit 1
+          fi
+
+      - name: Create deployment tarball
+        run: |
+          echo "${GITHUB_SHA}" > .build-id
+          tar --exclude=node_modules \
+            --exclude=.git \
+            --exclude=server/data \
+            --exclude=.github \
+            --exclude=deploy.tar \
+            --exclude=.git-status.txt \
+            -cf deploy.tar .
+          ls -lh deploy.tar
+
+      - name: Deploy to CapRover
+        env:
+          CAPROVER_SERVER: ${{ secrets.CAPROVER_SERVER }}
+          CAPROVER_APP_NAME: ${{ secrets.CAPROVER_APP_NAME }}
+          CAPROVER_APP_TOKEN: ${{ secrets.CAPROVER_APP_TOKEN }}
+          CAPROVER_PASSWORD: ${{ secrets.CAPROVER_PASSWORD }}
+          CAPROVER_OTP_TOKEN: ${{ secrets.CAPROVER_OTP_TOKEN }}
+        run: |
+          set -uo pipefail
+
+          RAW_SERVER="${CAPROVER_SERVER%/}"
+          APP="$(echo "$CAPROVER_APP_NAME" | tr -d '[:space:]')"
+
+          PROTO="https"
+          case "$RAW_SERVER" in
+            http://*) PROTO="http"; HOST="${RAW_SERVER#http://}";;
+            https://*) PROTO="https"; HOST="${RAW_SERVER#https://}";;
+            *) HOST="$RAW_SERVER";;
+          esac
+          HOST="${HOST%%/*}"
+          case "$HOST" in
+            captain.*) ;;
+            *) HOST="captain.${HOST}";;
+          esac
+          SERVER="${PROTO}://${HOST}"
+
+          echo "Deploying app '${APP}' from source tarball to ${SERVER}"
+
+          capi() {
+            local method="$1" url="$2" data="${3:-}"
+            local out; out=$(mktemp)
+            if [ -n "$data" ]; then
+              CAPI_STATUS=$(curl -ksS -o "$out" -w '%{http_code}' -X "$method" "$url" \
+                "${CAPI_HEADERS[@]}" -H "Content-Type: application/json" -d "$data" || echo "000")
+            else
+              CAPI_STATUS=$(curl -ksS -o "$out" -w '%{http_code}' -X "$method" "$url" \
+                "${CAPI_HEADERS[@]}" || echo "000")
+            fi
+            CAPI_BODY=$(cat "$out"); rm -f "$out"
+          }
+
+          fail_response() {
+            echo "::error::$1 failed (HTTP ${CAPI_STATUS})."
+            if echo "$CAPI_BODY" | grep -q "Nothing here yet"; then
+              echo "CapRover returned its default nginx page, so ${SERVER}/api/v2 is not routing to the captain service."
+              echo "Confirm CAPROVER_SERVER is the dashboard URL and any proxy forwards /api/v2 to CapRover."
+            fi
+            echo "--- response body (truncated) ---"
+            echo "$CAPI_BODY" | head -c 1000; echo ""
+            exit 1
+          }
+
+          upload_tarball() {
+            local out; out=$(mktemp)
+            echo "Uploading source tarball (CapRover will build the image)..."
+            CAPI_STATUS=$(curl -ksS -o "$out" -w '%{http_code}' \
+              -X POST "${SERVER}/api/v2/user/apps/appData/${APP}?detached=1" \
+              "${CAPI_HEADERS[@]}" \
+              -F "sourceFile=@deploy.tar" \
+              -F "gitHash=${GITHUB_SHA:-}" || echo "000")
+            CAPI_BODY=$(cat "$out"); rm -f "$out"
+            if [ "$CAPI_STATUS" != "200" ] || ! echo "$CAPI_BODY" | jq -e '.status == 100 or .status == 110' >/dev/null 2>&1; then
+              fail_response "CapRover tarball deploy"
+            fi
+            echo "Upload accepted. CapRover is building and deploying the app (this can take several minutes)."
+          }
+
+          if [ -n "$CAPROVER_PASSWORD" ]; then
+            echo "Logging in to CapRover..."
+            CAPI_HEADERS=(-H "x-namespace: captain")
+            if [ -n "$CAPROVER_OTP_TOKEN" ]; then
+              LOGIN_BODY=$(jq -n --arg p "$CAPROVER_PASSWORD" --arg o "$CAPROVER_OTP_TOKEN" '{password:$p, otpToken:$o}')
+            else
+              LOGIN_BODY=$(jq -n --arg p "$CAPROVER_PASSWORD" '{password:$p}')
+            fi
+            capi POST "${SERVER}/api/v2/login" "$LOGIN_BODY"
+            [ "$CAPI_STATUS" = "200" ] || fail_response "CapRover login"
+            JWT=$(echo "$CAPI_BODY" | jq -r '.data.token // empty')
+            if [ -z "$JWT" ]; then
+              echo "::error::Login returned no token. Check CAPROVER_PASSWORD (and CAPROVER_OTP_TOKEN if 2FA is on)."
+              echo "$CAPI_BODY" | head -c 1000
+              exit 1
+            fi
+            echo "Login succeeded."
+
+            CAPI_HEADERS=(-H "x-captain-auth: ${JWT}" -H "x-namespace: captain")
+
+            echo "Checking for existing app..."
+            capi GET "${SERVER}/api/v2/user/apps/appDefinitions"
+            [ "$CAPI_STATUS" = "200" ] || fail_response "CapRover app list"
+            APPS=$(echo "$CAPI_BODY" | jq -r '(.data.appDefinitions // []) | .[].appName')
+
+            if ! echo "$APPS" | grep -Fxq "$APP"; then
+              echo "Creating CapRover app '${APP}'..."
+              REGISTER_BODY=$(jq -n --arg a "$APP" '{appName:$a, hasPersistentData:false}')
+              capi POST "${SERVER}/api/v2/user/apps/appDefinitions/register" "$REGISTER_BODY"
+              { [ "$CAPI_STATUS" = "200" ] && echo "$CAPI_BODY" | jq -e '.status == 100 or .status == 110' >/dev/null 2>&1; } || fail_response "CapRover app register"
+              echo "App '${APP}' created."
+            else
+              echo "App '${APP}' already exists."
+            fi
+
+            upload_tarball
+          else
+            CAPI_HEADERS=(-H "x-captain-app-token: ${CAPROVER_APP_TOKEN}" -H "x-namespace: captain")
+            upload_tarball
+          fi
