@@ -1,4 +1,13 @@
 import {
+  AVATAR_STAGES,
+  FILE_TARGET,
+  computeAvatarVisuals,
+  deriveAvatarStage as deriveAvatarStageFromState,
+  deriveAvatarUnlocks as deriveAvatarUnlocksFromState,
+  fileProgressPct as fileProgressPctFromQuota,
+  formatFileBadge,
+} from './avatar.js';
+import {
   generateSyncCode,
   pushState,
   syncNow,
@@ -14,7 +23,6 @@ import {
 const STATE_KEY        = 'lumon-compliance-state';
 const FOUR_HOURS_MS    = 4 * 60 * 60 * 1000;
 const SIX_HOURS_MS     = 6 * 60 * 60 * 1000;
-const FILE_TARGET      = 1000;
 const SUSTENANCE_TARGET= 3;
 
 const MORNING_ADVISORY_H   = 7;
@@ -26,14 +34,6 @@ const QUOTA_FLAGS = { FLUID:1, ACTIVITY:2, AFTERNOON_DOSE:4, FULL_DAY:8, MORNING
 
 const TIER_NAMES      = ['UNINITIALIZED','ACTIVE REFINEMENT','ELEVATED THROUGHPUT','FULL COMPLIANCE'];
 const TIER_THRESHOLDS = [0,100,300,600];
-
-const AVATAR_STAGES = [
-  { id:'ghost',       label:'LATENT SIGNAL',          minPct:0   },
-  { id:'raw',         label:'RAW DATASET',            minPct:10  },
-  { id:'fenced',      label:'FENCED MATRIX',          minPct:25  },
-  { id:'singularity', label:'COMPLIANT SINGULARITY',  minPct:75  },
-  { id:'caricature',  label:'CUSTOM CARICATURE',      minPct:100 },
-];
 
 const MILESTONES = [
   { pct:10,  id:'eraser',      name:'LUMON ERASER', badge:'ERASER' },
@@ -130,7 +130,7 @@ function pushLog(text){
   if (activityLog.length > MAX_LOG) activityLog.pop();
   renderActivityLog();
 }
-function fileProgressPct(){ return clamp((state.fileState.quota / FILE_TARGET) * 100, 0, 100); }
+function fileProgressPct(){ return fileProgressPctFromQuota(state.fileState.quota); }
 function isComplianceFrozen(s = state){ const u = s?.incentives?.complianceFreezeUntil; return u && new Date(u) > new Date(); }
 function asciiBar(pct, width = 10){ const n = clamp(Math.round((pct/100)*width), 0, width); return '[' + '█'.repeat(n) + '░'.repeat(width-n) + ']'; }
 
@@ -374,52 +374,33 @@ export function deriveTempers(s){
 }
 function dominantTemper(t){ return Object.entries(t).sort((a,b)=>b[1]-a[1])[0][0]; }
 function deriveAvatarStage(){
-  const pct = fileProgressPct();
-  const hits = state.fileState.milestonesHit;
-  if (hits.includes('caricature') || pct >= 100) return AVATAR_STAGES[4];
-  if (hits.includes('mde') || pct >= 75) return AVATAR_STAGES[3];
-  if (hits.includes('finger-trap') || pct >= 25) return AVATAR_STAGES[2];
-  if (hits.includes('eraser') || pct >= 10) return AVATAR_STAGES[1];
-  return AVATAR_STAGES[0];
+  return deriveAvatarStageFromState(state.fileState);
 }
 
 function deriveAvatarUnlocks(){
-  const hits = state.fileState.milestonesHit;
-  const inv = state.incentives.inventory;
-  const u = [];
-  if (hits.includes('eraser'))      u.push('eraser');
-  if (hits.includes('finger-trap'))  u.push('trap');
-  if (hits.includes('mde'))          u.push('mde');
-  if (hits.includes('caricature'))   u.push('caricature');
-  if (inv.includes('laser-crystal')) u.push('crystal');
-  if (inv.includes('coffee-cozy'))   u.push('cozy');
-  return u.join(' ');
+  return deriveAvatarUnlocksFromState(state.fileState, state.incentives);
 }
 
 function renderAvatar(){
   const avatar = deriveAvatarStage();
-  const pct = fileProgressPct();
+  const visuals = computeAvatarVisuals(state.fileState.quota, state.fileState.fileNumber);
   const el = document.getElementById('mdr-avatar');
   const node = document.getElementById('mdr-data-node');
   if (!el) return;
 
-  const opacity = clamp(0.08 + (pct / 100) * 0.92, 0.08, 1);
-  const scale   = clamp(0.5 + (pct / 100) * 0.5, 0.5, 1);
-  const variant = (state.fileState.fileNumber - 1) % 4;
-
-  el.style.setProperty('--avatar-opacity', opacity.toFixed(3));
-  el.style.setProperty('--avatar-scale', scale.toFixed(3));
+  el.style.setProperty('--avatar-opacity', visuals.opacity.toFixed(3));
+  el.style.setProperty('--avatar-scale', visuals.scale.toFixed(3));
   el.dataset.stage = avatar.id;
-  el.dataset.fileVariant = String(variant);
+  el.dataset.fileVariant = String(visuals.variant);
   el.dataset.unlock = deriveAvatarUnlocks();
 
   const badge = el.querySelector('.av-file-badge');
-  if (badge) badge.textContent = `F-${String(state.fileState.fileNumber).padStart(4,'0')}`;
+  if (badge) badge.textContent = formatFileBadge(state.fileState.fileNumber);
 
   if (node) node.dataset.avatarStage = avatar.id;
 
   const visLabel = document.getElementById('avatar-visibility-label');
-  if (visLabel) visLabel.textContent = `VISIBILITY: ${Math.round(opacity * 100)}%`;
+  if (visLabel) visLabel.textContent = `VISIBILITY: ${visuals.visibilityPct}%`;
 }
 export function recalculateRefinementTier(s){
   const q = s.subject.cumulativeQuota; let tier = 0;

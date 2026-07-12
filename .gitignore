@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
 
+# Test artifacts
+test-results/
+playwright-report/
+
 # Archival server data
 server/data/
 
