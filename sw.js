@@ -1,9 +1,10 @@
-const CACHE_NAME = 'lumon-terminal-v7';
+const CACHE_NAME = 'lumon-terminal-v8';
 const SHELL = [
   './',
   './index.html',
   './styles.css',
   './app.js',
+  './avatar.js',
   './sync.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
