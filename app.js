@@ -51,13 +51,18 @@ const MILESTONES = [
 ];
 
 const NODE_STATUS = {
-  baseline:'NODE: BASELINE', optimal:'NODE: OPTIMAL THROUGHPUT',
-  depleted:'NODE: SUSTENANCE / FLUID DEPLETION', noncompliant:'NODE: COMPLIANCE BREACH',
+  baseline:'NODE: BASELINE — NUMBERS NOMINAL',
+  optimal:'NODE: OPTIMAL THROUGHPUT',
+  depleted:'NODE: SUSTENANCE / FLUID DEPLETION',
+  noncompliant:'NODE: COMPLIANCE BREACH — STANDING AT RISK',
   underutilized:'NODE: QUOTA UNDERUTILIZATION',
 };
 const CAM_STATUS = {
-  baseline:'STATUS: NOMINAL', optimal:'STATUS: OPTIMAL', depleted:'STATUS: DEPLETION',
-  noncompliant:'STATUS: BREACH', underutilized:'STATUS: UNDERUTILIZED',
+  baseline:'STATUS: NOMINAL',
+  optimal:'STATUS: OPTIMAL THROUGHPUT',
+  depleted:'STATUS: DEPLETION — RETURN TO PROTOCOLS',
+  noncompliant:'STATUS: BREACH',
+  underutilized:'STATUS: UNDERUTILIZED',
 };
 const TEMPER_NAMES = { woe:'WOE', frolic:'FROLIC', dread:'DREAD', malice:'MALICE' };
 
@@ -200,7 +205,7 @@ async function engageKiosk(){
   if (state.kioskFullscreen && document.documentElement.requestFullscreen) {
     try { await document.documentElement.requestFullscreen(); } catch { /* optional */ }
   }
-  showToast('KIOSK MODE ENGAGED', { tone: 'ok' });
+  showToast('KIOSK PROTOCOL ENGAGED — STAY AT YOUR WORKSTATION', { tone: 'ok' });
   renderAmbientReport();
 }
 async function toggleKioskQuick(){
@@ -212,7 +217,7 @@ async function toggleKioskQuick(){
     if (document.fullscreenElement) {
       try { await document.exitFullscreen(); } catch { /* optional */ }
     }
-    showToast('KIOSK MODE RELEASED', { tone: 'dim' });
+    showToast('KIOSK PROTOCOL RELEASED', { tone: 'dim' });
   } else {
     await engageKiosk();
   }
@@ -246,7 +251,7 @@ function maybeShowAmbientHint(){
   state.ambientHintSeen = true;
   saveState();
   setTimeout(() => {
-    showToast('DEPARTMENTAL EVENTS ARE RARE — WATCH THE FEED', { tone: 'dim' });
+    showToast('DEPARTMENTAL REMINDER — EVENTS ARE RARE. THE WORK IS MYSTERIOUS AND IMPORTANT.', { tone: 'dim' });
   }, 2500);
 }
 
@@ -463,26 +468,26 @@ export function checkComplianceGrace(s){
   const messages = [];
 
   if (!s.dailyLog.morningDoseAt){
-    if (mins >= MORNING_ADVISORY_H*60 && mins < MORNING_CUTOFF_H*60) messages.push('✚ AM INJECTION REQUIRED — BEFORE 10:00');
+    if (mins >= MORNING_ADVISORY_H*60 && mins < MORNING_CUTOFF_H*60) messages.push('✚ AM INJECTION REQUIRED — BEFORE 10:00 — PLEASE COMPLY');
     else if (mins >= MORNING_CUTOFF_H*60 && !s.dailyLog.morningPenaltyApplied && !isComplianceFrozen(s)){
       s.metrics.complianceStanding = clamp(s.metrics.complianceStanding - 10, 0, 100);
       s.dailyLog.morningPenaltyApplied = true;
-      pushLog('AM INJECTION MISSED — COMPLIANCE -10');
+      pushLog('AM INJECTION MISSED — COMPLIANCE STANDING -10');
     }
-    if (mins >= MORNING_CUTOFF_H*60) messages.push('✚ AM INJECTION OVERDUE');
+    if (mins >= MORNING_CUTOFF_H*60) messages.push('✚ AM INJECTION OVERDUE — YOU HAVE BEEN NOTED');
   }
   if (!s.dailyLog.complianceDoseAt){
-    if (mins >= AFTERNOON_ADVISORY_H*60 && mins < AFTERNOON_CUTOFF_H*60) messages.push('✚ PM INJECTION REQUIRED — BEFORE 14:00');
+    if (mins >= AFTERNOON_ADVISORY_H*60 && mins < AFTERNOON_CUTOFF_H*60) messages.push('✚ PM INJECTION REQUIRED — BEFORE 14:00 — PLEASE COMPLY');
     else if (mins >= AFTERNOON_CUTOFF_H*60 && !s.dailyLog.compliancePenaltyApplied && !isComplianceFrozen(s)){
       s.metrics.complianceStanding = clamp(s.metrics.complianceStanding - 20, 0, 100);
       s.dailyLog.compliancePenaltyApplied = true;
-      pushLog('PM INJECTION MISSED — COMPLIANCE -20');
+      pushLog('PM INJECTION MISSED — COMPLIANCE STANDING -20');
     }
     if (mins >= AFTERNOON_CUTOFF_H*60) messages.push('✚ PM INJECTION OVERDUE — STANDING REDUCED');
   }
   if (s.metrics.sustenanceLevel < 30){
     messages.push('◧ SUSTENANCE LOW — WOE / DREAD ELEVATED');
-    if (!s.dailyLog.sustenanceWarned){ s.dailyLog.sustenanceWarned = true; pushLog('SUSTENANCE CRITICAL — TEMPER ENGINE SPIKING WOE/DREAD'); }
+    if (!s.dailyLog.sustenanceWarned){ s.dailyLog.sustenanceWarned = true; pushLog('SUSTENANCE CRITICAL — TEMPERS SPIKING WOE/DREAD'); }
   } else if (s.dailyLog.sustenanceWarned && s.metrics.sustenanceLevel >= 45){ s.dailyLog.sustenanceWarned = false; }
 
   if (messages.length){ advisory.textContent = messages.join('   |   '); advisory.classList.remove('hidden'); }
@@ -614,7 +619,20 @@ function refreshDigits(){
   if (document.hidden) return;
   const nums = document.querySelectorAll('.mdr-num');
   if (!nums.length) return;
-  for (let i = Math.floor(Math.random()*5); i < nums.length; i += 6 + Math.floor(Math.random()*4)) nums[i].textContent = rndDigit();
+  const temper = document.getElementById('mdr-data-node')?.dataset?.dominant || 'frolic';
+  const step = temper === 'malice' || temper === 'dread' ? 3 + Math.floor(Math.random()*3)
+    : temper === 'woe' ? 5 + Math.floor(Math.random()*3)
+    : 6 + Math.floor(Math.random()*4);
+  const start = Math.floor(Math.random() * Math.min(5, nums.length));
+  for (let i = start; i < nums.length; i += step) nums[i].textContent = rndDigit();
+  if (temper === 'malice' || temper === 'dread') {
+    const huddleAt = Math.floor(Math.random() * Math.max(1, nums.length - 8));
+    for (let j = 0; j < 6 && huddleAt + j < nums.length; j++) {
+      nums[huddleAt + j].textContent = rndDigit();
+      nums[huddleAt + j].classList.add('num-hot');
+    }
+    setTimeout(() => document.querySelectorAll('.mdr-num.num-hot').forEach((n) => n.classList.remove('num-hot')), 900);
+  }
 }
 function triggerRefinementBurst(){
   const node = document.getElementById('mdr-data-node');
@@ -703,9 +721,13 @@ function setQuad(id, val){
 function renderTempers(){
   const t = deriveTempers(state);
   const dom = dominantTemper(t);
-  document.getElementById('mdr-data-node').dataset.dominant = dom;
+  const node = document.getElementById('mdr-data-node');
+  if (node) node.dataset.dominant = dom;
+  document.body.dataset.temper = dom;
+  const camDrift = document.getElementById('cam-drift');
+  if (camDrift) camDrift.dataset.dominant = dom;
   setQuad('quad-wo', t.woe); setQuad('quad-fc', t.frolic); setQuad('quad-dr', t.dread); setQuad('quad-ma', t.malice);
-  document.getElementById('tempers-readout').textContent = `DOMINANT: ${TEMPER_NAMES[dom]}`;
+  document.getElementById('tempers-readout').textContent = `DOMINANT TEMPER: ${TEMPER_NAMES[dom]}`;
   setMetric('temper-woe-bar', 'temper-woe-val', t.woe);
   setMetric('temper-frolic-bar', 'temper-frolic-val', t.frolic);
   setMetric('temper-dread-bar', 'temper-dread-val', t.dread);
@@ -1129,7 +1151,7 @@ async function init(){
   digitTimer = setInterval(refreshDigits, 2200);
   setInterval(() => tick(), 60_000);
 
-  pushLog('REFINEMENT STREAM INITIALIZED');
+  pushLog('REFINEMENT STREAM INITIALIZED — WELCOME BACK TO THE FLOOR');
   if (!state.onboardingComplete) showOrientation();
   else maybeShowAmbientHint();
 

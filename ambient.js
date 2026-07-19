@@ -132,7 +132,7 @@ export const AMBIENT_EVENTS = [
     weight: 9,
     run(ctx) {
       ctx.showToast('PLEASE RETURN TO YOUR WORKSTATION', { tone: 'amber', sticky: true });
-      ctx.pushLog('AMBIENT: INTERCOM CHYRON');
+      ctx.pushLog('DEPARTMENTAL PA — RETURN TO WORKSTATION');
     },
   },
   {
@@ -210,7 +210,7 @@ export const AMBIENT_EVENTS = [
     run(ctx) {
       const n = awardCredits(ctx, 1, 'COFFEE SERVICE');
       ctx.pulseScene('ambient-coffee', 6000);
-      ctx.showToast(`BREAK ROOM COURTESY — +${n} CR`, { tone: 'ok' });
+      ctx.showToast('BREAK ROOM COURTESY — YOU HAVE BEEN SEEN', { tone: 'ok' });
     },
   },
   {
@@ -219,7 +219,7 @@ export const AMBIENT_EVENTS = [
     weight: 5,
     run(ctx) {
       awardXp(ctx, 8, 'QUOTA ENCOURAGEMENT');
-      ctx.showToast('REFINER PRAISE — THROUGHPUT NOTED', { tone: 'ok' });
+      ctx.showToast('THE BOARD NOTES YOUR THROUGHPUT', { tone: 'ok' });
       ctx.render();
     },
   },

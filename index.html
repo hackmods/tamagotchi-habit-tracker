@@ -247,12 +247,12 @@
 
           <!-- TAB 04: UTILITIES -->
           <section class="tab-panel" id="tab-utilities" role="tabpanel" aria-labelledby="tab-btn-utilities" hidden>
-            <p class="cli-h">// EMPLOYEE SUBSYSTEMS</p>
+            <p class="cli-h">// DEPARTMENTAL SUBSYSTEMS</p>
             <div class="util-grid">
-              <button type="button" id="btn-incentives" class="util-card"><span class="util-id">INC-01</span><span class="util-name">INCENTIVES</span><span class="util-desc">Spend allocation credits</span></button>
-              <button type="button" id="btn-procurement" class="util-card"><span class="util-id">PRC-02</span><span class="util-name">PROCUREMENT</span><span class="util-desc">Palettes &amp; geometries</span></button>
-              <button type="button" id="btn-archival" class="util-card"><span class="util-id">ARC-03</span><span class="util-name">ARCHIVAL</span><span class="util-desc">Encrypted sync protocol</span></button>
-              <button type="button" id="btn-orientation" class="util-card"><span class="util-id">ORI-04</span><span class="util-name">ORIENTATION</span><span class="util-desc">Departmental briefing</span></button>
+              <button type="button" id="btn-incentives" class="util-card"><span class="util-id">INC-01</span><span class="util-name">INCENTIVES</span><span class="util-desc">Board-approved perks</span></button>
+              <button type="button" id="btn-procurement" class="util-card"><span class="util-id">PRC-02</span><span class="util-name">PROCUREMENT</span><span class="util-desc">Palettes &amp; node geometries</span></button>
+              <button type="button" id="btn-archival" class="util-card"><span class="util-id">ARC-03</span><span class="util-name">ARCHIVAL</span><span class="util-desc">Encrypted record transmit</span></button>
+              <button type="button" id="btn-orientation" class="util-card"><span class="util-id">ORI-04</span><span class="util-name">ORIENTATION</span><span class="util-desc">Departmental handbook</span></button>
             </div>
 
             <section class="util-widget kiosk-widget">
@@ -319,7 +319,7 @@
         <div class="cam-ambient" id="cam-ambient" aria-hidden="true">STATUS: NOMINAL</div>
         <div class="cam-chyron hidden" id="cam-chyron" aria-live="polite"></div>
         <button type="button" id="btn-kiosk-quick" class="kiosk-quick" aria-label="Engage kiosk stay-awake mode" title="Kiosk">KIOSK</button>
-        <p class="phone-portal-hint" aria-hidden="true">TAP ANYWHERE TO OPEN TERMINAL</p>
+        <p class="phone-portal-hint" aria-hidden="true">TAP TO ENTER REFINEMENT</p>
 
       </div><!-- /scene-stage -->
     </div><!-- /diorama -->
@@ -331,21 +331,21 @@
   <!-- ═══ DRAWERS / MODALS (shared across views) ══════════════════════ -->
 
   <aside id="incentives-drawer" class="drawer hidden" aria-label="Employee incentives">
-    <div class="drawer-header"><h2>EMPLOYEE INCENTIVES</h2><button type="button" id="btn-close-incentives" class="btn-close" aria-label="Close">×</button></div>
-    <p class="drawer-note">Spend Credits on items approved by the Lumon Wellness Division.</p>
+    <div class="drawer-header"><h2>WELLNESS INCENTIVES</h2><button type="button" id="btn-close-incentives" class="btn-close" aria-label="Close">×</button></div>
+    <p class="drawer-note">Spend Credits on Wellness Division incentives. The Board is watching your throughput.</p>
     <div id="incentives-catalog" class="catalog"></div>
   </aside>
 
   <aside id="procurement-drawer" class="drawer hidden" aria-label="Lumon Procurement">
     <div class="drawer-header"><h2>LUMON PROCUREMENT</h2><button type="button" id="btn-close-procurement" class="btn-close" aria-label="Close">×</button></div>
-    <p class="drawer-note">Unlock department palettes and refinement node geometries with Credits.</p>
+    <p class="drawer-note">Unlock department palettes and refinement node geometries. Design is not decoration — it is compliance.</p>
     <section class="procurement-section"><h3>DEPARTMENT PALETTES</h3><div id="palette-catalog" class="catalog"></div></section>
     <section class="procurement-section"><h3>NODE GEOMETRIES</h3><div id="geometry-catalog" class="catalog"></div></section>
   </aside>
 
   <aside id="archival-sync-panel" class="drawer hidden" aria-label="Archival transmission">
     <div class="drawer-header"><h2>ARCHIVAL TRANSMISSION</h2><button type="button" id="btn-close-archival" class="btn-close" aria-label="Close">×</button></div>
-    <p class="drawer-note">Optional encrypted cross-device sync. Terminal operates fully offline without this.</p>
+    <p class="drawer-note">Optional encrypted archival across devices. The terminal remains fully operational offline — as intended.</p>
     <label class="toggle-row"><input type="checkbox" id="archival-enabled"><span>ENABLE ARCHIVAL PROTOCOL</span></label>
     <label class="field-label" for="archival-endpoint">ARCHIVAL ENDPOINT</label>
     <input type="url" id="archival-endpoint" placeholder="https://example.com/api" class="field-input">
@@ -368,14 +368,14 @@
       <div class="orientation-header"><h2 id="orientation-title">◆ DEPARTMENTAL ORIENTATION</h2><button type="button" id="btn-close-orientation" class="btn-close" aria-label="Close">×</button></div>
       <div class="orientation-pages">
         <div class="orientation-page active" data-page="1">
-          <p class="orient-heading">WELCOME, INNIE.</p>
-          <p class="orient-body">You are <strong>SUBJECT #4229</strong>. This window is a live <strong>Innie-Cam</strong> feed of Floor 7 MDR. Leave it open on a secondary monitor during long sessions.</p>
-          <p class="orient-body">Click the <strong>CRT monitor</strong> to open your Refinement Terminal and log daily protocols. Press <strong>ESC</strong> to return to the camera. Rare departmental events may appear on the desk feed — infrequently.</p>
-          <p class="orient-note">Phone = habit logger (Add to Home Screen as <strong>Innie-Cam</strong>). Extra monitor = ambient MDR feed. Use <strong>KIOSK</strong> for stay-awake.</p>
+          <p class="orient-heading">WELCOME TO THE SEVERED FLOOR.</p>
+          <p class="orient-body">You are <strong>SUBJECT #4229</strong>. This feed is <strong>Innie-Cam</strong> — Floor 7, Macrodata Refinement. Your outie’s care becomes your innie’s <strong>protocols</strong>. Leave the camera open on a secondary monitor.</p>
+          <p class="orient-body">Click the <strong>CRT</strong> to refine. Log fluid, activity, sustenance, and compliance injections. <strong>ESC</strong> returns you to the floor. The Board may interrupt — rarely.</p>
+          <p class="orient-note">Phone = outie logger (Add to Home Screen as <strong>Innie-Cam</strong>). Extra monitor = MDR ambient. <strong>KIOSK</strong> keeps you at your workstation.</p>
         </div>
         <div class="orientation-page" data-page="2">
           <p class="orient-heading">DAILY PROTOCOLS</p>
-          <table class="orient-table"><thead><tr><th>ENDPOINT</th><th>COMMAND</th><th>REWARD</th></tr></thead>
+          <table class="orient-table"><thead><tr><th>ENDPOINT</th><th>COMMAND</th><th>FILE / CR</th></tr></thead>
           <tbody>
             <tr><td>FLUID</td><td>HYDRATE_UNIT (2000ml)</td><td>+25 / +5</td></tr>
             <tr><td>QUOTA</td><td>LOG_ACTIVITY (8000u)</td><td>+25 / +5</td></tr>
@@ -383,12 +383,12 @@
             <tr><td>SUSTENANCE</td><td>SUSTENANCE (3 comp)</td><td>+25 / +5</td></tr>
             <tr><td>ALL</td><td>full compliance bonus</td><td>+25 / +5</td></tr>
           </tbody></table>
-          <p class="orient-note">PM injection missed after 14:00 reduces Compliance Standing by 20.</p>
+          <p class="orient-note">PM injection missed after 14:00 reduces <strong>Compliance Standing</strong> by 20. Please comply.</p>
         </div>
         <div class="orientation-page" data-page="3">
           <p class="orient-heading">THE FOUR TEMPERS</p>
-          <p class="orient-body">The node sorts your state into <strong>WO</strong> (Woe), <strong>FC</strong> (Frolic), <strong>DR</strong> (Dread), <strong>MA</strong> (Malice). Healthy metrics raise Frolic; low sustenance and missed injections raise Woe and Dread.</p>
-          <p class="orient-body">Daily completions fill the <strong>Active File</strong>. At 100% a <strong>Waffle Party</strong> grants a permanent ×1.5 XP multiplier.</p>
+          <p class="orient-body">Macrodata is sorted into <strong>WO</strong> (Woe), <strong>FC</strong> (Frolic), <strong>DR</strong> (Dread), <strong>MA</strong> (Malice). Healthy protocols raise Frolic; missed injections and low sustenance raise Woe and Dread. Watch the numbers — they know.</p>
+          <p class="orient-body">Daily completions fill the <strong>Active File</strong>. At 100% a <strong>Waffle Party</strong> is permitted — prestige ×1.5. <strong>MDE</strong> is a Board incentive, not a toy.</p>
         </div>
       </div>
       <div class="orientation-nav"><button type="button" id="btn-orient-prev" class="btn-secondary" disabled>← PREV</button><span id="orient-page-indicator" class="orient-page-num">1 / 3</span><button type="button" id="btn-orient-next" class="btn-secondary">NEXT →</button></div>

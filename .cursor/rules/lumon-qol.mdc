@@ -14,3 +14,5 @@ When improving this repo, prefer the roadmap in [`.cursor/plans/lumon-qol-p0-p4.
 - **P4**: Pointer-path Playwright smoke, `npm start`, ambient session report, SW bump docs
 
 Product defaults: secondary-monitor ambient first; rare ambient stays hours-scale; habit protocols stay; vanilla ES modules.
+
+When editing copy, ambient, MDR digits, or Lumon branding, also follow [`.cursor/rules/severance-continuity.mdc`](severance-continuity.mdc) and the knowledge files it references.
