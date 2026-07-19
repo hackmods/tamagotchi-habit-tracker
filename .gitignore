@@ -8,6 +8,10 @@ playwright-report/
 # Archival server data
 server/data/
 
+# Local-only secrets / lab notes (keep README so the folder is seeded)
+.secrets/*
+!.secrets/README.md
+
 # OS
 .DS_Store
 Thumbs.db
