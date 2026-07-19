@@ -62,7 +62,8 @@ Debug query params: `?reset=1`, `?debugTime=HH:MM`, `?ambientDebug=1|A|B|C`, `?s
 
 ## CI / deploy
 
-- `.github/workflows/deploy.yml` — lint → unit → Playwright Chromium → Docker → CapRover on `main`
+- `.github/workflows/deploy.yml` — lint → unit → Playwright Chromium → Docker on `main`/`PR`; CapRover upload only when secrets are set (otherwise skipped)
+- **Lab host:** Proxmox CT **122** (`lumon-docker`, `http://192.168.0.122/`) via host nginx → `/var/www/html` (not Docker-in-LXC)
 - Bumping shell assets requires bumping `sw.js` `CACHE_NAME` **and** `scripts/validate-static.js` expected value (see `docs/DEPLOY-CAPROVER.md`)
 
 ## Tests status

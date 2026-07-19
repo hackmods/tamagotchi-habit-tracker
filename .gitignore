@@ -12,6 +12,10 @@ server/data/
 .secrets/*
 !.secrets/README.md
 
+# Local deploy artifacts (Proxmox / CapRover tarball)
+deploy.tar
+.build-id
+
 # OS
 .DS_Store
 Thumbs.db

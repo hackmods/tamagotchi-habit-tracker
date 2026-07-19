@@ -77,7 +77,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Validate CapRover secrets
+      - name: Check CapRover secrets
+        id: caprover
         env:
           CAPROVER_SERVER: ${{ secrets.CAPROVER_SERVER }}
           CAPROVER_APP_NAME: ${{ secrets.CAPROVER_APP_NAME }}
@@ -85,8 +86,9 @@ jobs:
           CAPROVER_PASSWORD: ${{ secrets.CAPROVER_PASSWORD }}
         run: |
           if [ -z "$CAPROVER_SERVER" ] || [ -z "$CAPROVER_APP_NAME" ]; then
-            echo "::error::CAPROVER_SERVER and CAPROVER_APP_NAME secrets must be set."
-            exit 1
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::CapRover secrets unset — validate passed; skipping CapRover deploy (lab host is Proxmox CT)."
+            exit 0
           fi
           if [ -z "$CAPROVER_APP_TOKEN" ] && [ -z "$CAPROVER_PASSWORD" ]; then
             echo "::error::Set CAPROVER_APP_TOKEN or CAPROVER_PASSWORD for deploy auth."
@@ -97,8 +99,10 @@ jobs:
             echo "::error::CAPROVER_APP_NAME must be the short app name (e.g. lumon-terminal), not a URL."
             exit 1
           fi
+          echo "configured=true" >> "$GITHUB_OUTPUT"
 
       - name: Create deployment tarball
+        if: steps.caprover.outputs.configured == 'true'
         run: |
           echo "${GITHUB_SHA}" > .build-id
           tar --exclude=node_modules \
@@ -111,6 +115,7 @@ jobs:
           ls -lh deploy.tar
 
       - name: Deploy to CapRover
+        if: steps.caprover.outputs.configured == 'true'
         env:
           CAPROVER_SERVER: ${{ secrets.CAPROVER_SERVER }}
           CAPROVER_APP_NAME: ${{ secrets.CAPROVER_APP_NAME }}

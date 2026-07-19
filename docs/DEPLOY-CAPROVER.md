@@ -1,6 +1,8 @@
 # CapRover deployment (GitHub Actions)
 
-Pushes to `main` validate the static PWA assets, smoke-test the Docker image, then upload the source as a tarball to CapRover. CapRover builds the image from `captain-definition` + `Dockerfile` and deploys it — no container registry required.
+Pushes to `main` always run the **validate** job (static assets, lint, unit, Playwright, Docker smoke). The CapRover **deploy** job runs only when CapRover secrets are configured; otherwise it skips with a notice so CI stays green while the lab host is Proxmox CT `122` (`http://192.168.0.122/`, host nginx → `/var/www/html`).
+
+When CapRover secrets are set, CI uploads the source as a tarball. CapRover builds the image from `captain-definition` + `Dockerfile` and deploys it — no container registry required.
 
 ## One-time CapRover setup
 
