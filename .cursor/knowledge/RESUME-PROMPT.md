@@ -11,15 +11,14 @@ You are continuing work on **Lumon Innie-Cam** (`tamagotchi-habit-tracker`) — 
 2. `.cursor/knowledge/project-state.md`
 3. `.cursor/knowledge/severance-facts.md`
 4. `.cursor/knowledge/show-app-continuity.md`
-5. `.cursor/knowledge/next-work.md`
-6. `.cursor/plans/lumon-qol-p0-p4.plan.md` (QOL already shipped)
+5. `.cursor/knowledge/visual-direction.md`
+6. `.cursor/knowledge/engine-design.md`
+7. `.cursor/knowledge/next-work.md`
 
-**Locked product defaults:** monitor-first ambient; phone habit portal; rare ambient A/B/C (45m+); keep habit engine; vanilla JS; Lumon handbook voice.
-
-**Last shipped on `main`:** knowledge base + voice/MDR temper digit pass (`403bf27`); P0–P4 QOL (`82e8e1a`); overhaul with `ambient.js`/`engine.js` (`3f4c904`).
+**Locked product defaults:** monitor-first ambient; phone habit portal; rare ambient A/B/C (45m+); engine v2 protocol bins; vanilla JS; Lumon handbook voice.
 
 **Verify green:** `npm run lint && npm test`
 
-**Start with the next slice from `next-work.md` unless I specify otherwise.** Prefer: (1) desk idle presence, or (2) RESOURCING daily checklist — ask which if unclear. Match existing patterns; commit and push when the slice is complete and tests pass. Do not commit `.git-status.txt` or `proxmox_mcp.log`.
+**Start with the next slice from `next-work.md` unless I specify otherwise.** Match existing patterns; commit and push when the slice is complete and tests pass. Do not commit `.git-status.txt` or `proxmox_mcp.log`.
 
 I am the outie. Welcome back to the floor.

@@ -12,32 +12,39 @@ import {
   COOLDOWN_MS,
 } from './ambient.js';
 import {
-  setAudioEnabled,
-  setDeskAudioActive,
-  notifyAudioVisibility,
-  playIntercomChirp,
-} from './audio.js';
-import {
   AFTERNOON_ADVISORY_H,
   AFTERNOON_CUTOFF_H,
   MORNING_ADVISORY_H,
   MORNING_CUTOFF_H,
-  applyElapsedTime as applyElapsedTimeCore,
+  STATE_VERSION,
+  applyTick,
   clamp,
   dateKeyOf,
+  deriveAdvisoryMessages,
   deriveNodeState as deriveNodeStateCore,
-  deriveProtocolChecklist,
   deriveTempers as deriveTempersCore,
-  evaluateQuotaTargets,
+  deriveTerminalSnapshot,
+  dominantTemper as dominantTemperCore,
+  evaluateQuotaAwards,
+  freshDailyLog as freshDailyLogCore,
   isComplianceFrozen as isComplianceFrozenCore,
-  protocolChecklistSummary,
+  migrateState as migrateStateCore,
   recalculateRefinementTier as recalculateRefinementTierCore,
+  recordProtocol,
+  rolloverDayIfNeeded,
 } from './engine.js';
 import {
   generateSyncCode,
   pushState,
   syncNow,
 } from './sync.js';
+import {
+  setAudioEnabled,
+  setDeskAudioActive,
+  notifyAudioVisibility,
+  playIntercomChirp,
+  playAmbientCue,
+} from './audio.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    LUMON INNIE-CAM — application logic
@@ -93,15 +100,11 @@ const INCENTIVES_CATALOG = [
 ];
 
 const DEFAULT_STATE = {
+  stateVersion: STATE_VERSION,
   subject: { subjectNumber:4229, cumulativeQuota:0, allocationCredits:0, refinementTier:0, prestigeMultiplier:1, filesCompleted:0 },
   fileState: { fileNumber:1, quota:0, milestonesHit:[] },
   metrics: { fluidEfficiency:100, quotaProgression:100, complianceStanding:100, sustenanceLevel:100 },
-  dailyLog: {
-    date:null, fluidIntakeMl:0, activityUnits:0, sustenanceUnits:0,
-    morningDoseAt:null, morningPenaltyApplied:false,
-    complianceDoseAt:null, compliancePenaltyApplied:false,
-    sustenanceWarned:false, quotasAwarded:0,
-  },
+  dailyLog: freshDailyLogCore(null),
   incentives: { inventory:[], activeSkin:null, complianceFreezeUntil:null, fingerTrapTaps:0 },
   onboardingComplete:false,
   lastSavedAt:new Date().toISOString(),
@@ -113,6 +116,7 @@ const DEFAULT_STATE = {
   kioskFullscreen: false,
   ambientHintSeen: false,
   audioEnabled: false,
+  uiTips: { a2hsDismissed: false, kioskTipDismissed: false },
 };
 
 // ─── runtime globals ───────────────────────────────────────────────
@@ -125,7 +129,8 @@ let burstTimer = null, digitTimer = null;
 let prestigeInProgress = false;
 let orientPage = 1;
 let lastDominantTemper = null;
-let activeTab = 'data-matrix';
+let activeCenterMode = 'matrix';
+let selectedProtocolId = null;
 let logSidebarOpen = true;
 let crtHome = null;
 let ambientScheduler = null;
@@ -285,6 +290,19 @@ function maybeShowAmbientHint(){
   }, 2500);
 }
 
+function maybeShowUiTips(){
+  const a2hs = document.getElementById('ui-tip-a2hs');
+  const kiosk = document.getElementById('ui-tip-kiosk');
+  if (!a2hs || !kiosk || !state?.uiTips) return;
+  if (!state.uiTips) state.uiTips = { a2hsDismissed: false, kioskTipDismissed: false };
+  const narrow = window.matchMedia('(max-width: 600px)').matches;
+  const standalone = window.matchMedia('(display-mode: standalone)').matches;
+  const showA2hs = narrow && !standalone && !state.uiTips.a2hsDismissed && state.onboardingComplete;
+  const showKiosk = standalone && !narrow && !state.uiTips.kioskTipDismissed && state.onboardingComplete;
+  a2hs.classList.toggle('hidden', !showA2hs);
+  kiosk.classList.toggle('hidden', !showKiosk);
+}
+
 function trapFocus(container){
   const nodes = [...container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
     .filter((n) => !n.disabled && n.offsetParent !== null);
@@ -336,24 +354,7 @@ function migrateState(raw){
   if (!raw) return structuredClone(DEFAULT_STATE);
   if (raw.hydration !== undefined || raw.pet !== undefined) return structuredClone(DEFAULT_STATE);
   const m = deepMerge(structuredClone(DEFAULT_STATE), raw);
-  if (m.subject.id && !m.subject.subjectNumber) m.subject.subjectNumber = parseInt(m.subject.id,10) || 4229;
-  delete m.subject.id;
-  if (!m.fileState)  m.fileState  = { ...DEFAULT_STATE.fileState };
-  if (!m.incentives) m.incentives = { ...DEFAULT_STATE.incentives };
-  if (!m.subject.prestigeMultiplier) m.subject.prestigeMultiplier = 1;
-  if (!m.subject.filesCompleted)     m.subject.filesCompleted = 0;
-  if (m.metrics.sustenanceLevel === undefined)        m.metrics.sustenanceLevel = 100;
-  if (m.dailyLog.sustenanceUnits === undefined)       m.dailyLog.sustenanceUnits = 0;
-  if (m.dailyLog.sustenanceWarned === undefined)      m.dailyLog.sustenanceWarned = false;
-  if (m.dailyLog.morningDoseAt === undefined)         m.dailyLog.morningDoseAt = null;
-  if (m.dailyLog.morningPenaltyApplied === undefined) m.dailyLog.morningPenaltyApplied = false;
-  if (m.onboardingComplete === undefined)             m.onboardingComplete = false;
-  if (!m.ambient) m.ambient = structuredClone(DEFAULT_STATE.ambient);
-  if (m.kioskAwake === undefined) m.kioskAwake = false;
-  if (m.kioskFullscreen === undefined) m.kioskFullscreen = false;
-  if (m.ambientHintSeen === undefined) m.ambientHintSeen = false;
-  if (m.audioEnabled === undefined) m.audioEnabled = false;
-  return m;
+  return migrateStateCore(m, DEFAULT_STATE) || m;
 }
 
 export function loadState(){
@@ -387,29 +388,25 @@ function schedulePush(){
   }, 2000);
 }
 
-// ─── time decay (CORE) ─────────────────────────────────────────────
+// ─── time decay (engine v2) ───────────────────────────────────────
 export function applyElapsedTime(s, elapsedMs){
-  let fluidMs = elapsedMs;
-  const pauseUntil = s.ambient?.sustenancePauseUntil;
   let sustenanceMs = elapsedMs;
+  const pauseUntil = s.ambient?.sustenancePauseUntil;
   if (pauseUntil && new Date(pauseUntil) > now()) {
     sustenanceMs = applyAmbientSustenancePause(s, elapsedMs, now());
   }
-  // Apply fluid/compliance on full elapsed; sustenance respects ambient pause via temporary override
-  if (sustenanceMs === 0 && fluidMs > 0) {
-    const sustenanceBackup = s.metrics.sustenanceLevel;
-    applyElapsedTimeCore(s, fluidMs, now());
-    s.metrics.sustenanceLevel = sustenanceBackup;
-    return;
-  }
-  applyElapsedTimeCore(s, elapsedMs, now());
+  const { logs } = applyTick(s, elapsedMs, now(), { sustenanceMs });
+  for (const line of logs) pushLog(line);
 }
 
-// ─── quota evaluation (CORE) ───────────────────────────────────────
+function applyQuotaAwards(awards){
+  if (!awards) return;
+  state.subject.allocationCredits += awards.credits || 0;
+  addQuotaXp(awards.quota || 0);
+}
+
 function evaluateDailyQuotas(){
-  const awards = evaluateQuotaTargets(state.dailyLog);
-  state.subject.allocationCredits += awards.credits;
-  addQuotaXp(awards.quota);
+  applyQuotaAwards(evaluateQuotaAwards(state));
 }
 
 // ─── XP + file progression (CORE) ──────────────────────────────────
@@ -477,58 +474,30 @@ function applyPrestigeCycle(){
   pushLog(`NEW FILE ASSIGNED — SUBJECT AVATAR RESET`);
 }
 function freshDailyLog(){
-  return { date:todayKey(), fluidIntakeMl:0, activityUnits:0, sustenanceUnits:0, morningDoseAt:null, morningPenaltyApplied:false, complianceDoseAt:null, compliancePenaltyApplied:false, sustenanceWarned:false, quotasAwarded:0 };
+  return freshDailyLogCore(todayKey());
 }
 
-// ─── midnight reset (CORE) ─────────────────────────────────────────
+// ─── midnight reset (engine v2) ────────────────────────────────────
 export function checkMidnightReset(s){
-  const today = todayKey();
-  if (!s.dailyLog.date){ s.dailyLog.date = today; return; }
-  if (s.dailyLog.date === today) return;
-  const awards = evaluateQuotaTargets(s.dailyLog);
-  s.subject.allocationCredits += awards.credits;
-  addQuotaXp(awards.quota);
-  s.dailyLog = freshDailyLog();
-  pushLog('MIDNIGHT RESET — NEW SESSION');
+  const result = rolloverDayIfNeeded(s, now());
+  if (result.rolled) {
+    applyQuotaAwards(result.awards);
+    if (result.message) pushLog(result.message);
+  }
 }
 
-// ─── compliance grace / advisory (CORE) ────────────────────────────
+// ─── compliance advisory (engine owns penalties via applyTick) ─────
 export function checkComplianceGrace(s){
   const advisory = document.getElementById('compliance-advisory');
-  const mins = now().getHours()*60 + now().getMinutes();
-  const messages = [];
-
-  if (!s.dailyLog.morningDoseAt){
-    if (mins >= MORNING_ADVISORY_H*60 && mins < MORNING_CUTOFF_H*60) messages.push('✚ AM INJECTION REQUIRED — BEFORE 10:00 — PLEASE COMPLY');
-    else if (mins >= MORNING_CUTOFF_H*60 && !s.dailyLog.morningPenaltyApplied && !isComplianceFrozen(s)){
-      s.metrics.complianceStanding = clamp(s.metrics.complianceStanding - 10, 0, 100);
-      s.dailyLog.morningPenaltyApplied = true;
-      pushLog('AM INJECTION MISSED — COMPLIANCE STANDING -10');
-    }
-    if (mins >= MORNING_CUTOFF_H*60) messages.push('✚ AM INJECTION OVERDUE — YOU HAVE BEEN NOTED');
-  }
-  if (!s.dailyLog.complianceDoseAt){
-    if (mins >= AFTERNOON_ADVISORY_H*60 && mins < AFTERNOON_CUTOFF_H*60) messages.push('✚ PM INJECTION REQUIRED — BEFORE 14:00 — PLEASE COMPLY');
-    else if (mins >= AFTERNOON_CUTOFF_H*60 && !s.dailyLog.compliancePenaltyApplied && !isComplianceFrozen(s)){
-      s.metrics.complianceStanding = clamp(s.metrics.complianceStanding - 20, 0, 100);
-      s.dailyLog.compliancePenaltyApplied = true;
-      pushLog('PM INJECTION MISSED — COMPLIANCE STANDING -20');
-    }
-    if (mins >= AFTERNOON_CUTOFF_H*60) messages.push('✚ PM INJECTION OVERDUE — STANDING REDUCED');
-  }
-  if (s.metrics.sustenanceLevel < 30){
-    messages.push('◧ SUSTENANCE LOW — WOE / DREAD ELEVATED');
-    if (!s.dailyLog.sustenanceWarned){ s.dailyLog.sustenanceWarned = true; pushLog('SUSTENANCE CRITICAL — TEMPERS SPIKING WOE/DREAD'); }
-  } else if (s.dailyLog.sustenanceWarned && s.metrics.sustenanceLevel >= 45){ s.dailyLog.sustenanceWarned = false; }
-
+  const messages = deriveAdvisoryMessages(s, now());
   if (messages.length){ advisory.textContent = messages.join('   |   '); advisory.classList.remove('hidden'); }
   else { advisory.classList.add('hidden'); advisory.textContent = ''; }
 }
 
-// ─── node state + Four Tempers (CORE) ──────────────────────────────
+// ─── node state + Four Tempers ─────────────────────────────────────
 export function deriveNodeState(s){ return deriveNodeStateCore(s); }
-export function deriveTempers(s){ return deriveTempersCore(s); }
-function dominantTemper(t){ return Object.entries(t).sort((a,b)=>b[1]-a[1])[0][0]; }
+export function deriveTempers(s){ return deriveTempersCore(s, now()); }
+function dominantTemper(t){ return dominantTemperCore(t); }
 function deriveAvatarStage(){
   return deriveAvatarStageFromState(state.fileState);
 }
@@ -562,51 +531,38 @@ export function recalculateRefinementTier(s){
   return recalculateRefinementTierCore(s);
 }
 
-// ─── user actions (the 4 endpoints) ────────────────────────────────
+// ─── user actions (engine recordProtocol) ──────────────────────────
+function applyRecordResult(result){
+  if (!result?.ok) return;
+  applyQuotaAwards(result.awards);
+  if (result.message) {
+    const msg = result.recordedAt
+      ? `${result.message} AT ${fmtTime(result.recordedAt)}`
+      : result.message;
+    pushLog(msg);
+  }
+  saveState();
+  triggerRefinementBurst();
+  tick(false);
+}
+
 export function rehydrateUnit(ml){
   const amount = Number(ml) || Number(document.getElementById('fluid-intake-input').value) || 250;
-  if (amount <= 0) return;
-  state.dailyLog.fluidIntakeMl += amount;
-  state.metrics.fluidEfficiency = clamp(state.metrics.fluidEfficiency + amount/50, 0, 100);
-  evaluateDailyQuotas(); saveState();
-  pushLog(`FLUID LOGGED: ${amount} ML (TOTAL ${state.dailyLog.fluidIntakeMl})`);
-  triggerRefinementBurst(); tick(false);
+  applyRecordResult(recordProtocol(state, 'hydrate', { amount }, now()));
 }
 export function logPhysicalActivity(units){
   const amount = Number(units) || Number(document.getElementById('activity-units-input').value) || 1000;
-  if (amount <= 0) return;
-  state.dailyLog.activityUnits += amount;
-  state.metrics.quotaProgression = clamp(state.metrics.quotaProgression + amount/200, 0, 100);
-  evaluateDailyQuotas(); saveState();
-  pushLog(`ACTIVITY LOGGED: ${amount} UNITS (TOTAL ${state.dailyLog.activityUnits})`);
-  triggerRefinementBurst(); tick(false);
+  applyRecordResult(recordProtocol(state, 'activity', { amount }, now()));
 }
 export function logSustenance(levelBoost){
   const boost = Number(levelBoost) || 34;
-  state.dailyLog.sustenanceUnits += 1;
-  state.metrics.sustenanceLevel = clamp(state.metrics.sustenanceLevel + boost, 0, 100);
-  state.dailyLog.sustenanceWarned = false;
-  evaluateDailyQuotas(); saveState();
-  pushLog(`SUSTENANCE LOGGED: COMPONENT ${state.dailyLog.sustenanceUnits} (+${boost})`);
-  triggerRefinementBurst(); tick(false);
+  applyRecordResult(recordProtocol(state, 'sustenance', { boost }, now()));
 }
 export function administerMorningDose(){
-  if (state.dailyLog.morningDoseAt) return;
-  state.dailyLog.morningDoseAt = new Date().toISOString();
-  state.metrics.complianceStanding = clamp(state.metrics.complianceStanding + 10, 0, 100);
-  evaluateDailyQuotas(); saveState();
-  pushLog(`AM INJECTION ADMINISTERED AT ${fmtTime(state.dailyLog.morningDoseAt)}`);
-  triggerRefinementBurst(); tick(false);
+  applyRecordResult(recordProtocol(state, 'am-injection', {}, now()));
 }
 export function administerComplianceDose(){
-  if (state.dailyLog.complianceDoseAt) return;
-  state.dailyLog.complianceDoseAt = new Date().toISOString();
-  state.metrics.complianceStanding = clamp(state.metrics.complianceStanding + 15, 0, 100);
-  const mins = now().getHours()*60 + now().getMinutes();
-  if (mins >= AFTERNOON_CUTOFF_H*60 && state.dailyLog.compliancePenaltyApplied) state.metrics.complianceStanding = clamp(state.metrics.complianceStanding + 5, 0, 100);
-  evaluateDailyQuotas(); saveState();
-  pushLog(`PM INJECTION ADMINISTERED AT ${fmtTime(state.dailyLog.complianceDoseAt)}`);
-  triggerRefinementBurst(); tick(false);
+  applyRecordResult(recordProtocol(state, 'pm-injection', {}, now()));
 }
 
 // ─── data field builders (low-CPU; transform/opacity only) ─────────
@@ -693,7 +649,7 @@ function openTerminal(){
   crt?.removeAttribute('role');
   crt?.setAttribute('tabindex', '-1');
   backdrop?.setAttribute('aria-hidden', 'false');
-  switchTab(activeTab);
+  switchCenterMode(activeCenterMode);
   toggleLogSidebar(logSidebarOpen);
   const frame = document.getElementById('terminal-frame');
   if (frame) releaseTerminalFocus = trapFocus(frame);
@@ -719,19 +675,47 @@ function closeTerminal(){
   focusReturnEl = null;
 }
 
-// ─── tab navigation ────────────────────────────────────────────────
-function switchTab(tabId){
-  activeTab = tabId;
-  document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
-    const on = btn.dataset.tab === tabId;
-    btn.classList.toggle('active', on);
-    btn.setAttribute('aria-selected', on ? 'true' : 'false');
+// ─── center mode + protocol bins ───────────────────────────────────
+function switchCenterMode(mode){
+  activeCenterMode = mode === 'utilities' ? 'utilities' : mode === 'protocol' ? 'protocol' : 'matrix';
+  const frame = document.getElementById('terminal-frame');
+  if (frame) frame.dataset.centerMode = activeCenterMode;
+
+  document.querySelectorAll('.btn-mode[data-mode]').forEach((btn) => {
+    const on = btn.dataset.mode === (activeCenterMode === 'protocol' ? 'matrix' : activeCenterMode) ||
+      (btn.dataset.mode === 'matrix' && activeCenterMode === 'matrix');
+    const isMatrixBtn = btn.dataset.mode === 'matrix';
+    const isUtilBtn = btn.dataset.mode === 'utilities';
+    let pressed = false;
+    if (isMatrixBtn) pressed = activeCenterMode === 'matrix' || activeCenterMode === 'protocol';
+    if (isUtilBtn) pressed = activeCenterMode === 'utilities';
+    btn.classList.toggle('active', pressed);
+    btn.setAttribute('aria-pressed', pressed ? 'true' : 'false');
   });
-  document.querySelectorAll('.tab-panel').forEach(panel => {
-    const on = panel.id === `tab-${tabId}`;
+
+  document.querySelectorAll('.stage-panel').forEach((panel) => {
+    const on = panel.dataset.stage === activeCenterMode;
     panel.classList.toggle('active', on);
     panel.hidden = !on;
   });
+
+  if (activeCenterMode === 'protocol' && selectedProtocolId) {
+    document.querySelectorAll('.cli-cmd[data-protocol]').forEach((cmd) => {
+      const show = cmd.dataset.protocol === selectedProtocolId;
+      cmd.hidden = !show;
+    });
+    const title = document.getElementById('protocol-stage-title');
+    if (title) title.textContent = `// ${selectedProtocolId.toUpperCase().replace(/-/g, '_')}`;
+  }
+}
+
+function selectProtocolBin(protocolId){
+  selectedProtocolId = protocolId;
+  document.querySelectorAll('.protocol-bin').forEach((btn) => {
+    const on = btn.dataset.protocol === protocolId;
+    btn.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  switchCenterMode('protocol');
 }
 
 function toggleLogSidebar(force){
@@ -752,16 +736,17 @@ function setQuad(id, val){
   el.style.setProperty('--v', (val/100).toFixed(2));
   el.querySelector('.quad-val').textContent = String(Math.round(val)).padStart(2,'0');
 }
-function renderTempers(){
-  const t = deriveTempers(state);
-  const dom = dominantTemper(t);
+function renderTempers(snap){
+  const t = snap?.temperVector || deriveTempers(state);
+  const dom = snap?.dominant || dominantTemper(t);
   const node = document.getElementById('mdr-data-node');
   if (node) node.dataset.dominant = dom;
   document.body.dataset.temper = dom;
   const camDrift = document.getElementById('cam-drift');
   if (camDrift) camDrift.dataset.dominant = dom;
   setQuad('quad-wo', t.woe); setQuad('quad-fc', t.frolic); setQuad('quad-dr', t.dread); setQuad('quad-ma', t.malice);
-  document.getElementById('tempers-readout').textContent = `DOMINANT TEMPER: ${TEMPER_NAMES[dom]}`;
+  const readout = document.getElementById('tempers-readout');
+  if (readout) readout.textContent = `DOMINANT: ${TEMPER_NAMES[dom]}`;
   setMetric('temper-woe-bar', 'temper-woe-val', t.woe);
   setMetric('temper-frolic-bar', 'temper-frolic-val', t.frolic);
   setMetric('temper-dread-bar', 'temper-dread-val', t.dread);
@@ -793,21 +778,25 @@ const PROTOCOL_STATUS_LABEL = {
   pending: 'PENDING',
 };
 
-function renderProtocolChecklist(){
-  const list = document.getElementById('protocol-checklist');
+function renderProtocolBins(snap){
+  const nav = document.getElementById('protocol-bins');
   const summary = document.getElementById('protocol-checklist-summary');
-  if (!list || !state) return;
-  const items = deriveProtocolChecklist(state.dailyLog, now());
-  list.innerHTML = items.map((item) => `
-    <li data-status="${item.status}" role="listitem">
-      <span class="protocol-status" data-status="${item.status}">${PROTOCOL_STATUS_LABEL[item.status]}</span>
-      <span class="protocol-label">${item.label}</span>
-      <span class="protocol-detail">${item.detail}</span>
-    </li>
+  if (!nav || !snap) return;
+  const bins = snap.bins;
+  nav.innerHTML = bins.map((bin) => `
+    <button type="button" class="protocol-bin" role="tab"
+      data-protocol="${bin.id}" data-status="${bin.status}"
+      aria-selected="${selectedProtocolId === bin.id ? 'true' : 'false'}"
+      aria-label="${bin.bin} ${bin.label} ${bin.progressPct}%">
+      <span class="bin-id">${bin.bin} · ${PROTOCOL_STATUS_LABEL[bin.status]}</span>
+      <span class="bin-pct">${bin.progressPct}%</span>
+      <span class="bin-bar" style="--pct:${bin.progressPct}%"><i></i></span>
+      <span class="bin-micro"><span>WO ${bin.micro.wo}</span><span>FC ${bin.micro.fc}</span><span>DR ${bin.micro.dr}</span><span>MA ${bin.micro.ma}</span></span>
+    </button>
   `).join('');
-  if (summary) summary.textContent = protocolChecklistSummary(items);
+  if (summary) summary.textContent = snap.checklistSummary;
 
-  for (const item of items) {
+  for (const item of bins) {
     const cmd = document.querySelector(`.cli-cmd[data-protocol="${item.id}"]`);
     if (cmd) cmd.dataset.protocolStatus = item.status;
     const chip = document.querySelector(`.protocol-cmd-status[data-for="${item.id}"]`);
@@ -860,6 +849,8 @@ function render(){
   document.body.dataset.skin = state.incentives.activeSkin || '';
   document.body.classList.toggle('kiosk-awake', !!state.kioskAwake);
 
+  const snap = deriveTerminalSnapshot(state, now());
+
   document.getElementById('subject-designation').textContent = `SUBJECT #${state.subject.subjectNumber}`;
   document.getElementById('refinement-tier').textContent     = `TIER: ${TIER_NAMES[state.subject.refinementTier]}`;
   document.getElementById('prestige-multiplier').textContent = `x${state.subject.prestigeMultiplier.toFixed(1)}`;
@@ -867,7 +858,10 @@ function render(){
   document.getElementById('allocation-credits').textContent  = `CR ${String(state.subject.allocationCredits).padStart(4,'0')}`;
 
   const filePct = Math.round(fileProgressPct());
-  document.getElementById('file-designation').textContent = `FILE-${String(state.fileState.fileNumber).padStart(4,'0')}`;
+  const fileDes = document.getElementById('file-designation');
+  if (fileDes) fileDes.textContent = `FILE-${String(state.fileState.fileNumber).padStart(4,'0')}`;
+  const headerPct = document.getElementById('header-file-pct');
+  if (headerPct) headerPct.textContent = `${filePct}% COMPLETE`;
   document.getElementById('file-bar').textContent = asciiBar(filePct, 14);
   document.getElementById('file-value').textContent = `${filePct}%`;
 
@@ -876,14 +870,21 @@ function render(){
   setMetric('compliance-bar','compliance-value', state.metrics.complianceStanding);
   setMetric('sustenance-bar','sustenance-value', state.metrics.sustenanceLevel);
 
-  document.getElementById('fluid-intake-today').textContent   = state.dailyLog.fluidIntakeMl;
-  document.getElementById('activity-units-today').textContent = state.dailyLog.activityUnits;
-  document.getElementById('sustenance-today').textContent     = state.dailyLog.sustenanceUnits;
+  const fluidToday = document.getElementById('fluid-intake-today');
+  if (fluidToday) fluidToday.textContent = state.dailyLog.fluidIntakeMl;
+  const actToday = document.getElementById('activity-units-today');
+  if (actToday) actToday.textContent = state.dailyLog.activityUnits;
+  const sustToday = document.getElementById('sustenance-today');
+  if (sustToday) sustToday.textContent = state.dailyLog.sustenanceUnits;
 
-  document.getElementById('morning-dose-time').textContent = state.dailyLog.morningDoseAt ? `${fmtTime(state.dailyLog.morningDoseAt)} ✓` : 'NOT RECORDED';
-  document.getElementById('btn-administer-morning').disabled = !!state.dailyLog.morningDoseAt;
-  document.getElementById('compliance-dose-time').textContent = state.dailyLog.complianceDoseAt ? `${fmtTime(state.dailyLog.complianceDoseAt)} ✓` : 'NOT RECORDED';
-  document.getElementById('btn-administer-dose').disabled = !!state.dailyLog.complianceDoseAt;
+  const morningEl = document.getElementById('morning-dose-time');
+  if (morningEl) morningEl.textContent = state.dailyLog.morningDoseAt ? `${fmtTime(state.dailyLog.morningDoseAt)} ✓` : 'NOT RECORDED';
+  const amBtn = document.getElementById('btn-administer-morning');
+  if (amBtn) amBtn.disabled = !!state.dailyLog.morningDoseAt;
+  const pmEl = document.getElementById('compliance-dose-time');
+  if (pmEl) pmEl.textContent = state.dailyLog.complianceDoseAt ? `${fmtTime(state.dailyLog.complianceDoseAt)} ✓` : 'NOT RECORDED';
+  const pmBtn = document.getElementById('btn-administer-dose');
+  if (pmBtn) pmBtn.disabled = !!state.dailyLog.complianceDoseAt;
 
   const mins = now().getHours()*60 + now().getMinutes();
   updateWindowIndicator('morning-window-indicator',   mins, MORNING_ADVISORY_H*60,   MORNING_CUTOFF_H*60,   !!state.dailyLog.morningDoseAt);
@@ -891,21 +892,22 @@ function render(){
 
   document.getElementById('compliance-freeze-notice').classList.toggle('hidden', !isComplianceFrozen());
 
-  renderProtocolChecklist();
+  renderProtocolBins(snap);
 
   const avatar = deriveAvatarStage();
   const node = document.getElementById('mdr-data-node');
-  const nodeState = deriveNodeState(state);
-  node.dataset.avatarStage = avatar.id;
-  node.dataset.state = nodeState;
-  node.dataset.geometry = state.activeGeometry;
+  const nodeState = snap.nodeState;
+  if (node) {
+    node.dataset.avatarStage = avatar.id;
+    node.dataset.state = nodeState;
+    node.dataset.geometry = state.activeGeometry;
+  }
   document.getElementById('avatar-temper-label').textContent = `STAGE: ${avatar.label}`;
   document.getElementById('mdr-status-label').textContent = NODE_STATUS[nodeState];
   const cam = document.getElementById('cam-ambient'); if (cam) cam.textContent = CAM_STATUS[nodeState];
 
   renderAvatar();
-
-  renderTempers();
+  renderTempers(snap);
   renderMilestoneLine();
   renderIncentives();
   renderProcurement();
@@ -932,6 +934,7 @@ function render(){
   const audioToggle = document.getElementById('audio-enabled');
   if (audioToggle) audioToggle.checked = !!state.audioEnabled;
   renderAmbientReport();
+  maybeShowUiTips();
 }
 
 // ─── live clock (cam + terminal) ───────────────────────────────────
@@ -1026,6 +1029,7 @@ function dismissOrientation(){
   state.onboardingComplete = true;
   saveState();
   maybeShowAmbientHint();
+  maybeShowUiTips();
   bumpIdle();
 }
 function updateOrientPage(){
@@ -1036,7 +1040,21 @@ function updateOrientPage(){
 }
 
 // ─── archival ──────────────────────────────────────────────────────
-function updateArchivalStatus(msg){ const el = document.getElementById('archival-status'); if (el) el.textContent = msg; }
+function updateArchivalStatus(msg, tone = 'idle'){
+  const el = document.getElementById('archival-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.dataset.tone = tone;
+}
+function setTransmitStatus(status){
+  const btn = document.getElementById('btn-transmit-record');
+  if (!btn) return;
+  btn.dataset.status = status;
+  if (status === 'sending') btn.textContent = 'TRANSMITTING…';
+  else if (status === 'ok') btn.textContent = 'TRANSMITTED';
+  else if (status === 'fail') btn.textContent = 'TRANSMIT FAILED';
+  else btn.textContent = 'TRANSMIT RECORD';
+}
 function showConflictModal(){ return new Promise(resolve => { pendingConflict = resolve; document.getElementById('conflict-modal').classList.remove('hidden'); }); }
 async function initArchivalPull(){
   if (!state.sync.enabled || !state.sync.apiBase || !state.sync.code) return;
@@ -1095,12 +1113,32 @@ function bindEventListeners(){
     if (e.altKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); toggleLogSidebar(); }
   });
 
-  // tab bar
-  document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  // center modes + protocol bins
+  document.getElementById('btn-center-matrix')?.addEventListener('click', () => {
+    selectedProtocolId = null;
+    switchCenterMode('matrix');
   });
+  document.getElementById('btn-center-utilities')?.addEventListener('click', () => switchCenterMode('utilities'));
   document.getElementById('btn-toggle-log')?.addEventListener('click', () => toggleLogSidebar());
   document.getElementById('btn-close-log')?.addEventListener('click', () => toggleLogSidebar(false));
+  document.getElementById('protocol-bins')?.addEventListener('click', (e) => {
+    const bin = e.target.closest('.protocol-bin');
+    if (bin?.dataset.protocol) selectProtocolBin(bin.dataset.protocol);
+  });
+  document.getElementById('btn-toggle-tempers-bar')?.addEventListener('click', () => {
+    document.getElementById('temper-rail')?.classList.toggle('open');
+    document.getElementById('vitals-rail')?.classList.remove('open');
+  });
+  document.getElementById('btn-toggle-vitals-bar')?.addEventListener('click', () => {
+    document.getElementById('vitals-rail')?.classList.toggle('open');
+    document.getElementById('temper-rail')?.classList.remove('open');
+  });
+  document.getElementById('btn-dismiss-a2hs')?.addEventListener('click', () => {
+    state.uiTips.a2hsDismissed = true; saveState(); maybeShowUiTips();
+  });
+  document.getElementById('btn-dismiss-kiosk-tip')?.addEventListener('click', () => {
+    state.uiTips.kioskTipDismissed = true; saveState(); maybeShowUiTips();
+  });
 
   // habit endpoints
   document.getElementById('btn-administer-morning').addEventListener('click', administerMorningDose);
@@ -1191,14 +1229,31 @@ function bindEventListeners(){
   document.getElementById('btn-copy-hash').addEventListener('click', async () => { if (state.sync.code){ await navigator.clipboard.writeText(state.sync.code); updateArchivalStatus('HASH COPIED'); } });
   document.getElementById('btn-regenerate-hash').addEventListener('click', async () => { state.sync.code = await generateSyncCode(); saveState(); render(); updateArchivalStatus('NEW HASH GENERATED'); });
   document.getElementById('btn-transmit-record').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-transmit-record');
     try {
+      setTransmitStatus('sending');
+      updateArchivalStatus('TRANSMITTING…', 'sending');
       if (!state.sync.code) state.sync.code = await generateSyncCode();
-      state.sync.enabled = true; state.sync.apiBase = document.getElementById('archival-endpoint').value.trim();
+      state.sync.enabled = true;
+      const endpoint = document.getElementById('archival-endpoint').value.trim();
+      if (endpoint) state.sync.apiBase = endpoint;
+      if (!state.sync.apiBase) {
+        setTransmitStatus('fail');
+        updateArchivalStatus('SET ENDPOINT UNDER ADVANCED — OR USE LOCAL ARCHIVE ONLY', 'fail');
+        return;
+      }
       const pw = document.getElementById('archival-passphrase').value;
       const result = await syncNow(state, pw, () => showConflictModal());
       if (result.action === 'applied' && result.state) state = migrateState(result.state);
-      saveState(); render(); updateArchivalStatus('RECORD TRANSMITTED — ' + fmtTime(new Date()));
-    } catch (err){ updateArchivalStatus('TRANSMIT ERROR: ' + err.message); }
+      saveState(); render();
+      setTransmitStatus('ok');
+      updateArchivalStatus('RECORD ON FILE — ' + fmtTime(new Date()), 'ok');
+      setTimeout(() => setTransmitStatus('idle'), 2500);
+    } catch (err){
+      setTransmitStatus('fail');
+      updateArchivalStatus('TRANSMIT FAILED — ' + err.message, 'fail');
+      setTimeout(() => setTransmitStatus('idle'), 3000);
+    }
   });
   document.getElementById('btn-retain-local').addEventListener('click', () => { document.getElementById('conflict-modal').classList.add('hidden'); pendingConflict?.('local'); pendingConflict = null; });
   document.getElementById('btn-accept-archival').addEventListener('click', () => { document.getElementById('conflict-modal').classList.add('hidden'); pendingConflict?.('remote'); pendingConflict = null; });
@@ -1228,7 +1283,7 @@ async function init(){
   const crt = document.getElementById('crt-monitor');
   if (crt) crtHome = { parent: crt.parentElement, next: crt.nextSibling };
   render();
-  switchTab('data-matrix');
+  switchCenterMode('matrix');
   toggleLogSidebar(true);
   bindEventListeners();
   startClock();
@@ -1238,7 +1293,10 @@ async function init(){
 
   pushLog('REFINEMENT STREAM INITIALIZED — WELCOME BACK TO THE FLOOR');
   if (!state.onboardingComplete) showOrientation();
-  else maybeShowAmbientHint();
+  else {
+    maybeShowAmbientHint();
+    maybeShowUiTips();
+  }
 
   setAudioEnabled(!!state.audioEnabled);
   syncDeskAudio();
@@ -1254,6 +1312,7 @@ async function init(){
       if (typeof msg === 'string' && /workstation|intercom|please return/i.test(msg)) {
         playIntercomChirp();
       }
+      playAmbientCue(state.ambient?.lastEventId);
     },
   });
   ambientScheduler.start();

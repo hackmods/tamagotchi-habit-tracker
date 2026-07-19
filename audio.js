@@ -24,6 +24,29 @@ const DEFIANT_NOTES = [
   { f: 0, d: 0.4 },
 ];
 
+/** Sparse alternate motif — quieter fifths. */
+const HALLWAY_NOTES = [
+  { f: 146.83, d: 0.22 },
+  { f: 220.0, d: 0.2 },
+  { f: 293.66, d: 0.28 },
+  { f: 0, d: 0.2 },
+  { f: 174.61, d: 0.22 },
+  { f: 261.63, d: 0.36 },
+  { f: 0, d: 0.5 },
+];
+
+/** Brief wellness-adjacent motif. */
+const WELLNESS_NOTES = [
+  { f: 392.0, d: 0.14 },
+  { f: 349.23, d: 0.14 },
+  { f: 329.63, d: 0.18 },
+  { f: 261.63, d: 0.28 },
+  { f: 0, d: 0.35 },
+];
+
+const MOTIF_POOL = [DEFIANT_NOTES, HALLWAY_NOTES, WELLNESS_NOTES];
+let motifIndex = 0;
+
 let ctx = null;
 let master = null;
 let humNodes = null;
@@ -108,8 +131,10 @@ function beepSquare(freq, duration, when, vel = 0.08) {
 
 function playMotifOnce() {
   if (!ctx || !deskActive || !enabled || REDUCED_MOTION) return;
+  const notes = MOTIF_POOL[motifIndex % MOTIF_POOL.length];
+  motifIndex += 1;
   let t = ctx.currentTime + 0.05;
-  for (const note of DEFIANT_NOTES) {
+  for (const note of notes) {
     if (note.f > 0) beepSquare(note.f, Math.min(note.d * 0.92, 0.28), t, 0.055);
     t += note.d;
   }
@@ -177,4 +202,37 @@ export function playIntercomChirp() {
   const t = ctx.currentTime + 0.02;
   beepSquare(880, 0.08, t, 0.04);
   beepSquare(660, 0.12, t + 0.1, 0.035);
+}
+
+/**
+ * Short original cue keyed to ambient event id (default off via enabled flag).
+ * @param {string} [eventId]
+ */
+export function playAmbientCue(eventId) {
+  if (!enabled || !deskActive || REDUCED_MOTION || !eventId) return;
+  ensureCtx();
+  if (!ctx) return;
+  ctx.resume?.();
+  const t = ctx.currentTime + 0.02;
+  if (eventId === 'intercom' || eventId === 'compliance-drill') {
+    playIntercomChirp();
+    return;
+  }
+  if (eventId === 'ballast-failure' || eventId === 'night-shift') {
+    beepSquare(110, 0.15, t, 0.05);
+    beepSquare(82.41, 0.2, t + 0.12, 0.04);
+    return;
+  }
+  if (eventId === 'wellness-gaze' || eventId === 'mde-tease') {
+    beepSquare(523.25, 0.1, t, 0.03);
+    beepSquare(659.25, 0.14, t + 0.12, 0.028);
+    return;
+  }
+  if (eventId === 'numbers-huddle' || eventId === 'eraser-pass') {
+    beepSquare(440, 0.06, t, 0.03);
+    beepSquare(494, 0.06, t + 0.07, 0.03);
+    beepSquare(523, 0.08, t + 0.14, 0.03);
+    return;
+  }
+  beepSquare(330, 0.1, t, 0.03);
 }

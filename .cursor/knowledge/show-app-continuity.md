@@ -19,14 +19,17 @@ Outie actions (water, movement, doses, meals) are *translated* into innie metric
 |--------------|-------------------|
 | MDR open-plan office | Pseudo-3D diorama: sage carpet, ceiling light grid, 4-pod desks |
 | Mark’s workstation cluster | Pod cross (N/W/E/S); interactive CRT on south pod |
-| Refinement terminal | `#terminal-frame` inside CRT glass (`DATA_MATRIX` etc.) |
+| Refinement terminal | `#terminal-frame` MDR/Cold Harbor **frame**: header · temper rail · center stage · vitals rail · bins `01`–`05` |
 | Floating scary numbers | `.mdr-num` drift field + idle CRT preview digits |
-| Four Tempers bins | Quadrants WO/FC/DR/MA + temper bars |
+| Four Tempers bins | Left temper rail WO/FC/DR/MA + digit quadrants |
+| Five file progress boxes | Footer **protocol bins** (hydrate / activity / AM / PM / sustenance) from engine snapshot |
 | Security / hallway cam | Cam HUD: `REC · INNIE-CAM · FLOOR 7 · MDR` |
 | Intercom / PA | Ambient toast + lasting `#cam-chyron` |
 | Break Room dread | Palette `breakroom`; rare compliance drill / diversion events |
 | Wellness session | East-pod figure gaze; `wellness` palette |
 | O&D / design culture | Procurement palettes & node geometries |
+
+Center stage modes: **MATRIX** (default) · **protocol** (bin expand) · **UTILITIES** (titlebar).
 
 ## Progression & perks
 

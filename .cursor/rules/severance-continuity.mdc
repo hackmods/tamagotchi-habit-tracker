@@ -5,7 +5,7 @@ alwaysApply: false
 
 # Severance knowledge (agent reference)
 
-Read [`.cursor/knowledge/severance-facts.md`](../knowledge/severance-facts.md) and [`.cursor/knowledge/show-app-continuity.md`](../knowledge/show-app-continuity.md) before changing copy, ambient events, MDR visuals, or Lumon branding.
+Read [`.cursor/knowledge/severance-facts.md`](../knowledge/severance-facts.md), [`.cursor/knowledge/show-app-continuity.md`](../knowledge/show-app-continuity.md), and [`.cursor/knowledge/visual-direction.md`](../knowledge/visual-direction.md) before changing copy, ambient events, MDR visuals, or Lumon branding. For habit math, also read [`.cursor/knowledge/engine-design.md`](../knowledge/engine-design.md).
 
 **Voice rules**
 - Clinical corporate handbook tone; short imperative lines
@@ -14,6 +14,6 @@ Read [`.cursor/knowledge/severance-facts.md`](../knowledge/severance-facts.md) a
 - Easter eggs = lore crumbs; CR/XP rewards stay tiny
 
 **Visual rules**
-- MDR = scary numbers, temper quadrants (WO/FC/DR/MA), phosphor CRT
+- MDR = scary numbers, temper quadrants (WO/FC/DR/MA), phosphor CRT; terminal = header + center stage + bins 01–05 + edge vitals (see visual-direction)
 - Office = sage carpet, white panels, ceiling grid, 4-pod desks
 - Ambient stays rare (hours-scale), not arcade

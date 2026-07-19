@@ -59,7 +59,7 @@ test.describe('SVG avatar smoke', () => {
     await page.goto('/?reset=1');
     await openTerminal(page);
 
-    await page.getByRole('tab', { name: /RESOURCING/i }).click();
+    await page.locator('.protocol-bin[data-protocol="hydrate"]').click();
     await page.locator('#btn-rehydrate-250').click();
     await expect(page.locator('#mdr-data-node')).toHaveClass(/refining/);
     await expect(page.locator('#mdr-data-node')).not.toHaveClass(/refining/, { timeout: 2000 });
@@ -67,28 +67,37 @@ test.describe('SVG avatar smoke', () => {
 });
 
 test.describe('core terminal smoke', () => {
-  test('tab navigation and ESC return to desk view', async ({ page }) => {
+  test('protocol bins and ESC return to desk view', async ({ page }) => {
     await page.goto('/?reset=1');
     await openTerminal(page);
 
-    await page.getByRole('tab', { name: /RESOURCING/i }).click();
-    await expect(page.locator('#tab-resourcing')).toHaveClass(/active/);
+    await page.locator('.protocol-bin[data-protocol="hydrate"]').click();
+    await expect(page.locator('#stage-protocol')).toHaveClass(/active/);
+    await expect(page.locator('.cli-cmd[data-protocol="hydrate"]')).toBeVisible();
 
     await page.keyboard.press('Escape');
     await expect(page.locator('body')).toHaveAttribute('data-view', 'desk');
     await expect(page.locator('#crt-monitor')).not.toHaveClass(/focused/);
   });
 
-  test('RESOURCING shows daily protocol checklist with status', async ({ page }) => {
+  test('protocol bins show status and open logging controls', async ({ page }) => {
     await page.goto('/?reset=1&debugTime=11:00');
     await openTerminal(page);
-    await page.getByRole('tab', { name: /RESOURCING/i }).click();
-    await expect(page.locator('#protocol-checklist')).toBeVisible();
-    await expect(page.locator('#protocol-checklist li')).toHaveCount(5);
+    await expect(page.locator('#protocol-bins .protocol-bin')).toHaveCount(5);
     await expect(page.locator('#protocol-checklist-summary')).toContainText(/PLEASE COMPLY/);
-    await expect(page.locator('#protocol-checklist li[data-status="overdue"]')).toHaveCount(1);
+    await expect(page.locator('.protocol-bin[data-status="overdue"]')).toHaveCount(1);
+    await page.locator('.protocol-bin[data-protocol="activity"]').click();
     await expect(page.locator('#btn-log-activity')).toBeVisible();
+    await page.locator('.protocol-bin[data-protocol="am-injection"]').click();
     await expect(page.locator('#btn-administer-morning')).toBeVisible();
+  });
+
+  test('UTILITIES mode opens from titlebar', async ({ page }) => {
+    await page.goto('/?reset=1');
+    await openTerminal(page);
+    await page.locator('#btn-center-utilities').click();
+    await expect(page.locator('#stage-utilities')).toHaveClass(/active/);
+    await expect(page.locator('#btn-archival')).toBeVisible();
   });
 
   test('CRT opens via real pointer click', async ({ page }) => {

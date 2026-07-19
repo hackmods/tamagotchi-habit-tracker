@@ -4,6 +4,7 @@ const STATE_KEY = 'lumon-compliance-state';
 
 export function buildState(overrides = {}) {
   return {
+    stateVersion: 2,
     subject: {
       subjectNumber: 4229,
       cumulativeQuota: 0,
@@ -34,6 +35,14 @@ export function buildState(overrides = {}) {
       compliancePenaltyApplied: false,
       sustenanceWarned: false,
       quotasAwarded: 0,
+      awards: {
+        hydrate: false,
+        activity: false,
+        amInjection: false,
+        pmInjection: false,
+        sustenance: false,
+        fullDay: false,
+      },
     },
     incentives: { inventory: [], activeSkin: null, complianceFreezeUntil: null, fingerTrapTaps: 0 },
     onboardingComplete: true,
@@ -55,6 +64,8 @@ export function buildState(overrides = {}) {
     kioskAwake: false,
     kioskFullscreen: false,
     ambientHintSeen: true,
+    audioEnabled: false,
+    uiTips: { a2hsDismissed: true, kioskTipDismissed: true },
     ...overrides,
   };
 }

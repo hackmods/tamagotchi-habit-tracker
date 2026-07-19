@@ -54,8 +54,8 @@ if (sw.includes(0) && sw.length > 100 && sw.filter((b) => b === 0).length > sw.l
   process.exit(1);
 }
 const swText = sw.toString('utf8');
-if (!swText.includes("CACHE_NAME = 'lumon-terminal-v11'")) {
-  console.error('sw.js CACHE_NAME should be bumped when shell assets change (expected lumon-terminal-v11)');
+if (!swText.includes("CACHE_NAME = 'lumon-terminal-v12'")) {
+  console.error('sw.js CACHE_NAME should be bumped when shell assets change (expected lumon-terminal-v12)');
   process.exit(1);
 }
 for (const asset of ['./avatar.js', './ambient.js', './engine.js', './audio.js', './fonts/fonts.css']) {

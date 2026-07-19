@@ -100,12 +100,20 @@
                     <span class="crt-prompt">▶ CLICK TO REFINE</span>
                   </div>
 
-                  <!-- INNER TERMINAL (tabbed MDR application — lives inside monitor glass) -->
-                  <div id="terminal-frame" class="terminal-frame" role="application" aria-label="Macrodata Refinement Terminal">
+                  <!-- INNER TERMINAL — MDR / Cold Harbor frame -->
+                  <div id="terminal-frame" class="terminal-frame" role="application" aria-label="Macrodata Refinement Terminal" data-center-mode="matrix">
 
-      <header class="terminal-titlebar">
-        <span class="tt-title">LUMON · MACRODATA REFINEMENT TERMINAL</span>
-        <button type="button" id="btn-return-desk" class="btn-return">[ESC // RETURN TO DESK]</button>
+      <header class="terminal-titlebar mdr-header">
+        <span class="tt-file" id="file-designation">FILE-0001</span>
+        <span class="tt-pct" id="header-file-pct">0% COMPLETE</span>
+        <span class="tt-lumon" aria-hidden="true">LUMON</span>
+        <span class="tt-spacer"></span>
+        <button type="button" id="btn-toggle-tempers-bar" class="btn-mode phone-only" hidden>TEMPERS</button>
+        <button type="button" id="btn-toggle-vitals-bar" class="btn-mode phone-only" hidden>VITALS</button>
+        <button type="button" id="btn-center-matrix" class="btn-mode active" data-mode="matrix" aria-pressed="true">MATRIX</button>
+        <button type="button" id="btn-center-utilities" class="btn-mode" data-mode="utilities" aria-pressed="false">UTILITIES</button>
+        <button type="button" id="btn-toggle-log" class="btn-mode tab-btn-log" title="Alt+L">LOG</button>
+        <button type="button" id="btn-return-desk" class="btn-return">[ESC // DESK]</button>
       </header>
 
       <div class="cli-statline">
@@ -118,22 +126,24 @@
         <span id="clock-date" class="muted">---</span>
       </div>
 
-      <nav class="terminal-tabbar" role="tablist" aria-label="MDR application modules">
-        <button type="button" class="tab-btn active" role="tab" id="tab-btn-data-matrix" data-tab="data-matrix" aria-selected="true" aria-controls="tab-data-matrix">[01 // DATA_MATRIX]</button>
-        <button type="button" class="tab-btn" role="tab" id="tab-btn-resourcing" data-tab="resourcing" aria-selected="false" aria-controls="tab-resourcing">[02 // RESOURCING]</button>
-        <button type="button" class="tab-btn" role="tab" id="tab-btn-compliance" data-tab="compliance" aria-selected="false" aria-controls="tab-compliance">[03 // COMPLIANCE]</button>
-        <button type="button" class="tab-btn" role="tab" id="tab-btn-utilities" data-tab="utilities" aria-selected="false" aria-controls="tab-utilities">[04 // UTILITIES]</button>
-        <button type="button" class="tab-btn tab-btn-log" id="btn-toggle-log" title="Alt+L">[ALT+L // TERMINAL_OUTPUT]</button>
-      </nav>
-
       <p id="compliance-advisory" class="cli-advisory hidden" role="alert"></p>
+      <p class="cli-sub protocol-summary" id="protocol-checklist-summary">0 / 5 PROTOCOLS COMPLETE — PLEASE COMPLY</p>
 
-      <div class="terminal-workspace">
+      <div class="terminal-workspace mdr-frame">
+
+        <aside class="temper-rail" id="temper-rail" aria-label="Temper sorting">
+          <button type="button" class="rail-toggle" id="btn-toggle-tempers" hidden>TEMPERS</button>
+          <p class="cli-h">// TEMPERS</p>
+          <div class="temper-bar-row temper-wo"><span class="temper-key">WO</span><span class="cli-bar" id="temper-woe-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-woe-val">0%</span></div>
+          <div class="temper-bar-row temper-fc"><span class="temper-key">FC</span><span class="cli-bar" id="temper-frolic-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-frolic-val">0%</span></div>
+          <div class="temper-bar-row temper-dr"><span class="temper-key">DR</span><span class="cli-bar" id="temper-dread-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-dread-val">0%</span></div>
+          <div class="temper-bar-row temper-ma"><span class="temper-key">MA</span><span class="cli-bar" id="temper-malice-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-malice-val">0%</span></div>
+          <p class="cli-sub" id="tempers-readout">DOMINANT: FROLIC</p>
+        </aside>
 
         <div class="terminal-main" id="terminal-main">
 
-          <!-- TAB 01: DATA_MATRIX -->
-          <section class="tab-panel active" id="tab-data-matrix" role="tabpanel" aria-labelledby="tab-btn-data-matrix">
+          <section class="stage-panel active" id="stage-matrix" data-stage="matrix">
             <div class="matrix-workspace">
               <div id="mdr-data-node" data-avatar-stage="ghost" data-state="baseline" data-dominant="frolic">
                 <div id="mdr-grid-bg" class="mdr-grid-bg" aria-hidden="true"></div>
@@ -167,35 +177,20 @@
                 </div>
                 <div class="mdr-crosshair" aria-hidden="true"></div>
               </div>
-              <p class="matrix-meta"><span id="avatar-temper-label">STAGE: LATENT SIGNAL</span> · <span id="avatar-visibility-label">VISIBILITY: 8%</span> · <span id="tempers-readout">DOMINANT: FROLIC</span> · <span id="mdr-status-label">NODE: BASELINE</span></p>
+              <p class="matrix-meta"><span id="avatar-temper-label">STAGE: LATENT SIGNAL</span> · <span id="avatar-visibility-label">VISIBILITY: 8%</span> · <span id="mdr-status-label">NODE: BASELINE</span></p>
             </div>
-
-            <div class="temper-bars">
-              <p class="cli-h">// TEMPER SORTING BINS</p>
-              <div class="temper-bar-row temper-wo"><span class="temper-key">WOE</span><span class="cli-bar" id="temper-woe-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-woe-val">0%</span></div>
-              <div class="temper-bar-row temper-fc"><span class="temper-key">FROLIC</span><span class="cli-bar" id="temper-frolic-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-frolic-val">0%</span></div>
-              <div class="temper-bar-row temper-dr"><span class="temper-key">DREAD</span><span class="cli-bar" id="temper-dread-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-dread-val">0%</span></div>
-              <div class="temper-bar-row temper-ma"><span class="temper-key">MALICE</span><span class="cli-bar" id="temper-malice-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="temper-malice-val">0%</span></div>
-            </div>
-
             <div class="matrix-footer">
-              <div class="cli-metric compact"><span class="cli-key" id="file-designation">FILE-0001</span><span class="cli-bar" id="file-bar">[░░░░░░░░░░░░░░]</span><span class="cli-pct" id="file-value">0%</span></div>
+              <div class="cli-metric compact"><span class="cli-key">FILE</span><span class="cli-bar" id="file-bar">[░░░░░░░░░░░░░░]</span><span class="cli-pct" id="file-value">0%</span></div>
               <p class="cli-sub" id="milestone-line">MILESTONES: [ ]10% [ ]25% [ ]75% [ ]100%</p>
               <div id="inventory-badges" class="inventory-badges"></div>
             </div>
           </section>
 
-          <!-- TAB 02: RESOURCING (daily protocol checklist + logging) -->
-          <section class="tab-panel" id="tab-resourcing" role="tabpanel" aria-labelledby="tab-btn-resourcing" hidden>
-            <p class="cli-h">// DAILY PROTOCOL CHECKLIST</p>
-            <p class="cli-sub" id="protocol-checklist-summary">0 / 5 PROTOCOLS COMPLETE — PLEASE COMPLY</p>
-            <ul class="protocol-checklist" id="protocol-checklist" aria-label="Daily protocol compliance"></ul>
+          <section class="stage-panel" id="stage-protocol" data-stage="protocol" hidden>
+            <p class="cli-h" id="protocol-stage-title">// PROTOCOL</p>
+            <ul class="protocol-checklist" id="protocol-checklist" aria-label="Daily protocol compliance" hidden></ul>
 
-            <p class="cli-h">// FLUID_EFFICIENCY · SUSTENANCE_COMPONENT</p>
-            <div class="cli-metric"><span class="cli-key">FLUID_EFFICIENCY</span><span class="cli-bar" id="fluid-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="fluid-value">0%</span></div>
-            <div class="cli-metric"><span class="cli-key">SUSTENANCE_COMPONENT</span><span class="cli-bar" id="sustenance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="sustenance-value">0%</span></div>
-
-            <div class="cli-cmd" data-protocol="hydrate">
+            <div class="cli-cmd" data-protocol="hydrate" hidden>
               <span class="cli-cmd-label">&gt; HYDRATE_UNIT</span>
               <span class="cli-cmd-stat">TODAY · <span id="fluid-intake-today">0</span>/2000ml · <span class="protocol-cmd-status" data-for="hydrate"></span></span>
               <span class="cli-cmd-actions">
@@ -206,7 +201,7 @@
               </span>
             </div>
 
-            <div class="cli-cmd" data-protocol="activity">
+            <div class="cli-cmd" data-protocol="activity" hidden>
               <span class="cli-cmd-label">&gt; LOG_ACTIVITY</span>
               <span class="cli-cmd-stat">TODAY · <span id="activity-units-today">0</span>/8000u · <span class="protocol-cmd-status" data-for="activity"></span></span>
               <span class="cli-cmd-actions">
@@ -218,19 +213,19 @@
               </span>
             </div>
 
-            <div class="cli-cmd" data-protocol="am-injection">
+            <div class="cli-cmd" data-protocol="am-injection" hidden>
               <span class="cli-cmd-label">&gt; AM_INJECTION</span>
               <span class="cli-cmd-stat"><span id="morning-dose-time">NOT RECORDED</span> <em id="morning-window-indicator"></em> · <span class="protocol-cmd-status" data-for="am-injection"></span></span>
               <span class="cli-cmd-actions"><button type="button" id="btn-administer-morning" class="btn-cli btn-cli-go">ADMINISTER</button></span>
             </div>
 
-            <div class="cli-cmd" data-protocol="pm-injection">
+            <div class="cli-cmd" data-protocol="pm-injection" hidden>
               <span class="cli-cmd-label">&gt; PM_INJECTION</span>
               <span class="cli-cmd-stat"><span id="compliance-dose-time">NOT RECORDED</span> <em id="afternoon-window-indicator"></em> · <span class="protocol-cmd-status" data-for="pm-injection"></span></span>
               <span class="cli-cmd-actions"><button type="button" id="btn-administer-dose" class="btn-cli btn-cli-go">ADMINISTER</button></span>
             </div>
 
-            <div class="cli-cmd" data-protocol="sustenance">
+            <div class="cli-cmd" data-protocol="sustenance" hidden>
               <span class="cli-cmd-label">&gt; SUSTENANCE</span>
               <span class="cli-cmd-stat">TODAY · <span id="sustenance-today">0</span>/3 comp · <span class="protocol-cmd-status" data-for="sustenance"></span></span>
               <span class="cli-cmd-actions">
@@ -241,17 +236,7 @@
             </div>
           </section>
 
-          <!-- TAB 03: COMPLIANCE (standing / quota readout) -->
-          <section class="tab-panel" id="tab-compliance" role="tabpanel" aria-labelledby="tab-btn-compliance" hidden>
-            <p class="cli-h">// QUOTA_PROGRESSION · COMPLIANCE STANDING</p>
-            <div class="cli-metric"><span class="cli-key">QUOTA_PROGRESSION</span><span class="cli-bar" id="quota-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="quota-value">0%</span></div>
-            <div class="cli-metric"><span class="cli-key">COMPLIANCE_STANDING</span><span class="cli-bar" id="compliance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="compliance-value">0%</span></div>
-            <p id="compliance-freeze-notice" class="cli-note hidden">◈ EGG BAR ACTIVE — DECAY SUSPENDED</p>
-            <p class="cli-note">Daily injections and activity are logged under <strong>RESOURCING</strong>. This panel reports standing only.</p>
-          </section>
-
-          <!-- TAB 04: UTILITIES -->
-          <section class="tab-panel" id="tab-utilities" role="tabpanel" aria-labelledby="tab-btn-utilities" hidden>
+          <section class="stage-panel" id="stage-utilities" data-stage="utilities" hidden>
             <p class="cli-h">// DEPARTMENTAL SUBSYSTEMS</p>
             <div class="util-grid">
               <button type="button" id="btn-incentives" class="util-card"><span class="util-id">INC-01</span><span class="util-name">INCENTIVES</span><span class="util-desc">Board-approved perks</span></button>
@@ -300,6 +285,16 @@
 
         </div><!-- /terminal-main -->
 
+        <aside class="vitals-rail" id="vitals-rail" aria-label="Compliance vitals">
+          <button type="button" class="rail-toggle" id="btn-toggle-vitals" hidden>VITALS</button>
+          <p class="cli-h">// VITALS</p>
+          <div class="cli-metric"><span class="cli-key">FLUID</span><span class="cli-bar" id="fluid-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="fluid-value">0%</span></div>
+          <div class="cli-metric"><span class="cli-key">QUOTA</span><span class="cli-bar" id="quota-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="quota-value">0%</span></div>
+          <div class="cli-metric"><span class="cli-key">STANDING</span><span class="cli-bar" id="compliance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="compliance-value">0%</span></div>
+          <div class="cli-metric"><span class="cli-key">SUSTENANCE</span><span class="cli-bar" id="sustenance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="sustenance-value">0%</span></div>
+          <p id="compliance-freeze-notice" class="cli-note hidden">◈ EGG BAR — DECAY SUSPENDED</p>
+        </aside>
+
         <aside class="terminal-log-sidebar open" id="log-sidebar" aria-label="Terminal output log">
           <div class="log-sidebar-head">
             <span class="cli-h">// TERMINAL_OUTPUT</span>
@@ -310,6 +305,10 @@
           </ol>
           <span class="cli-cursor" aria-hidden="true">_</span>
         </aside>
+
+        <nav class="protocol-bins" id="protocol-bins" aria-label="Daily protocol bins" role="tablist">
+          <!-- populated by app.js from engine snapshot -->
+        </nav>
 
       </div><!-- /terminal-workspace -->
                   </div><!-- /terminal-frame -->
@@ -358,20 +357,39 @@
     <div class="drawer-header"><h2>ARCHIVAL TRANSMISSION</h2><button type="button" id="btn-close-archival" class="btn-close" aria-label="Close">×</button></div>
     <p class="drawer-note">Optional encrypted archival across devices. The terminal remains fully operational offline — as intended.</p>
     <label class="toggle-row"><input type="checkbox" id="archival-enabled"><span>ENABLE ARCHIVAL PROTOCOL</span></label>
-    <label class="field-label" for="archival-endpoint">ARCHIVAL ENDPOINT</label>
-    <input type="url" id="archival-endpoint" placeholder="https://example.com/api" class="field-input">
-    <label class="field-label" for="archival-hash">ARCHIVAL HASH</label>
-    <div class="hash-row"><code id="archival-hash">—</code><button type="button" id="btn-copy-hash" class="btn-secondary">COPY</button><button type="button" id="btn-regenerate-hash" class="btn-secondary">REGEN</button></div>
     <label class="field-label" for="archival-passphrase">PASSPHRASE (OPTIONAL)</label>
     <input type="password" id="archival-passphrase" class="field-input" autocomplete="off">
-    <button type="button" id="btn-transmit-record" class="btn-primary btn-full">TRANSMIT RECORD</button>
-    <p id="archival-status" class="archival-status"></p>
+    <p class="cli-sub">Your archival hash: <code id="archival-hash">—</code>
+      <button type="button" id="btn-copy-hash" class="btn-secondary">COPY</button>
+    </p>
+    <button type="button" id="btn-transmit-record" class="btn-primary btn-full" data-status="idle">TRANSMIT RECORD</button>
+    <p id="archival-status" class="archival-status" data-tone="idle">READY</p>
+    <details class="archival-advanced">
+      <summary>ADVANCED — ENDPOINT &amp; HASH</summary>
+      <label class="field-label" for="archival-endpoint">ARCHIVAL ENDPOINT</label>
+      <input type="url" id="archival-endpoint" placeholder="https://example.com/api" class="field-input">
+      <button type="button" id="btn-regenerate-hash" class="btn-secondary">REGENERATE HASH</button>
+    </details>
   </aside>
 
   <div id="conflict-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="conflict-title">
-    <div class="modal-content"><h2 id="conflict-title">ARCHIVAL CONFLICT DETECTED</h2><p>Local and archival records diverge. Select resolution protocol.</p>
-      <div class="modal-actions"><button type="button" id="btn-retain-local" class="btn-primary">RETAIN LOCAL RECORD</button><button type="button" id="btn-accept-archival" class="btn-primary">ACCEPT ARCHIVAL RECORD</button></div>
+    <div class="modal-content">
+      <h2 id="conflict-title">ARCHIVAL DIVERGENCE</h2>
+      <p>This workstation and the archival record disagree. Keep the copy on this terminal, or accept the archival copy. The Board does not arbitrate.</p>
+      <div class="modal-actions">
+        <button type="button" id="btn-retain-local" class="btn-primary">KEEP THIS TERMINAL</button>
+        <button type="button" id="btn-accept-archival" class="btn-primary">ACCEPT ARCHIVAL COPY</button>
+      </div>
     </div>
+  </div>
+
+  <div id="ui-tip-a2hs" class="ui-tip hidden" role="status">
+    <p>Add to Home Screen as <strong>Innie-Cam</strong> for thumb protocol logging.</p>
+    <button type="button" id="btn-dismiss-a2hs" class="btn-cli">DISMISS</button>
+  </div>
+  <div id="ui-tip-kiosk" class="ui-tip hidden" role="status">
+    <p>Engage <strong>KIOSK</strong> on the desk HUD to keep this monitor awake.</p>
+    <button type="button" id="btn-dismiss-kiosk-tip" class="btn-cli">DISMISS</button>
   </div>
 
   <div id="orientation-modal" class="orientation-modal hidden" role="dialog" aria-modal="true" aria-labelledby="orientation-title">
@@ -381,7 +399,7 @@
         <div class="orientation-page active" data-page="1">
           <p class="orient-heading">WELCOME TO THE SEVERED FLOOR.</p>
           <p class="orient-body">You are <strong>SUBJECT #4229</strong>. This feed is <strong>Innie-Cam</strong> — Floor 7, Macrodata Refinement. Your outie’s care becomes your innie’s <strong>protocols</strong>. Leave the camera open on a secondary monitor.</p>
-          <p class="orient-body">Click the <strong>CRT</strong> to refine. Log fluid, activity, sustenance, and compliance injections. <strong>ESC</strong> returns you to the floor. The Board may interrupt — rarely.</p>
+          <p class="orient-body">Click the <strong>CRT</strong> to refine. Use footer bins <strong>01–05</strong> to log fluid, activity, injections, and sustenance. <strong>ESC</strong> returns you to the floor. The Board may interrupt — rarely.</p>
           <p class="orient-note">Phone = outie logger (Add to Home Screen as <strong>Innie-Cam</strong>). Extra monitor = MDR ambient. <strong>KIOSK</strong> keeps you at your workstation.</p>
         </div>
         <div class="orientation-page" data-page="2">
