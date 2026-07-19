@@ -79,6 +79,18 @@ test.describe('core terminal smoke', () => {
     await expect(page.locator('#crt-monitor')).not.toHaveClass(/focused/);
   });
 
+  test('RESOURCING shows daily protocol checklist with status', async ({ page }) => {
+    await page.goto('/?reset=1&debugTime=11:00');
+    await openTerminal(page);
+    await page.getByRole('tab', { name: /RESOURCING/i }).click();
+    await expect(page.locator('#protocol-checklist')).toBeVisible();
+    await expect(page.locator('#protocol-checklist li')).toHaveCount(5);
+    await expect(page.locator('#protocol-checklist-summary')).toContainText(/PLEASE COMPLY/);
+    await expect(page.locator('#protocol-checklist li[data-status="overdue"]')).toHaveCount(1);
+    await expect(page.locator('#btn-log-activity')).toBeVisible();
+    await expect(page.locator('#btn-administer-morning')).toBeVisible();
+  });
+
   test('CRT opens via real pointer click', async ({ page }) => {
     await page.addInitScript(({ key, value }) => {
       localStorage.setItem(key, value);

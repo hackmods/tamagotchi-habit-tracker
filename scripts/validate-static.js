@@ -7,6 +7,7 @@ const required = [
   'avatar.js',
   'ambient.js',
   'engine.js',
+  'audio.js',
   'sync.js',
   'sw.js',
   'manifest.webmanifest',
@@ -38,6 +39,10 @@ if (!appJs.includes("from './engine.js'")) {
   console.error('app.js must import engine module');
   process.exit(1);
 }
+if (!appJs.includes("from './audio.js'")) {
+  console.error('app.js must import audio module');
+  process.exit(1);
+}
 
 const sw = readFileSync('sw.js');
 if (sw[0] === 0xff && sw[1] === 0xfe) {
@@ -49,11 +54,11 @@ if (sw.includes(0) && sw.length > 100 && sw.filter((b) => b === 0).length > sw.l
   process.exit(1);
 }
 const swText = sw.toString('utf8');
-if (!swText.includes("CACHE_NAME = 'lumon-terminal-v10'")) {
-  console.error('sw.js CACHE_NAME should be bumped when shell assets change (expected lumon-terminal-v10)');
+if (!swText.includes("CACHE_NAME = 'lumon-terminal-v11'")) {
+  console.error('sw.js CACHE_NAME should be bumped when shell assets change (expected lumon-terminal-v11)');
   process.exit(1);
 }
-for (const asset of ['./avatar.js', './ambient.js', './engine.js', './fonts/fonts.css']) {
+for (const asset of ['./avatar.js', './ambient.js', './engine.js', './audio.js', './fonts/fonts.css']) {
   if (!swText.includes(asset)) {
     console.error(`sw.js SHELL must precache ${asset}`);
     process.exit(1);
@@ -70,6 +75,8 @@ for (const sel of [
   'id="cam-chyron"',
   'id="btn-kiosk-quick"',
   'crt-hit',
+  'id="protocol-checklist"',
+  'id="audio-enabled"',
 ]) {
   if (!html.includes(sel)) {
     console.error(`index.html missing required marker: ${sel}`);

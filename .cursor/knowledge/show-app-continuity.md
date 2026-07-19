@@ -76,6 +76,7 @@ Prefer these app strings (or close variants):
 - Cam status: `STATUS: NOMINAL | OPTIMAL | DEPLETION | BREACH | UNDERUTILIZED`
 - Node: `NODE: BASELINE | OPTIMAL THROUGHPUT | …`
 - Protocols: `HYDRATE_UNIT`, `LOG_ACTIVITY`, `AM_INJECTION`, `PM_INJECTION`, `SUSTENANCE`
+- RESOURCING checklist: `DONE` / `DUE` / `OVERDUE` / `PENDING` + “Please comply”
 - Return: `[ESC // RETURN TO DESK]`
 
 When adding UI, check this file first so new features inherit the same metaphor instead of introducing a second product vocabulary.

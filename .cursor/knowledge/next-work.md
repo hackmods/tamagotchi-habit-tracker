@@ -2,31 +2,27 @@
 
 Prioritize in order unless the user redirects. Keep Severance voice + continuity files in sync when adding features.
 
+## Recently shipped (this pass)
+
+- Desk idle presence (Mark pace + CRT refining digits; respects reduced motion / pause)
+- RESOURCING daily checklist (done / due / overdue / pending for all five protocols)
+- Optional floor audio (`audio.js`) — original Web Audio hum + sparse motif; **default off** in UTILITIES
+
 ## High value next slices
 
-### 1. Desk idle presence (ambient, not spam)
-- Subtle Mark pacing or CRT “working” digits while desk-focused
-- Still rare / low CPU; respect `prefers-reduced-motion` and `html.paused`
-- Must not compete with 45m+ ambient event cooldowns
-
-### 2. RESOURCING as daily checklist
-- Clear done / due / overdue for fluid, activity, AM/PM, sustenance
-- Handbook tone (“Please comply”), not streak gamification
-
-### 3. Archival UX polish
+### 1. Archival UX polish
 - One-button transmit status; friendlier conflict copy
 - Hide raw endpoint behind advanced for casual users
 
-### 4. Install surfaces
+### 2. Install surfaces
 - First-run phone: Add to Home Screen tip
 - First desktop standalone: kiosk tip
 
-### 5. Optional sound (default off)
-- Soft ballast / intercom behind UTILITIES mute
-- Silent default for coding sessions
-
-### 6. Visual regression smoke
+### 3. Visual regression smoke
 - Playwright screenshot desk + terminal @ 1920×1080
+
+### 4. Richer optional audio (still default off)
+- More motif variants / ambient event cues — still **original** synthesis only (no show soundtrack)
 
 ## Lumon / Severance alignment (ongoing)
 
@@ -43,4 +39,5 @@ When touching UI/copy/ambient:
 - Rewriting temper/quota math from scratch
 - Frequent ambient (sub-5-minute surprises)
 - Auto full MDE / Waffle from ambient
+- Shipping copyrighted Severance / show audio
 - Committing secrets / `.git-status.txt` / `proxmox_mcp.log`

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lumon-terminal-v10';
+const CACHE_NAME = 'lumon-terminal-v11';
 const SHELL = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const SHELL = [
   './avatar.js',
   './ambient.js',
   './engine.js',
+  './audio.js',
   './sync.js',
   './fonts/fonts.css',
   './fonts/ibm-plex-mono-400.woff2',

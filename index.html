@@ -185,15 +185,19 @@
             </div>
           </section>
 
-          <!-- TAB 02: RESOURCING -->
+          <!-- TAB 02: RESOURCING (daily protocol checklist + logging) -->
           <section class="tab-panel" id="tab-resourcing" role="tabpanel" aria-labelledby="tab-btn-resourcing" hidden>
+            <p class="cli-h">// DAILY PROTOCOL CHECKLIST</p>
+            <p class="cli-sub" id="protocol-checklist-summary">0 / 5 PROTOCOLS COMPLETE — PLEASE COMPLY</p>
+            <ul class="protocol-checklist" id="protocol-checklist" aria-label="Daily protocol compliance"></ul>
+
             <p class="cli-h">// FLUID_EFFICIENCY · SUSTENANCE_COMPONENT</p>
             <div class="cli-metric"><span class="cli-key">FLUID_EFFICIENCY</span><span class="cli-bar" id="fluid-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="fluid-value">0%</span></div>
             <div class="cli-metric"><span class="cli-key">SUSTENANCE_COMPONENT</span><span class="cli-bar" id="sustenance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="sustenance-value">0%</span></div>
 
-            <div class="cli-cmd">
+            <div class="cli-cmd" data-protocol="hydrate">
               <span class="cli-cmd-label">&gt; HYDRATE_UNIT</span>
-              <span class="cli-cmd-stat">TODAY · <span id="fluid-intake-today">0</span>/2000ml</span>
+              <span class="cli-cmd-stat">TODAY · <span id="fluid-intake-today">0</span>/2000ml · <span class="protocol-cmd-status" data-for="hydrate"></span></span>
               <span class="cli-cmd-actions">
                 <button type="button" id="btn-rehydrate-250" class="btn-cli">+250</button>
                 <button type="button" id="btn-rehydrate-500" class="btn-cli">+500</button>
@@ -202,27 +206,9 @@
               </span>
             </div>
 
-            <div class="cli-cmd">
-              <span class="cli-cmd-label">&gt; SUSTENANCE</span>
-              <span class="cli-cmd-stat">TODAY · <span id="sustenance-today">0</span>/3 comp</span>
-              <span class="cli-cmd-actions">
-                <button type="button" class="btn-cli sustenance-preset" data-level="18">SMALL</button>
-                <button type="button" class="btn-cli sustenance-preset" data-level="34">STD</button>
-                <button type="button" class="btn-cli sustenance-preset" data-level="52">LARGE</button>
-              </span>
-            </div>
-          </section>
-
-          <!-- TAB 03: COMPLIANCE -->
-          <section class="tab-panel" id="tab-compliance" role="tabpanel" aria-labelledby="tab-btn-compliance" hidden>
-            <p class="cli-h">// QUOTA_PROGRESSION · COMPLIANCE INJECTION</p>
-            <div class="cli-metric"><span class="cli-key">QUOTA_PROGRESSION</span><span class="cli-bar" id="quota-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="quota-value">0%</span></div>
-            <div class="cli-metric"><span class="cli-key">COMPLIANCE_STANDING</span><span class="cli-bar" id="compliance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="compliance-value">0%</span></div>
-            <p id="compliance-freeze-notice" class="cli-note hidden">◈ EGG BAR ACTIVE — DECAY SUSPENDED</p>
-
-            <div class="cli-cmd">
+            <div class="cli-cmd" data-protocol="activity">
               <span class="cli-cmd-label">&gt; LOG_ACTIVITY</span>
-              <span class="cli-cmd-stat">TODAY · <span id="activity-units-today">0</span>/8000u</span>
+              <span class="cli-cmd-stat">TODAY · <span id="activity-units-today">0</span>/8000u · <span class="protocol-cmd-status" data-for="activity"></span></span>
               <span class="cli-cmd-actions">
                 <button type="button" class="btn-cli activity-preset" data-units="1000">1K</button>
                 <button type="button" class="btn-cli activity-preset" data-units="2500">2.5K</button>
@@ -232,17 +218,36 @@
               </span>
             </div>
 
-            <div class="cli-cmd">
+            <div class="cli-cmd" data-protocol="am-injection">
               <span class="cli-cmd-label">&gt; AM_INJECTION</span>
-              <span class="cli-cmd-stat"><span id="morning-dose-time">NOT RECORDED</span> <em id="morning-window-indicator"></em></span>
+              <span class="cli-cmd-stat"><span id="morning-dose-time">NOT RECORDED</span> <em id="morning-window-indicator"></em> · <span class="protocol-cmd-status" data-for="am-injection"></span></span>
               <span class="cli-cmd-actions"><button type="button" id="btn-administer-morning" class="btn-cli btn-cli-go">ADMINISTER</button></span>
             </div>
 
-            <div class="cli-cmd">
+            <div class="cli-cmd" data-protocol="pm-injection">
               <span class="cli-cmd-label">&gt; PM_INJECTION</span>
-              <span class="cli-cmd-stat"><span id="compliance-dose-time">NOT RECORDED</span> <em id="afternoon-window-indicator"></em></span>
+              <span class="cli-cmd-stat"><span id="compliance-dose-time">NOT RECORDED</span> <em id="afternoon-window-indicator"></em> · <span class="protocol-cmd-status" data-for="pm-injection"></span></span>
               <span class="cli-cmd-actions"><button type="button" id="btn-administer-dose" class="btn-cli btn-cli-go">ADMINISTER</button></span>
             </div>
+
+            <div class="cli-cmd" data-protocol="sustenance">
+              <span class="cli-cmd-label">&gt; SUSTENANCE</span>
+              <span class="cli-cmd-stat">TODAY · <span id="sustenance-today">0</span>/3 comp · <span class="protocol-cmd-status" data-for="sustenance"></span></span>
+              <span class="cli-cmd-actions">
+                <button type="button" class="btn-cli sustenance-preset" data-level="18">SMALL</button>
+                <button type="button" class="btn-cli sustenance-preset" data-level="34">STD</button>
+                <button type="button" class="btn-cli sustenance-preset" data-level="52">LARGE</button>
+              </span>
+            </div>
+          </section>
+
+          <!-- TAB 03: COMPLIANCE (standing / quota readout) -->
+          <section class="tab-panel" id="tab-compliance" role="tabpanel" aria-labelledby="tab-btn-compliance" hidden>
+            <p class="cli-h">// QUOTA_PROGRESSION · COMPLIANCE STANDING</p>
+            <div class="cli-metric"><span class="cli-key">QUOTA_PROGRESSION</span><span class="cli-bar" id="quota-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="quota-value">0%</span></div>
+            <div class="cli-metric"><span class="cli-key">COMPLIANCE_STANDING</span><span class="cli-bar" id="compliance-bar">[░░░░░░░░░░]</span><span class="cli-pct" id="compliance-value">0%</span></div>
+            <p id="compliance-freeze-notice" class="cli-note hidden">◈ EGG BAR ACTIVE — DECAY SUSPENDED</p>
+            <p class="cli-note">Daily injections and activity are logged under <strong>RESOURCING</strong>. This panel reports standing only.</p>
           </section>
 
           <!-- TAB 04: UTILITIES -->
@@ -268,6 +273,12 @@
               <p class="cli-sub" id="ambient-report-last">LAST EVENT: —</p>
               <p class="cli-sub" id="ambient-report-cooldown">COOLDOWN: —</p>
               <p class="cli-sub" id="ambient-report-counts">TODAY A/B/C: 0 / 0 / 0</p>
+            </section>
+
+            <section class="util-widget" id="audio-widget">
+              <p class="cli-h">// FLOOR AUDIO (OPTIONAL)</p>
+              <label class="toggle-row"><input type="checkbox" id="audio-enabled"><span>ENABLE DESK AUDIO</span></label>
+              <p class="cli-sub">Original 8-bit floor hum + sparse motif. Silent by default. Not show soundtrack.</p>
             </section>
 
             <section id="finger-trap-widget" class="util-widget hidden">

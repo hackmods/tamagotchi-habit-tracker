@@ -604,6 +604,50 @@ body[data-temper="dread"] .crt-prompt { color: var(--dread); }
 .cli-cmd-stat em { font-style: normal; color: var(--term-amber); }
 .cli-cmd-actions { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; align-items: center; }
 
+.protocol-checklist {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-void);
+}
+.protocol-checklist li {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 10px;
+  font-size: .58rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-bottom: 1px dashed var(--border-color);
+}
+.protocol-checklist li:last-child { border-bottom: none; }
+.protocol-status {
+  font-family: var(--font-pixel);
+  font-size: .48rem;
+  letter-spacing: .08em;
+}
+.protocol-status[data-status="done"] { color: var(--term-green); }
+.protocol-status[data-status="due"] { color: var(--term-amber); }
+.protocol-status[data-status="overdue"] { color: var(--malice, #c44); }
+.protocol-status[data-status="pending"] { color: var(--text-faint); }
+.protocol-label { color: var(--text); }
+.protocol-detail { color: var(--text-dim); font-size: .52rem; }
+#protocol-checklist-summary { margin: 0 0 8px; }
+.cli-cmd[data-protocol-status="done"] .cli-cmd-label { color: var(--term-green-dim); }
+.cli-cmd[data-protocol-status="overdue"] {
+  border-color: var(--malice, #c44);
+  background: rgba(180, 40, 40, 0.06);
+}
+.cli-cmd[data-protocol-status="due"] .protocol-cmd-status { color: var(--term-amber); }
+.cli-cmd[data-protocol-status="done"] .protocol-cmd-status { color: var(--term-green); }
+.cli-cmd[data-protocol-status="overdue"] .protocol-cmd-status { color: var(--malice, #c44); }
+.protocol-cmd-status { font-family: var(--font-pixel); font-size: .45rem; letter-spacing: .06em; }
+
 .btn-cli { font-family: var(--font-mono); font-size: .55rem; letter-spacing: .05em; text-transform: uppercase; min-height: 32px; padding: 4px 9px; background: var(--bg-panel); color: var(--text); border: 1px solid var(--border-color); cursor: pointer; transition: background .1s, color .1s, transform .05s; }
 .btn-cli:hover { border-color: var(--term-green-dim); color: var(--term-green); }
 .btn-cli:active { transform: translateY(1px); background: var(--term-green); color: var(--bg-void); }
@@ -883,6 +927,35 @@ body:not(.desk-idle) .cam-hud,
 body:not(.desk-idle) .cam-ambient,
 body:not(.desk-idle) .kiosk-quick { transition: opacity .4s ease; }
 
+/* Desk idle presence — Mark paces; CRT “works” (not ambient-event spam) */
+body.desk-idle:not(.ambient-gaze) .wellness-figure {
+  animation: mark-pace 32s ease-in-out infinite;
+}
+@keyframes mark-pace {
+  0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+  18% { transform: translateX(-32%) translateY(-1px) rotate(-1deg); }
+  36% { transform: translateX(-62%) translateY(0) rotate(.5deg); }
+  54% { transform: translateX(-40%) translateY(-2px) rotate(-.4deg); }
+  72% { transform: translateX(-58%) translateY(-1px) rotate(.6deg); }
+  88% { transform: translateX(-45%) translateY(0) rotate(0deg); }
+}
+body.desk-idle .crt-logo {
+  animation-duration: 2.2s;
+  opacity: 1;
+}
+body.desk-idle .crt-drift {
+  opacity: 1;
+  filter: brightness(1.15);
+}
+body.desk-idle .crt-prompt {
+  color: var(--term-amber);
+  animation: prompt-blink 2.2s steps(2) infinite;
+}
+body.desk-idle .pod-s .pod-crt-mini::after {
+  animation-duration: 2.4s;
+  box-shadow: inset 0 0 10px rgba(0,255,120,.45);
+}
+
 body.ambient-ballast .light-panel.ballast-flicker,
 body.ambient-ballast .light-panel.lit:nth-child(7) {
   animation: ballast-fail 10s steps(2) forwards !important;
@@ -999,4 +1072,7 @@ body.kiosk-awake .cam-feed-id::after { content: ' · KIOSK'; color: var(--term-a
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .crt-flicker { display: none; }
   .pod-visitor { display: none; }
+  body.desk-idle:not(.ambient-gaze) .wellness-figure {
+    animation: none !important;
+  }
 }

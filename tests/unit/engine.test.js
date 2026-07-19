@@ -4,9 +4,11 @@ import {
   applyElapsedTime,
   dateKeyOf,
   deriveNodeState,
+  deriveProtocolChecklist,
   deriveTempers,
   evaluateQuotaTargets,
   isComplianceFrozen,
+  protocolChecklistSummary,
   recalculateRefinementTier,
 } from '../../engine.js';
 import { canFireAmbient, pickAmbientEvent, COOLDOWN_MS } from '../../ambient.js';
@@ -128,4 +130,33 @@ test('canFireAmbient enforces cooldown', () => {
   // May still fail if document is undefined in node — canFireAmbient checks document.hidden
   // In node, document is undefined so hidden check is skipped
   assert.equal(canFireAmbient(s, now), true);
+});
+
+test('deriveProtocolChecklist marks AM overdue after cutoff', () => {
+  const log = baseState().dailyLog;
+  const items = deriveProtocolChecklist(log, new Date('2026-07-19T11:00:00'));
+  const am = items.find((i) => i.id === 'am-injection');
+  assert.equal(am.status, 'overdue');
+  const fluid = items.find((i) => i.id === 'hydrate');
+  assert.equal(fluid.status, 'due');
+});
+
+test('deriveProtocolChecklist marks all done when quotas met', () => {
+  const log = {
+    ...baseState().dailyLog,
+    fluidIntakeMl: 2000,
+    activityUnits: 8000,
+    sustenanceUnits: 3,
+    morningDoseAt: '2026-07-19T08:00:00.000Z',
+    complianceDoseAt: '2026-07-19T12:00:00.000Z',
+  };
+  const items = deriveProtocolChecklist(log, new Date('2026-07-19T15:00:00'));
+  assert.ok(items.every((i) => i.status === 'done'));
+  assert.match(protocolChecklistSummary(items), /BOARD ACKNOWLEDGES/);
+});
+
+test('deriveProtocolChecklist marks AM due inside advisory window', () => {
+  const items = deriveProtocolChecklist(baseState().dailyLog, new Date('2026-07-19T08:30:00'));
+  assert.equal(items.find((i) => i.id === 'am-injection').status, 'due');
+  assert.equal(items.find((i) => i.id === 'pm-injection').status, 'pending');
 });

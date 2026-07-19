@@ -13,6 +13,7 @@
 
 | Commit | Summary |
 |--------|---------|
+| _(pending)_ | Desk idle presence + RESOURCING checklist + optional floor audio |
 | `403bf27` | Severance knowledge base + Lumon voice / MDR temper digit pass |
 | `82e8e1a` | P0–P4 QOL (CRT hit, kiosk, phone portal, fonts, session report) |
 | `3f4c904` | Monitor PWA overhaul (ambient.js, engine.js, multi-size, smoke fix) |
@@ -25,11 +26,12 @@ Branch tracks `origin/main`. Do not commit `.git-status.txt` or `proxmox_mcp.log
 |------|------|
 | `index.html` | Desk diorama + CRT-embedded terminal shell |
 | `styles.css` | Design system v9+, multi-size, ambient, temper digits |
-| `app.js` | State, render, kiosk, idle, wiring |
-| `engine.js` | Pure decay / quota / temper helpers (unit-tested) |
+| `app.js` | State, render, kiosk, idle presence, wiring |
+| `engine.js` | Pure decay / quota / temper / protocol checklist (unit-tested) |
 | `ambient.js` | Rare event scheduler A/B/C |
+| `audio.js` | Optional Web Audio floor hum + original motif (default off) |
 | `avatar.js` | File-progress avatar helpers |
-| `sw.js` | Offline shell — **CACHE_NAME `lumon-terminal-v10`** |
+| `sw.js` | Offline shell — **CACHE_NAME `lumon-terminal-v11`** |
 | `fonts/` | Self-hosted IBM Plex Mono + Silkscreen (latin woff2) |
 | `tests/e2e/` | smoke (+ pointer CRT), responsive, ambient |
 | `tests/unit/` | avatar + engine |

@@ -3,6 +3,8 @@
 export const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
 export const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 export const SUSTENANCE_TARGET = 3;
+export const FLUID_TARGET_ML = 2000;
+export const ACTIVITY_TARGET_U = 8000;
 export const QUOTA_FLAGS = {
   FLUID: 1,
   ACTIVITY: 2,
@@ -12,8 +14,12 @@ export const QUOTA_FLAGS = {
   SUSTENANCE: 32,
 };
 export const TIER_THRESHOLDS = [0, 100, 300, 600];
+export const MORNING_ADVISORY_H = 7;
 export const MORNING_CUTOFF_H = 10;
+export const AFTERNOON_ADVISORY_H = 11;
 export const AFTERNOON_CUTOFF_H = 14;
+
+/** @typedef {'done'|'due'|'overdue'|'pending'} ProtocolStatus */
 
 export function clamp(n, min, max) {
   return Math.min(max, Math.max(min, n));
@@ -66,12 +72,12 @@ export function evaluateQuotaTargets(log) {
     awards.credits += 5;
     nf |= QUOTA_FLAGS.MORNING_DOSE;
   }
-  if (!(flags & QUOTA_FLAGS.FLUID) && log.fluidIntakeMl >= 2000) {
+  if (!(flags & QUOTA_FLAGS.FLUID) && log.fluidIntakeMl >= FLUID_TARGET_ML) {
     awards.quota += 25;
     awards.credits += 5;
     nf |= QUOTA_FLAGS.FLUID;
   }
-  if (!(flags & QUOTA_FLAGS.ACTIVITY) && log.activityUnits >= 8000) {
+  if (!(flags & QUOTA_FLAGS.ACTIVITY) && log.activityUnits >= ACTIVITY_TARGET_U) {
     awards.quota += 25;
     awards.credits += 5;
     nf |= QUOTA_FLAGS.ACTIVITY;
@@ -165,4 +171,74 @@ export function departmentalSeed(subjectNumber, dateKey) {
     h = Math.imul(h, 16777619);
   }
   return h >>> 0;
+}
+
+/**
+ * Daily protocol checklist for RESOURCING.
+ * Status: done | due | overdue | pending (handbook tone, not streaks).
+ * @param {object} log
+ * @param {Date} [at]
+ * @returns {{ id: string, label: string, status: ProtocolStatus, detail: string }[]}
+ */
+export function deriveProtocolChecklist(log, at = new Date()) {
+  const mins = at.getHours() * 60 + at.getMinutes();
+  const morningDone = Boolean(log?.morningDoseAt);
+  const afternoonDone = Boolean(log?.complianceDoseAt);
+  const fluidMl = log?.fluidIntakeMl || 0;
+  const activityU = log?.activityUnits || 0;
+  const sustenanceN = log?.sustenanceUnits || 0;
+
+  function injectionStatus(done, advisoryH, cutoffH) {
+    if (done) return 'done';
+    if (mins >= cutoffH * 60) return 'overdue';
+    if (mins >= advisoryH * 60) return 'due';
+    return 'pending';
+  }
+
+  function progressStatus(current, target) {
+    if (current >= target) return 'done';
+    return 'due';
+  }
+
+  return [
+    {
+      id: 'am-injection',
+      label: 'AM_INJECTION',
+      status: injectionStatus(morningDone, MORNING_ADVISORY_H, MORNING_CUTOFF_H),
+      detail: morningDone ? 'RECORDED' : mins >= MORNING_CUTOFF_H * 60 ? 'OVERDUE AFTER 10:00' : 'BEFORE 10:00',
+    },
+    {
+      id: 'hydrate',
+      label: 'HYDRATE_UNIT',
+      status: progressStatus(fluidMl, FLUID_TARGET_ML),
+      detail: `${fluidMl}/${FLUID_TARGET_ML}ml`,
+    },
+    {
+      id: 'activity',
+      label: 'LOG_ACTIVITY',
+      status: progressStatus(activityU, ACTIVITY_TARGET_U),
+      detail: `${activityU}/${ACTIVITY_TARGET_U}u`,
+    },
+    {
+      id: 'pm-injection',
+      label: 'PM_INJECTION',
+      status: injectionStatus(afternoonDone, AFTERNOON_ADVISORY_H, AFTERNOON_CUTOFF_H),
+      detail: afternoonDone ? 'RECORDED' : mins >= AFTERNOON_CUTOFF_H * 60 ? 'OVERDUE AFTER 14:00' : 'BEFORE 14:00',
+    },
+    {
+      id: 'sustenance',
+      label: 'SUSTENANCE',
+      status: progressStatus(sustenanceN, SUSTENANCE_TARGET),
+      detail: `${sustenanceN}/${SUSTENANCE_TARGET} COMP`,
+    },
+  ];
+}
+
+export function protocolChecklistSummary(items) {
+  const done = items.filter((i) => i.status === 'done').length;
+  const overdue = items.filter((i) => i.status === 'overdue').length;
+  const total = items.length;
+  if (done === total) return `${done} / ${total} PROTOCOLS COMPLETE — THE BOARD ACKNOWLEDGES`;
+  if (overdue > 0) return `${done} / ${total} PROTOCOLS · ${overdue} OVERDUE — PLEASE COMPLY`;
+  return `${done} / ${total} PROTOCOLS COMPLETE — PLEASE COMPLY`;
 }

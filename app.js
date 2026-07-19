@@ -12,15 +12,25 @@ import {
   COOLDOWN_MS,
 } from './ambient.js';
 import {
+  setAudioEnabled,
+  setDeskAudioActive,
+  notifyAudioVisibility,
+  playIntercomChirp,
+} from './audio.js';
+import {
+  AFTERNOON_ADVISORY_H,
   AFTERNOON_CUTOFF_H,
+  MORNING_ADVISORY_H,
   MORNING_CUTOFF_H,
   applyElapsedTime as applyElapsedTimeCore,
   clamp,
   dateKeyOf,
   deriveNodeState as deriveNodeStateCore,
+  deriveProtocolChecklist,
   deriveTempers as deriveTempersCore,
   evaluateQuotaTargets,
   isComplianceFrozen as isComplianceFrozenCore,
+  protocolChecklistSummary,
   recalculateRefinementTier as recalculateRefinementTierCore,
 } from './engine.js';
 import {
@@ -37,9 +47,6 @@ import {
 ═══════════════════════════════════════════════════════════════════ */
 
 const STATE_KEY        = 'lumon-compliance-state';
-
-const MORNING_ADVISORY_H   = 7;
-const AFTERNOON_ADVISORY_H = 11;
 
 const TIER_NAMES      = ['UNINITIALIZED','ACTIVE REFINEMENT','ELEVATED THROUGHPUT','FULL COMPLIANCE'];
 
@@ -105,6 +112,7 @@ const DEFAULT_STATE = {
   kioskAwake: false,
   kioskFullscreen: false,
   ambientHintSeen: false,
+  audioEnabled: false,
 };
 
 // ─── runtime globals ───────────────────────────────────────────────
@@ -186,11 +194,33 @@ function clearCamChyron(){
 
 function bumpIdle(){
   document.body.classList.remove('desk-idle');
+  setCrtWorkingPresence(false);
   clearTimeout(idleTimer);
   if (document.body.dataset.view !== 'desk' || document.hidden) return;
   idleTimer = setTimeout(() => {
-    if (document.body.dataset.view === 'desk') document.body.classList.add('desk-idle');
+    if (document.body.dataset.view === 'desk') {
+      document.body.classList.add('desk-idle');
+      setCrtWorkingPresence(true);
+    }
   }, IDLE_MS);
+}
+
+function setCrtWorkingPresence(active){
+  const prompt = document.querySelector('#crt-idle-preview .crt-prompt');
+  if (prompt) prompt.textContent = active ? '▶ REFINING…' : '▶ CLICK TO REFINE';
+  // Faster digit churn while desk-idle only (still low CPU; independent of ambient cooldown)
+  if (active) {
+    if (digitTimer) { clearInterval(digitTimer); digitTimer = null; }
+    digitTimer = setInterval(refreshDigits, 1100);
+  } else if (!document.hidden) {
+    if (digitTimer) { clearInterval(digitTimer); digitTimer = null; }
+    digitTimer = setInterval(refreshDigits, 2200);
+  }
+}
+
+function syncDeskAudio(){
+  const onDesk = document.body.dataset.view === 'desk' && !document.hidden;
+  setDeskAudioActive(onDesk && !!state?.audioEnabled);
 }
 
 async function engageKiosk(){
@@ -322,6 +352,7 @@ function migrateState(raw){
   if (m.kioskAwake === undefined) m.kioskAwake = false;
   if (m.kioskFullscreen === undefined) m.kioskFullscreen = false;
   if (m.ambientHintSeen === undefined) m.ambientHintSeen = false;
+  if (m.audioEnabled === undefined) m.audioEnabled = false;
   return m;
 }
 
@@ -647,8 +678,10 @@ function openTerminal(){
   focusReturnEl = document.activeElement;
   document.body.dataset.view = 'terminal';
   document.body.classList.remove('desk-idle');
+  setCrtWorkingPresence(false);
   clearTimeout(idleTimer);
   ambientScheduler?.pause();
+  syncDeskAudio();
   const crt = document.getElementById('crt-monitor');
   const backdrop = document.getElementById('zoom-backdrop');
   if (crt && crt.parentElement !== document.body) {
@@ -680,6 +713,7 @@ function closeTerminal(){
   backdrop?.setAttribute('aria-hidden', 'true');
   ambientScheduler?.resume();
   syncWakeLock();
+  syncDeskAudio();
   bumpIdle();
   if (focusReturnEl && typeof focusReturnEl.focus === 'function') focusReturnEl.focus();
   focusReturnEl = null;
@@ -750,6 +784,38 @@ function updateWindowIndicator(id, mins, advisoryMins, cutoffMins, done){
   else if (mins >= cutoffMins) el.textContent = '[CLOSED]';
   else if (mins >= advisoryMins){ const rem = cutoffMins - mins; el.textContent = `[${Math.floor(rem/60)}h${rem%60}m]`; }
   else el.textContent = '';
+}
+
+const PROTOCOL_STATUS_LABEL = {
+  done: 'DONE',
+  due: 'DUE',
+  overdue: 'OVERDUE',
+  pending: 'PENDING',
+};
+
+function renderProtocolChecklist(){
+  const list = document.getElementById('protocol-checklist');
+  const summary = document.getElementById('protocol-checklist-summary');
+  if (!list || !state) return;
+  const items = deriveProtocolChecklist(state.dailyLog, now());
+  list.innerHTML = items.map((item) => `
+    <li data-status="${item.status}" role="listitem">
+      <span class="protocol-status" data-status="${item.status}">${PROTOCOL_STATUS_LABEL[item.status]}</span>
+      <span class="protocol-label">${item.label}</span>
+      <span class="protocol-detail">${item.detail}</span>
+    </li>
+  `).join('');
+  if (summary) summary.textContent = protocolChecklistSummary(items);
+
+  for (const item of items) {
+    const cmd = document.querySelector(`.cli-cmd[data-protocol="${item.id}"]`);
+    if (cmd) cmd.dataset.protocolStatus = item.status;
+    const chip = document.querySelector(`.protocol-cmd-status[data-for="${item.id}"]`);
+    if (chip) {
+      chip.textContent = PROTOCOL_STATUS_LABEL[item.status];
+      chip.dataset.status = item.status;
+    }
+  }
 }
 function renderIncentives(){
   const el = document.getElementById('incentives-catalog'); if (!el) return;
@@ -825,6 +891,8 @@ function render(){
 
   document.getElementById('compliance-freeze-notice').classList.toggle('hidden', !isComplianceFrozen());
 
+  renderProtocolChecklist();
+
   const avatar = deriveAvatarStage();
   const node = document.getElementById('mdr-data-node');
   const nodeState = deriveNodeState(state);
@@ -861,6 +929,8 @@ function render(){
   if (fsToggle) fsToggle.checked = !!state.kioskFullscreen;
   const quick = document.getElementById('btn-kiosk-quick');
   if (quick) quick.setAttribute('aria-pressed', state.kioskAwake ? 'true' : 'false');
+  const audioToggle = document.getElementById('audio-enabled');
+  if (audioToggle) audioToggle.checked = !!state.audioEnabled;
   renderAmbientReport();
 }
 
@@ -987,11 +1057,14 @@ function handleVisibility(){
     clearInterval(digitTimer); digitTimer = null;
     ambientScheduler?.pause();
     releaseWakeLock();
+    notifyAudioVisibility();
   } else {
-    if (!digitTimer) digitTimer = setInterval(refreshDigits, 2200);
+    if (!digitTimer) digitTimer = setInterval(refreshDigits, document.body.classList.contains('desk-idle') ? 1100 : 2200);
     tick();
     if (document.body.dataset.view === 'desk') ambientScheduler?.resume();
     syncWakeLock();
+    notifyAudioVisibility();
+    syncDeskAudio();
   }
 }
 
@@ -1086,6 +1159,18 @@ function bindEventListeners(){
     e.stopPropagation();
     toggleKioskQuick();
   });
+  document.getElementById('audio-enabled')?.addEventListener('change', (e) => {
+    state.audioEnabled = e.target.checked;
+    setAudioEnabled(state.audioEnabled);
+    saveState();
+    syncDeskAudio();
+    if (state.audioEnabled) {
+      showToast('FLOOR AUDIO ENGAGED — ORIGINAL MOTIF ONLY', { tone: 'ok' });
+    } else {
+      showToast('FLOOR AUDIO MUTED', { tone: 'dim' });
+    }
+    render();
+  });
   document.getElementById('ambient-toast')?.addEventListener('click', hideToast);
   document.getElementById('cam-chyron')?.addEventListener('click', clearCamChyron);
 
@@ -1155,13 +1240,21 @@ async function init(){
   if (!state.onboardingComplete) showOrientation();
   else maybeShowAmbientHint();
 
+  setAudioEnabled(!!state.audioEnabled);
+  syncDeskAudio();
+
   ambientScheduler = createAmbientScheduler({
     getState: () => state,
     saveState,
     pushLog,
     render,
     now,
-    showToast,
+    showToast: (msg, opts) => {
+      showToast(msg, opts);
+      if (typeof msg === 'string' && /workstation|intercom|please return/i.test(msg)) {
+        playIntercomChirp();
+      }
+    },
   });
   ambientScheduler.start();
 
