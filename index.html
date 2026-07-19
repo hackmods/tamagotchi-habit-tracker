@@ -26,116 +26,86 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════════════ -->
-  <!-- VIEW 1 — PASSIVE CAMERA MONITOR (the Lofi MDR office scene)      -->
+  <!-- VIEW 1 — PASSIVE CAMERA (pseudo-3D Lumon office diorama)         -->
   <!-- ══════════════════════════════════════════════════════════════ -->
   <main id="office-scene" class="office-scene" aria-label="Innie-Cam workspace feed">
+    <div class="diorama">
+      <div class="scene-stage">
 
-    <div class="scene-stage">
-
-      <!-- ceiling light matrix -->
-      <div class="ceiling" aria-hidden="true">
-        <div class="ceiling-grid" id="ceiling-grid"></div>
-      </div>
-
-      <!-- back + side partition walls -->
-      <div class="wall wall-back" aria-hidden="true"></div>
-      <div class="wall wall-left" aria-hidden="true"></div>
-      <div class="wall wall-right" aria-hidden="true"></div>
-
-      <!-- green carpet floor -->
-      <div class="floor" aria-hidden="true"><div class="floor-grain"></div></div>
-
-      <!-- the workstation cluster -->
-      <div class="workstation">
-
-        <!-- employee standing at the partition (pixel sprite) -->
-        <div class="employee" aria-hidden="true">
-          <svg class="employee-svg" viewBox="0 0 16 28" shape-rendering="crispEdges">
-            <!-- hair -->
-            <rect x="5" y="0" width="6" height="2" fill="#2b2218"/>
-            <rect x="4" y="1" width="8" height="2" fill="#3a2e20"/>
-            <!-- face -->
-            <rect x="5" y="2" width="6" height="4" fill="#d8a98a"/>
-            <rect x="5" y="2" width="1" height="4" fill="#3a2e20"/>
-            <rect x="10" y="2" width="1" height="4" fill="#3a2e20"/>
-            <!-- neck -->
-            <rect x="6" y="6" width="4" height="1" fill="#c79877"/>
-            <!-- suit shoulders/torso -->
-            <rect x="3" y="7" width="10" height="11" fill="#1c2738"/>
-            <rect x="3" y="7" width="10" height="1" fill="#2a3850"/>
-            <!-- white shirt + tie -->
-            <rect x="7" y="7" width="2" height="7" fill="#e9eef2"/>
-            <rect x="7" y="7" width="2" height="6" fill="#7a1f2b"/>
-            <rect x="7" y="7" width="2" height="1" fill="#9c2a38"/>
-            <!-- arms -->
-            <rect x="3" y="8" width="2" height="9" fill="#161f2d"/>
-            <rect x="11" y="8" width="2" height="9" fill="#161f2d"/>
-            <!-- hands -->
-            <rect x="3" y="17" width="2" height="2" fill="#d8a98a"/>
-            <rect x="11" y="17" width="2" height="2" fill="#d8a98a"/>
-            <!-- trousers -->
-            <rect x="4" y="18" width="8" height="8" fill="#13161c"/>
-            <rect x="7" y="18" width="2" height="8" fill="#0c0e12"/>
-            <!-- shoes -->
-            <rect x="4" y="26" width="3" height="2" fill="#0a0a0a"/>
-            <rect x="9" y="26" width="3" height="2" fill="#0a0a0a"/>
-          </svg>
+        <div class="ceiling" aria-hidden="true">
+          <div class="ceiling-grid" id="ceiling-grid"></div>
         </div>
 
-        <!-- dark green privacy partition -->
-        <div class="partition" aria-hidden="true"></div>
+        <div class="wall wall-back" aria-hidden="true"></div>
+        <div class="wall wall-left" aria-hidden="true"></div>
+        <div class="wall wall-right" aria-hidden="true"></div>
 
-        <!-- the white desk -->
-        <div class="desk" aria-hidden="true">
-          <div class="desk-top"></div>
-          <div class="desk-leg desk-leg-l"></div>
-          <div class="desk-leg desk-leg-r"></div>
-          <div class="desk-drawers"></div>
+        <div class="floor" aria-hidden="true"><div class="floor-grain"></div></div>
+
+        <!-- Helly's eraser — lazy tumbling arc on carpet -->
+        <div class="helly-eraser" id="helly-eraser" aria-hidden="true">
+          <div class="eraser-cap"></div>
+          <div class="eraser-body"></div>
         </div>
 
-        <!-- desk lamp -->
-        <div class="desk-lamp" aria-hidden="true"></div>
+        <div class="pod-visitor" id="pod-visitor" aria-hidden="true"></div>
 
-        <!-- refinement input device (the trackball/handset) -->
-        <div class="refine-device" aria-hidden="true"></div>
+        <!-- 4-pod cross desk cluster -->
+        <div class="pod-cross">
 
-        <!-- office chairs -->
-        <div class="chair chair-l" aria-hidden="true"><div class="chair-back"></div><div class="chair-seat"></div><div class="chair-base"></div></div>
-        <div class="chair chair-r" aria-hidden="true"><div class="chair-back"></div><div class="chair-seat"></div><div class="chair-base"></div></div>
+          <div class="pod-center-well" aria-hidden="true"></div>
 
-        <!-- THE CRT MONITOR — clickable, zooms to terminal -->
-        <button type="button" id="crt-monitor" class="crt-monitor" aria-label="Open Refinement Terminal">
-          <span class="crt-bezel">
-            <span class="crt-screen">
-              <span class="crt-drift" id="cam-drift" aria-hidden="true"></span>
-              <span class="crt-logo" aria-hidden="true">LUMON</span>
-            </span>
-          </span>
-          <span class="crt-stand"></span>
-          <span class="crt-prompt">▶ CLICK TO REFINE</span>
-        </button>
+          <div class="pod pod-n" aria-hidden="true">
+            <div class="pod-partition"></div>
+            <div class="pod-desk"></div>
+            <div class="pod-chair"></div>
+            <div class="pod-crt-mini"></div>
+          </div>
 
-      </div>
+          <div class="pod pod-w" aria-hidden="true">
+            <div class="pod-partition"></div>
+            <div class="pod-desk"></div>
+            <div class="pod-chair"></div>
+            <div class="pod-crt-mini"></div>
+          </div>
 
-      <!-- camera HUD overlay -->
-      <div class="cam-hud" aria-hidden="true">
-        <span class="cam-rec"><span class="cam-rec-dot"></span>REC</span>
-        <span class="cam-feed-id">INNIE-CAM · FLOOR 7 · MDR</span>
-        <span class="cam-clock" id="cam-clock">--:--:--</span>
-      </div>
-      <div class="cam-ambient" id="cam-ambient" aria-hidden="true">STATUS: NOMINAL</div>
-    </div>
-  </main>
+          <div class="pod pod-e">
+            <div class="pod-partition"></div>
+            <div class="pod-desk"></div>
+            <div class="pod-chair"></div>
+            <div class="wellness-figure" id="mark-figure" aria-hidden="true">
+              <svg class="wellness-svg" viewBox="0 0 14 20" shape-rendering="crispEdges">
+                <rect x="4" y="0" width="6" height="3" fill="#3a2e20"/>
+                <rect x="4" y="3" width="6" height="4" fill="#d8a98a"/>
+                <rect x="3" y="7" width="8" height="7" fill="#1c2738"/>
+                <rect x="5" y="7" width="4" height="5" fill="#7a1f2b"/>
+                <rect x="4" y="14" width="6" height="5" fill="#13161c"/>
+              </svg>
+            </div>
+            <div class="pod-crt-mini"></div>
+          </div>
 
-  <!-- ══════════════════════════════════════════════════════════════ -->
-  <!-- VIEW 2 — REFINEMENT TERMINAL OVERLAY (retro CLI)                 -->
-  <!-- ══════════════════════════════════════════════════════════════ -->
-  <div id="terminal-overlay" class="terminal-overlay" role="dialog" aria-modal="true" aria-label="Refinement Terminal" aria-hidden="true">
-    <div class="terminal-frame">
+          <!-- Foreground pod — interactive CRT faces the camera -->
+          <div class="pod pod-s pod-foreground">
+            <div class="pod-partition"></div>
+            <div class="pod-desk"></div>
+            <div class="pod-chair"></div>
+
+            <div id="crt-monitor" class="crt-monitor" role="button" tabindex="0" aria-label="Open Refinement Terminal" aria-expanded="false">
+              <div class="crt-bezel">
+                <div class="crt-screen">
+                  <div id="crt-idle-preview" class="crt-idle-preview" aria-hidden="true">
+                    <span class="crt-drift" id="cam-drift"></span>
+                    <span class="crt-logo">LUMON</span>
+                    <span class="crt-prompt">▶ CLICK TO REFINE</span>
+                  </div>
+
+                  <!-- INNER TERMINAL (tabbed MDR application — lives inside monitor glass) -->
+                  <div id="terminal-frame" class="terminal-frame" role="application" aria-label="Macrodata Refinement Terminal">
 
       <header class="terminal-titlebar">
         <span class="tt-title">LUMON · MACRODATA REFINEMENT TERMINAL</span>
-        <button type="button" id="btn-return-desk" class="btn-return">⎋ ESC · RETURN TO DESK</button>
+        <button type="button" id="btn-return-desk" class="btn-return">[ESC // RETURN TO DESK]</button>
       </header>
 
       <div class="cli-statline">
@@ -160,7 +130,7 @@
 
       <div class="terminal-workspace">
 
-        <main class="terminal-main" id="terminal-main">
+        <div class="terminal-main" id="terminal-main">
 
           <!-- TAB 01: DATA_MATRIX -->
           <section class="tab-panel active" id="tab-data-matrix" role="tabpanel" aria-labelledby="tab-btn-data-matrix">
@@ -282,8 +252,14 @@
               <button type="button" id="btn-incentives" class="util-card"><span class="util-id">INC-01</span><span class="util-name">INCENTIVES</span><span class="util-desc">Spend allocation credits</span></button>
               <button type="button" id="btn-procurement" class="util-card"><span class="util-id">PRC-02</span><span class="util-name">PROCUREMENT</span><span class="util-desc">Palettes &amp; geometries</span></button>
               <button type="button" id="btn-archival" class="util-card"><span class="util-id">ARC-03</span><span class="util-name">ARCHIVAL</span><span class="util-desc">Encrypted sync protocol</span></button>
-              <button type="button" id="btn-orientation" class="util-card"><span class="util-id">ORI-04</span><span class="util-name">ORIENTATION</span><span class="util-desc">Employee briefing</span></button>
+              <button type="button" id="btn-orientation" class="util-card"><span class="util-id">ORI-04</span><span class="util-name">ORIENTATION</span><span class="util-desc">Departmental briefing</span></button>
             </div>
+
+            <section class="util-widget kiosk-widget">
+              <p class="cli-h">// KIOSK / STAY AWAKE</p>
+              <label class="toggle-row"><input type="checkbox" id="kiosk-awake"><span>REQUEST SCREEN WAKE LOCK (DESK VIEW)</span></label>
+              <p class="cli-sub">Keeps the secondary monitor awake during long refinement sessions.</p>
+            </section>
 
             <section id="finger-trap-widget" class="util-widget hidden">
               <p class="cli-h">// CHINESE FINGER TRAP</p>
@@ -302,7 +278,7 @@
             </section>
           </section>
 
-        </main>
+        </div><!-- /terminal-main -->
 
         <aside class="terminal-log-sidebar open" id="log-sidebar" aria-label="Terminal output log">
           <div class="log-sidebar-head">
@@ -315,9 +291,30 @@
           <span class="cli-cursor" aria-hidden="true">_</span>
         </aside>
 
-      </div>
-    </div>
-  </div>
+      </div><!-- /terminal-workspace -->
+                  </div><!-- /terminal-frame -->
+                </div><!-- /crt-screen -->
+              </div><!-- /crt-bezel -->
+              <span class="crt-stand" aria-hidden="true"></span>
+            </div>
+
+          </div><!-- /pod-s -->
+
+        </div><!-- /pod-cross -->
+
+        <div class="cam-hud" aria-hidden="true">
+          <span class="cam-rec"><span class="cam-rec-dot"></span>REC</span>
+          <span class="cam-feed-id">INNIE-CAM · FLOOR 7 · MDR</span>
+          <span class="cam-clock" id="cam-clock">--:--:--</span>
+        </div>
+        <div class="cam-ambient" id="cam-ambient" aria-hidden="true">STATUS: NOMINAL</div>
+
+      </div><!-- /scene-stage -->
+    </div><!-- /diorama -->
+  </main>
+
+  <!-- zoom backdrop (dims room when terminal focused) -->
+  <div id="zoom-backdrop" class="zoom-backdrop" aria-hidden="true"></div>
 
   <!-- ═══ DRAWERS / MODALS (shared across views) ══════════════════════ -->
 
@@ -348,7 +345,7 @@
     <p id="archival-status" class="archival-status"></p>
   </aside>
 
-  <div id="conflict-modal" class="modal hidden" role="dialog" aria-labelledby="conflict-title">
+  <div id="conflict-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="conflict-title">
     <div class="modal-content"><h2 id="conflict-title">ARCHIVAL CONFLICT DETECTED</h2><p>Local and archival records diverge. Select resolution protocol.</p>
       <div class="modal-actions"><button type="button" id="btn-retain-local" class="btn-primary">RETAIN LOCAL RECORD</button><button type="button" id="btn-accept-archival" class="btn-primary">ACCEPT ARCHIVAL RECORD</button></div>
     </div>
@@ -356,12 +353,12 @@
 
   <div id="orientation-modal" class="orientation-modal hidden" role="dialog" aria-modal="true" aria-labelledby="orientation-title">
     <div class="orientation-inner">
-      <div class="orientation-header"><h2 id="orientation-title">◆ EMPLOYEE ORIENTATION</h2><button type="button" id="btn-close-orientation" class="btn-close" aria-label="Close">×</button></div>
+      <div class="orientation-header"><h2 id="orientation-title">◆ DEPARTMENTAL ORIENTATION</h2><button type="button" id="btn-close-orientation" class="btn-close" aria-label="Close">×</button></div>
       <div class="orientation-pages">
         <div class="orientation-page active" data-page="1">
           <p class="orient-heading">WELCOME, INNIE.</p>
-          <p class="orient-body">You are <strong>SUBJECT #4229</strong>. This window is a live <strong>Innie-Cam</strong> feed of your workspace on Floor 7. Leave it open during your day.</p>
-          <p class="orient-body">Click the <strong>CRT monitor</strong> to open your Refinement Terminal. Use the <strong>tab bar</strong> to switch between Data Matrix, Resourcing, Compliance, and Utilities modules. Press <strong>Alt+L</strong> to toggle the output log. Press <strong>ESC</strong> to return to the camera view.</p>
+          <p class="orient-body">You are <strong>SUBJECT #4229</strong>. This window is a live <strong>Innie-Cam</strong> feed of Floor 7 MDR. Leave it open on a secondary monitor during long sessions.</p>
+          <p class="orient-body">Click the <strong>CRT monitor</strong> to open your Refinement Terminal and log daily protocols. Press <strong>ESC</strong> to return to the camera. Rare departmental events may appear on the desk feed — infrequently.</p>
         </div>
         <div class="orientation-page" data-page="2">
           <p class="orient-heading">DAILY PROTOCOLS</p>
@@ -386,13 +383,15 @@
   </div>
 
   <!-- fullscreen events -->
-  <div id="mde-overlay" class="fullscreen-event hidden" role="dialog" aria-label="Music Dance Experience">
+  <div id="mde-overlay" class="fullscreen-event hidden" role="dialog" aria-modal="true" aria-label="Music Dance Experience">
     <div class="mde-content"><p class="mde-title">MUSIC DANCE EXPERIENCE</p><p class="mde-sub">WELLNESS INCENTIVE — 60 SECONDS</p><div id="mde-node" class="mde-node"></div><p class="mde-timer" id="mde-countdown">60</p></div>
   </div>
 
-  <div id="waffle-overlay" class="fullscreen-event hidden" role="dialog" aria-label="Waffle Party">
+  <div id="waffle-overlay" class="fullscreen-event hidden" role="dialog" aria-modal="true" aria-label="Waffle Party">
     <div class="waffle-scene"><div class="waffle-plate" aria-hidden="true"><div class="waffle-grid"></div><div class="milk-goblet"></div></div><p class="waffle-title">WAFFLE PARTY</p><p class="waffle-sub">FILE COMPLETE — PRESTIGE CYCLE INITIATED</p><p id="waffle-subject-next" class="waffle-next"></p></div>
   </div>
+
+  <div id="ambient-toast" class="ambient-toast hidden" role="status" aria-live="polite" aria-hidden="true"></div>
 
   <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
 

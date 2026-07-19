@@ -1,12 +1,15 @@
 {
+  "id": "/",
   "name": "Lumon Wellness Compliance Terminal",
-  "short_name": "Lumon Terminal",
-  "description": "Wellness compliance terminal for Lumon Industries subject monitoring",
+  "short_name": "Innie-Cam",
+  "description": "Innie-Cam MDR ambient companion and wellness compliance terminal for Lumon Industries subject monitoring",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "theme_color": "#3d8b7a",
-  "background_color": "#f4f3ee",
+  "orientation": "any",
+  "theme_color": "#0b0c10",
+  "background_color": "#0b0c10",
+  "categories": ["health", "lifestyle", "productivity"],
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -18,7 +21,13 @@
       "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

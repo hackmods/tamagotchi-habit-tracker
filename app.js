@@ -1,5 +1,4 @@
 import {
-  AVATAR_STAGES,
   FILE_TARGET,
   computeAvatarVisuals,
   deriveAvatarStage as deriveAvatarStageFromState,
@@ -7,6 +6,22 @@ import {
   fileProgressPct as fileProgressPctFromQuota,
   formatFileBadge,
 } from './avatar.js';
+import {
+  applyAmbientSustenancePause,
+  createAmbientScheduler,
+} from './ambient.js';
+import {
+  AFTERNOON_CUTOFF_H,
+  MORNING_CUTOFF_H,
+  applyElapsedTime as applyElapsedTimeCore,
+  clamp,
+  dateKeyOf,
+  deriveNodeState as deriveNodeStateCore,
+  deriveTempers as deriveTempersCore,
+  evaluateQuotaTargets,
+  isComplianceFrozen as isComplianceFrozenCore,
+  recalculateRefinementTier as recalculateRefinementTierCore,
+} from './engine.js';
 import {
   generateSyncCode,
   pushState,
@@ -21,19 +36,11 @@ import {
 ═══════════════════════════════════════════════════════════════════ */
 
 const STATE_KEY        = 'lumon-compliance-state';
-const FOUR_HOURS_MS    = 4 * 60 * 60 * 1000;
-const SIX_HOURS_MS     = 6 * 60 * 60 * 1000;
-const SUSTENANCE_TARGET= 3;
 
 const MORNING_ADVISORY_H   = 7;
-const MORNING_CUTOFF_H     = 10;
 const AFTERNOON_ADVISORY_H = 11;
-const AFTERNOON_CUTOFF_H   = 14;
-
-const QUOTA_FLAGS = { FLUID:1, ACTIVITY:2, AFTERNOON_DOSE:4, FULL_DAY:8, MORNING_DOSE:16, SUSTENANCE:32 };
 
 const TIER_NAMES      = ['UNINITIALIZED','ACTIVE REFINEMENT','ELEVATED THROUGHPUT','FULL COMPLIANCE'];
-const TIER_THRESHOLDS = [0,100,300,600];
 
 const MILESTONES = [
   { pct:10,  id:'eraser',      name:'LUMON ERASER', badge:'ERASER' },
@@ -88,6 +95,8 @@ const DEFAULT_STATE = {
   unlockedPalettes:['lumon-default'], unlockedGeometries:['hex-core'],
   activePalette:'lumon-default', activeGeometry:'hex-core',
   sync: { enabled:false, code:null, apiBase:'', contentHash:null, lastPushedAt:null, lastPulledAt:null },
+  ambient: { lastEventAt:null, lastEventId:null, sessionCount:0, dailyDate:null, dailyTiers:{ A:0, B:0, C:0 }, bCreditsToday:0, sustenancePauseUntil:null },
+  kioskAwake: false,
 };
 
 // ─── runtime globals ───────────────────────────────────────────────
@@ -102,6 +111,11 @@ let orientPage = 1;
 let lastDominantTemper = null;
 let activeTab = 'data-matrix';
 let logSidebarOpen = true;
+let crtHome = null;
+let ambientScheduler = null;
+let wakeLock = null;
+let focusReturnEl = null;
+let toastTimer = null;
 const ORIENT_PAGES = 3;
 
 const FIELD_ROWS = 6, FIELD_COLS = 13;
@@ -111,9 +125,7 @@ const activityLog = [];
 const MAX_LOG = 9;
 
 // ─── helpers ───────────────────────────────────────────────────────
-function clamp(n,min,max){ return Math.min(max, Math.max(min, n)); }
 function rndDigit(){ return String(Math.floor(Math.random()*10)); }
-function dateKeyOf(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function todayKey(){ return dateKeyOf(now()); }
 
 function now(){
@@ -131,8 +143,58 @@ function pushLog(text){
   renderActivityLog();
 }
 function fileProgressPct(){ return fileProgressPctFromQuota(state.fileState.quota); }
-function isComplianceFrozen(s = state){ const u = s?.incentives?.complianceFreezeUntil; return u && new Date(u) > new Date(); }
+function isComplianceFrozen(s = state){ return isComplianceFrozenCore(s, now()); }
 function asciiBar(pct, width = 10){ const n = clamp(Math.round((pct/100)*width), 0, width); return '[' + '█'.repeat(n) + '░'.repeat(width-n) + ']'; }
+
+function showToast(msg, { tone = 'dim', sticky = false } = {}){
+  const el = document.getElementById('ambient-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.dataset.tone = tone;
+  el.classList.remove('hidden');
+  el.setAttribute('aria-hidden', 'false');
+  clearTimeout(toastTimer);
+  if (!sticky) toastTimer = setTimeout(() => hideToast(), 6000);
+}
+function hideToast(){
+  const el = document.getElementById('ambient-toast');
+  if (!el) return;
+  el.classList.add('hidden');
+  el.setAttribute('aria-hidden', 'true');
+}
+
+function trapFocus(container){
+  const nodes = [...container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+    .filter((n) => !n.disabled && n.offsetParent !== null);
+  if (!nodes.length) return () => {};
+  const first = nodes[0];
+  const last = nodes[nodes.length - 1];
+  function onKey(e){
+    if (e.key !== 'Tab') return;
+    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  }
+  container.addEventListener('keydown', onKey);
+  first.focus();
+  return () => container.removeEventListener('keydown', onKey);
+}
+let releaseTerminalFocus = null;
+
+async function requestWakeLock(){
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch { /* optional */ }
+}
+async function releaseWakeLock(){
+  try { await wakeLock?.release(); } catch { /* optional */ }
+  wakeLock = null;
+}
+async function syncWakeLock(){
+  if (state?.kioskAwake && document.body.dataset.view === 'desk' && !document.hidden) await requestWakeLock();
+  else await releaseWakeLock();
+}
 
 // ─── state management ──────────────────────────────────────────────
 function deepMerge(target, source){
@@ -161,6 +223,8 @@ function migrateState(raw){
   if (m.dailyLog.morningDoseAt === undefined)         m.dailyLog.morningDoseAt = null;
   if (m.dailyLog.morningPenaltyApplied === undefined) m.dailyLog.morningPenaltyApplied = false;
   if (m.onboardingComplete === undefined)             m.onboardingComplete = false;
+  if (!m.ambient) m.ambient = structuredClone(DEFAULT_STATE.ambient);
+  if (m.kioskAwake === undefined) m.kioskAwake = false;
   return m;
 }
 
@@ -197,41 +261,23 @@ function schedulePush(){
 
 // ─── time decay (CORE) ─────────────────────────────────────────────
 export function applyElapsedTime(s, elapsedMs){
-  if (elapsedMs <= 0) return;
-  s.metrics.fluidEfficiency = clamp(s.metrics.fluidEfficiency * Math.pow(0.85, elapsedMs / FOUR_HOURS_MS), 0, 100);
-  if (s.metrics.sustenanceLevel === undefined) s.metrics.sustenanceLevel = 100;
-  s.metrics.sustenanceLevel = clamp(s.metrics.sustenanceLevel * Math.pow(0.85, elapsedMs / SIX_HOURS_MS), 0, 100);
-  if (!isComplianceFrozen(s)){
-    const hours = elapsedMs / (60*60*1000);
-    if (s.metrics.fluidEfficiency < 30) s.metrics.complianceStanding = clamp(s.metrics.complianceStanding - hours, 0, 100);
+  let fluidMs = elapsedMs;
+  const pauseUntil = s.ambient?.sustenancePauseUntil;
+  let sustenanceMs = elapsedMs;
+  if (pauseUntil && new Date(pauseUntil) > now()) {
+    sustenanceMs = applyAmbientSustenancePause(s, elapsedMs, now());
   }
+  // Apply fluid/compliance on full elapsed; sustenance respects ambient pause via temporary override
+  if (sustenanceMs === 0 && fluidMs > 0) {
+    const sustenanceBackup = s.metrics.sustenanceLevel;
+    applyElapsedTimeCore(s, fluidMs, now());
+    s.metrics.sustenanceLevel = sustenanceBackup;
+    return;
+  }
+  applyElapsedTimeCore(s, elapsedMs, now());
 }
 
 // ─── quota evaluation (CORE) ───────────────────────────────────────
-function evaluateQuotaTargets(log){
-  const awards = { quota:0, credits:0 };
-  const flags = log.quotasAwarded || 0;
-  let nf = flags;
-
-  const mDose = log.morningDoseAt ? new Date(log.morningDoseAt) : null;
-  if (!(flags & QUOTA_FLAGS.MORNING_DOSE) && mDose && dateKeyOf(mDose)===log.date && mDose.getHours() < MORNING_CUTOFF_H){
-    awards.quota += 25; awards.credits += 5; nf |= QUOTA_FLAGS.MORNING_DOSE;
-  }
-  if (!(flags & QUOTA_FLAGS.FLUID) && log.fluidIntakeMl >= 2000){ awards.quota += 25; awards.credits += 5; nf |= QUOTA_FLAGS.FLUID; }
-  if (!(flags & QUOTA_FLAGS.ACTIVITY) && log.activityUnits >= 8000){ awards.quota += 25; awards.credits += 5; nf |= QUOTA_FLAGS.ACTIVITY; }
-  const aDose = log.complianceDoseAt ? new Date(log.complianceDoseAt) : null;
-  if (!(flags & QUOTA_FLAGS.AFTERNOON_DOSE) && aDose && dateKeyOf(aDose)===log.date && aDose.getHours() < AFTERNOON_CUTOFF_H){
-    awards.quota += 25; awards.credits += 5; nf |= QUOTA_FLAGS.AFTERNOON_DOSE;
-  }
-  if (!(flags & QUOTA_FLAGS.SUSTENANCE) && log.sustenanceUnits >= SUSTENANCE_TARGET){ awards.quota += 25; awards.credits += 5; nf |= QUOTA_FLAGS.SUSTENANCE; }
-
-  const allFive = (nf&QUOTA_FLAGS.MORNING_DOSE) && (nf&QUOTA_FLAGS.FLUID) && (nf&QUOTA_FLAGS.ACTIVITY) && (nf&QUOTA_FLAGS.AFTERNOON_DOSE) && (nf&QUOTA_FLAGS.SUSTENANCE);
-  if (!(flags & QUOTA_FLAGS.FULL_DAY) && allFive){ awards.quota += 25; awards.credits += 5; nf |= QUOTA_FLAGS.FULL_DAY; }
-
-  log.quotasAwarded = nf;
-  return awards;
-}
-
 function evaluateDailyQuotas(){
   const awards = evaluateQuotaTargets(state.dailyLog);
   state.subject.allocationCredits += awards.credits;
@@ -352,26 +398,8 @@ export function checkComplianceGrace(s){
 }
 
 // ─── node state + Four Tempers (CORE) ──────────────────────────────
-export function deriveNodeState(s){
-  const { fluidEfficiency, quotaProgression, complianceStanding, sustenanceLevel } = s.metrics;
-  const penalty = s.dailyLog.compliancePenaltyApplied || s.dailyLog.morningPenaltyApplied;
-  if (complianceStanding < 25 || penalty) return 'noncompliant';
-  if (fluidEfficiency < 30 || sustenanceLevel < 25) return 'depleted';
-  if (quotaProgression < 30) return 'underutilized';
-  if (fluidEfficiency >= 60 && quotaProgression >= 60 && complianceStanding >= 60 && sustenanceLevel >= 50) return 'optimal';
-  return 'baseline';
-}
-export function deriveTempers(s){
-  const fl=s.metrics.fluidEfficiency, q=s.metrics.quotaProgression, co=s.metrics.complianceStanding, su=s.metrics.sustenanceLevel;
-  const pen=(s.dailyLog.compliancePenaltyApplied?1:0)+(s.dailyLog.morningPenaltyApplied?1:0);
-  const lowSust = su < 30 ? (30-su) : 0;
-  return {
-    dread:  clamp(((100-fl)+(100-su))/2 + lowSust*0.8, 0, 100),
-    woe:    clamp(((100-co)+(100-su))/2 + pen*12 + lowSust*0.6, 0, 100),
-    malice: clamp((100-co)*0.7 + pen*20, 0, 100),
-    frolic: clamp((fl+q+co+su)/4 - pen*15 - lowSust, 0, 100),
-  };
-}
+export function deriveNodeState(s){ return deriveNodeStateCore(s); }
+export function deriveTempers(s){ return deriveTempersCore(s); }
 function dominantTemper(t){ return Object.entries(t).sort((a,b)=>b[1]-a[1])[0][0]; }
 function deriveAvatarStage(){
   return deriveAvatarStageFromState(state.fileState);
@@ -403,9 +431,7 @@ function renderAvatar(){
   if (visLabel) visLabel.textContent = `VISIBILITY: ${visuals.visibilityPct}%`;
 }
 export function recalculateRefinementTier(s){
-  const q = s.subject.cumulativeQuota; let tier = 0;
-  for (let i = TIER_THRESHOLDS.length-1; i >= 0; i--){ if (q >= TIER_THRESHOLDS[i]){ tier = i; break; } }
-  const prev = s.subject.refinementTier; s.subject.refinementTier = tier; return tier !== prev;
+  return recalculateRefinementTierCore(s);
 }
 
 // ─── user actions (the 4 endpoints) ────────────────────────────────
@@ -479,11 +505,13 @@ function buildScene(){
   if (grid){
     grid.innerHTML = '';
     const total = 48;
+    const ballastIdx = Math.floor(Math.random() * total);
     for (let i = 0; i < total; i++){
       const p = document.createElement('div');
       p.className = 'light-panel lit';
       const roll = Math.random();
-      if (roll > 0.86) p.classList.add('flicker');
+      if (i === ballastIdx) p.classList.add('ballast-flicker');
+      else if (roll > 0.86) p.classList.add('flicker');
       else if (roll > 0.8) p.classList.add('flicker','b');
       else if (roll > 0.74) p.classList.add('flicker','c');
       grid.appendChild(p);
@@ -506,16 +534,42 @@ function triggerRefinementBurst(){
 
 // ─── view toggle: desk ⇄ terminal ──────────────────────────────────
 function openTerminal(){
+  focusReturnEl = document.activeElement;
   document.body.dataset.view = 'terminal';
-  const o = document.getElementById('terminal-overlay');
-  o.classList.add('active'); o.setAttribute('aria-hidden','false');
+  ambientScheduler?.pause();
+  const crt = document.getElementById('crt-monitor');
+  const backdrop = document.getElementById('zoom-backdrop');
+  if (crt && crt.parentElement !== document.body) {
+    if (!crtHome) crtHome = { parent: crt.parentElement, next: crt.nextSibling };
+    document.body.appendChild(crt);
+  }
+  crt?.classList.add('focused');
+  crt?.setAttribute('aria-expanded', 'true');
+  crt?.removeAttribute('role');
+  crt?.setAttribute('tabindex', '-1');
+  backdrop?.setAttribute('aria-hidden', 'false');
   switchTab(activeTab);
   toggleLogSidebar(logSidebarOpen);
+  const frame = document.getElementById('terminal-frame');
+  if (frame) releaseTerminalFocus = trapFocus(frame);
+  syncWakeLock();
 }
 function closeTerminal(){
+  releaseTerminalFocus?.();
+  releaseTerminalFocus = null;
   document.body.dataset.view = 'desk';
-  const o = document.getElementById('terminal-overlay');
-  o.classList.remove('active'); o.setAttribute('aria-hidden','true');
+  const crt = document.getElementById('crt-monitor');
+  const backdrop = document.getElementById('zoom-backdrop');
+  if (crt && crtHome) crtHome.parent.insertBefore(crt, crtHome.next);
+  crt?.classList.remove('focused');
+  crt?.setAttribute('aria-expanded', 'false');
+  crt?.setAttribute('role', 'button');
+  crt?.setAttribute('tabindex', '0');
+  backdrop?.setAttribute('aria-hidden', 'true');
+  ambientScheduler?.resume();
+  syncWakeLock();
+  if (focusReturnEl && typeof focusReturnEl.focus === 'function') focusReturnEl.focus();
+  focusReturnEl = null;
 }
 
 // ─── tab navigation ────────────────────────────────────────────────
@@ -619,7 +673,9 @@ function renderActivityLog(){
 // ─── main render ───────────────────────────────────────────────────
 function render(){
   document.documentElement.dataset.palette = state.activePalette;
+  document.documentElement.dataset.geometry = state.activeGeometry;
   document.body.dataset.skin = state.incentives.activeSkin || '';
+  document.body.classList.toggle('kiosk-awake', !!state.kioskAwake);
 
   document.getElementById('subject-designation').textContent = `SUBJECT #${state.subject.subjectNumber}`;
   document.getElementById('refinement-tier').textContent     = `TIER: ${TIER_NAMES[state.subject.refinementTier]}`;
@@ -681,6 +737,9 @@ function render(){
   document.getElementById('archival-enabled').checked = state.sync.enabled;
   document.getElementById('archival-endpoint').value = state.sync.apiBase || '';
   document.getElementById('archival-hash').textContent = state.sync.code || '—';
+
+  const kioskToggle = document.getElementById('kiosk-awake');
+  if (kioskToggle) kioskToggle.checked = !!state.kioskAwake;
 }
 
 // ─── live clock (cam + terminal) ───────────────────────────────────
@@ -714,8 +773,19 @@ function tick(applyElapsed = true){
 }
 
 // ─── drawers / incentives / procurement ────────────────────────────
-function openDrawer(id){ document.getElementById(id).classList.remove('hidden'); document.getElementById('drawer-backdrop').classList.remove('hidden'); }
-function closeDrawers(){ ['incentives-drawer','procurement-drawer','archival-sync-panel'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById('drawer-backdrop').classList.add('hidden'); }
+let releaseDrawerFocus = null;
+function openDrawer(id){
+  document.getElementById(id).classList.remove('hidden');
+  document.getElementById('drawer-backdrop').classList.remove('hidden');
+  releaseDrawerFocus?.();
+  releaseDrawerFocus = trapFocus(document.getElementById(id));
+}
+function closeDrawers(){
+  releaseDrawerFocus?.();
+  releaseDrawerFocus = null;
+  ['incentives-drawer','procurement-drawer','archival-sync-panel'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  document.getElementById('drawer-backdrop').classList.add('hidden');
+}
 
 function acquirePalette(id){
   const item = PALETTE_CATALOG.find(p => p.id===id);
@@ -776,15 +846,39 @@ async function initArchivalPull(){
 function handleVisibility(){
   const hidden = document.hidden;
   document.documentElement.classList.toggle('paused', hidden);
-  if (hidden){ clearInterval(digitTimer); digitTimer = null; }
-  else { if (!digitTimer) digitTimer = setInterval(refreshDigits, 2200); tick(); }
+  if (hidden){
+    clearInterval(digitTimer); digitTimer = null;
+    ambientScheduler?.pause();
+    releaseWakeLock();
+  } else {
+    if (!digitTimer) digitTimer = setInterval(refreshDigits, 2200);
+    tick();
+    if (document.body.dataset.view === 'desk') ambientScheduler?.resume();
+    syncWakeLock();
+  }
 }
 
 // ─── event listeners ───────────────────────────────────────────────
 function bindEventListeners(){
-  // view toggle
-  document.getElementById('crt-monitor').addEventListener('click', openTerminal);
-  document.getElementById('btn-return-desk').addEventListener('click', closeTerminal);
+  // view toggle — CRT is a div[role=button] on desk so nested terminal controls stay valid
+  document.getElementById('crt-monitor').addEventListener('click', () => {
+    if (document.body.dataset.view !== 'desk') return;
+    openTerminal();
+  });
+  document.getElementById('crt-monitor').addEventListener('keydown', (e) => {
+    if (document.body.dataset.view !== 'desk') return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openTerminal();
+    }
+  });
+  document.getElementById('terminal-frame')?.addEventListener('click', (e) => {
+    if (document.body.dataset.view === 'terminal') e.stopPropagation();
+  });
+  document.getElementById('btn-return-desk').addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeTerminal();
+  });
   document.addEventListener('keydown', (e) => {
     if (document.body.dataset.view !== 'terminal') return;
     if (e.key === 'Escape') closeTerminal();
@@ -839,6 +933,14 @@ function bindEventListeners(){
   document.getElementById('btn-orient-prev').addEventListener('click', () => { if (orientPage > 1){ orientPage--; updateOrientPage(); } });
   document.getElementById('btn-orient-next').addEventListener('click', () => { if (orientPage < ORIENT_PAGES){ orientPage++; updateOrientPage(); } else dismissOrientation(); });
 
+  document.getElementById('kiosk-awake')?.addEventListener('change', (e) => {
+    state.kioskAwake = e.target.checked;
+    document.body.classList.toggle('kiosk-awake', state.kioskAwake);
+    saveState();
+    syncWakeLock();
+  });
+  document.getElementById('ambient-toast')?.addEventListener('click', hideToast);
+
   // archival
   document.getElementById('archival-enabled').addEventListener('change', (e) => { state.sync.enabled = e.target.checked; saveState(); });
   document.getElementById('archival-endpoint').addEventListener('change', (e) => { state.sync.apiBase = e.target.value.trim(); saveState(); });
@@ -879,6 +981,8 @@ async function init(){
   recalculateRefinementTier(state);
 
   buildScene();
+  const crt = document.getElementById('crt-monitor');
+  if (crt) crtHome = { parent: crt.parentElement, next: crt.nextSibling };
   render();
   switchTab('data-matrix');
   toggleLogSidebar(true);
@@ -891,6 +995,24 @@ async function init(){
   pushLog('REFINEMENT STREAM INITIALIZED');
   if (!state.onboardingComplete) showOrientation();
 
+  ambientScheduler = createAmbientScheduler({
+    getState: () => state,
+    saveState,
+    pushLog,
+    render,
+    now,
+    showToast,
+  });
+  ambientScheduler.start();
+
+  const params = new URLSearchParams(window.location.search);
+  const ambientDebug = params.get('ambientDebug');
+  if (ambientDebug) {
+    const tier = ambientDebug === '1' ? null : ambientDebug.toUpperCase();
+    setTimeout(() => ambientScheduler.debugFire(tier === 'A' || tier === 'B' || tier === 'C' ? tier : null), 400);
+  }
+
+  syncWakeLock();
   registerServiceWorker();
 }
 

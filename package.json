@@ -5,6 +5,7 @@
   "scripts": {
     "test:unit": "node --test tests/unit/**/*.test.js",
     "test:e2e": "playwright test",
+    "test:smoke": "playwright test tests/e2e/smoke.spec.js",
     "test": "npm run test:unit && npm run test:e2e",
     "lint": "node scripts/validate-static.js"
   },

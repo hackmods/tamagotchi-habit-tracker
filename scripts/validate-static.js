@@ -1,11 +1,12 @@
-import { existsSync } from 'node:fs';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const required = [
   'index.html',
   'styles.css',
   'app.js',
   'avatar.js',
+  'ambient.js',
+  'engine.js',
   'sync.js',
   'sw.js',
   'manifest.webmanifest',
@@ -25,6 +26,43 @@ const appJs = readFileSync('app.js', 'utf8');
 if (!appJs.includes("from './avatar.js'")) {
   console.error('app.js must import avatar module');
   process.exit(1);
+}
+if (!appJs.includes("from './ambient.js'")) {
+  console.error('app.js must import ambient module');
+  process.exit(1);
+}
+if (!appJs.includes("from './engine.js'")) {
+  console.error('app.js must import engine module');
+  process.exit(1);
+}
+
+const sw = readFileSync('sw.js');
+if (sw[0] === 0xff && sw[1] === 0xfe) {
+  console.error('sw.js must be UTF-8 (found UTF-16 BOM)');
+  process.exit(1);
+}
+if (sw.includes(0) && sw.length > 100 && sw.filter((b) => b === 0).length > sw.length / 4) {
+  console.error('sw.js appears to contain wide-char / binary null padding');
+  process.exit(1);
+}
+const swText = sw.toString('utf8');
+if (!swText.includes("CACHE_NAME = 'lumon-terminal-v9'")) {
+  console.error('sw.js CACHE_NAME should be bumped when shell assets change (expected lumon-terminal-v9)');
+  process.exit(1);
+}
+for (const asset of ["./avatar.js", "./ambient.js", "./engine.js"]) {
+  if (!swText.includes(asset)) {
+    console.error(`sw.js SHELL must precache ${asset}`);
+    process.exit(1);
+  }
+}
+
+const html = readFileSync('index.html', 'utf8');
+for (const sel of ['id="terminal-frame"', 'id="crt-monitor"', 'class="wellness-svg"', 'id="ambient-toast"', 'id="kiosk-awake"']) {
+  if (!html.includes(sel)) {
+    console.error(`index.html missing required marker: ${sel}`);
+    process.exit(1);
+  }
 }
 
 console.log('Static asset validation passed.');

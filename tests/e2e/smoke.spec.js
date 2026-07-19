@@ -1,71 +1,15 @@
 import { expect, test } from '@playwright/test';
-
-const STATE_KEY = 'lumon-compliance-state';
-
-function buildState(overrides = {}) {
-  return {
-    subject: {
-      subjectNumber: 4229,
-      cumulativeQuota: 0,
-      allocationCredits: 0,
-      refinementTier: 0,
-      prestigeMultiplier: 1,
-      filesCompleted: 0,
-    },
-    fileState: {
-      fileNumber: 1,
-      quota: 0,
-      milestonesHit: [],
-    },
-    metrics: {
-      fluidEfficiency: 100,
-      quotaProgression: 100,
-      complianceStanding: 100,
-      sustenanceLevel: 100,
-    },
-    dailyLog: {
-      date: '2026-07-12',
-      fluidIntakeMl: 0,
-      activityUnits: 0,
-      sustenanceUnits: 0,
-      morningDoseAt: null,
-      morningPenaltyApplied: false,
-      complianceDoseAt: null,
-      compliancePenaltyApplied: false,
-      sustenanceWarned: false,
-      quotasAwarded: 0,
-    },
-    incentives: { inventory: [], activeSkin: null, complianceFreezeUntil: null, fingerTrapTaps: 0 },
-    onboardingComplete: true,
-    lastSavedAt: new Date().toISOString(),
-    unlockedPalettes: ['lumon-default'],
-    unlockedGeometries: ['hex-core'],
-    activePalette: 'lumon-default',
-    activeGeometry: 'hex-core',
-    sync: { enabled: false, code: null, apiBase: '', contentHash: null, lastPushedAt: null, lastPulledAt: null },
-    ...overrides,
-  };
-}
-
-async function dismissOrientation(page) {
-  const modal = page.locator('#orientation-modal');
-  if (await modal.isVisible()) {
-    await page.getByRole('button', { name: 'Close' }).click();
-    await expect(modal).toHaveClass(/hidden/);
-  }
-}
-
-async function openTerminal(page) {
-  await dismissOrientation(page);
-  await page.getByRole('button', { name: 'Open Refinement Terminal' }).click();
-  await expect(page.getByRole('dialog', { name: 'Refinement Terminal' })).toBeVisible();
-}
+import { STATE_KEY, buildState, dismissOrientation, openTerminal } from './helpers.js';
 
 test.describe('SVG avatar smoke', () => {
-  test('office scene loads with animated employee SVG', async ({ page }) => {
+  test('office scene loads with wellness SVG and Innie-Cam HUD', async ({ page }) => {
     await page.goto('/?reset=1');
-    await expect(page.locator('.employee-svg')).toBeVisible();
-    await expect(page.locator('.employee-svg rect')).not.toHaveCount(0);
+    await dismissOrientation(page);
+    await expect(page.locator('.wellness-svg')).toBeVisible();
+    await expect(page.locator('.wellness-svg rect')).not.toHaveCount(0);
+    await expect(page.locator('.cam-feed-id')).toContainText('INNIE-CAM');
+    await expect(page.locator('.cam-rec')).toContainText('REC');
+    await expect(page.locator('#cam-clock')).toBeVisible();
   });
 
   test('data matrix renders refinement avatar SVG with ghost stage defaults', async ({ page }) => {
@@ -73,8 +17,8 @@ test.describe('SVG avatar smoke', () => {
     await openTerminal(page);
 
     const avatar = page.locator('#mdr-avatar');
-    await expect(avatar).toBeVisible();
-    await expect(avatar.locator('svg.mdr-avatar-svg')).toBeVisible();
+    await expect(avatar).toBeAttached();
+    await expect(avatar.locator('svg.mdr-avatar-svg')).toBeAttached();
     await expect(avatar).toHaveAttribute('data-stage', 'ghost');
     await expect(page.locator('#mdr-data-node')).toHaveAttribute('data-avatar-stage', 'ghost');
     await expect(page.locator('#avatar-visibility-label')).toContainText('VISIBILITY: 8%');
@@ -131,7 +75,7 @@ test.describe('core terminal smoke', () => {
     await expect(page.locator('#tab-resourcing')).toHaveClass(/active/);
 
     await page.keyboard.press('Escape');
-    await expect(page.locator('#terminal-overlay')).not.toHaveClass(/active/);
     await expect(page.locator('body')).toHaveAttribute('data-view', 'desk');
+    await expect(page.locator('#crt-monitor')).not.toHaveClass(/focused/);
   });
 });

@@ -1,10 +1,12 @@
-const CACHE_NAME = 'lumon-terminal-v8';
+const CACHE_NAME = 'lumon-terminal-v9';
 const SHELL = [
   './',
   './index.html',
   './styles.css',
   './app.js',
   './avatar.js',
+  './ambient.js',
+  './engine.js',
   './sync.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
@@ -35,17 +37,21 @@ self.addEventListener('fetch', (event) => {
 
   if (event.request.method !== 'GET') return;
 
+  const isFont =
+    url.hostname === 'fonts.googleapis.com' ||
+    url.hostname === 'fonts.gstatic.com' ||
+    event.request.destination === 'font';
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
       return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
+        if (!response || response.status !== 200) return response;
+        if (response.type !== 'basic' && !isFont) return response;
         const clone = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         return response;
-      });
+      }).catch(() => cached);
     })
   );
 });
