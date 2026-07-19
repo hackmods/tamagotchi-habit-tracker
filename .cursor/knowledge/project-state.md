@@ -13,7 +13,7 @@
 
 | Commit | Summary |
 |--------|---------|
-| _(pending)_ | Desk idle presence + RESOURCING checklist + optional floor audio |
+| `bfcd902` | Desk idle presence + RESOURCING checklist + optional floor audio |
 | `403bf27` | Severance knowledge base + Lumon voice / MDR temper digit pass |
 | `82e8e1a` | P0–P4 QOL (CRT hit, kiosk, phone portal, fonts, session report) |
 | `3f4c904` | Monitor PWA overhaul (ambient.js, engine.js, multi-size, smoke fix) |
