@@ -10,6 +10,9 @@ const required = [
   'sync.js',
   'sw.js',
   'manifest.webmanifest',
+  'fonts/fonts.css',
+  'fonts/ibm-plex-mono-400.woff2',
+  'fonts/silkscreen-400.woff2',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',
@@ -46,11 +49,11 @@ if (sw.includes(0) && sw.length > 100 && sw.filter((b) => b === 0).length > sw.l
   process.exit(1);
 }
 const swText = sw.toString('utf8');
-if (!swText.includes("CACHE_NAME = 'lumon-terminal-v9'")) {
-  console.error('sw.js CACHE_NAME should be bumped when shell assets change (expected lumon-terminal-v9)');
+if (!swText.includes("CACHE_NAME = 'lumon-terminal-v10'")) {
+  console.error('sw.js CACHE_NAME should be bumped when shell assets change (expected lumon-terminal-v10)');
   process.exit(1);
 }
-for (const asset of ["./avatar.js", "./ambient.js", "./engine.js"]) {
+for (const asset of ['./avatar.js', './ambient.js', './engine.js', './fonts/fonts.css']) {
   if (!swText.includes(asset)) {
     console.error(`sw.js SHELL must precache ${asset}`);
     process.exit(1);
@@ -58,7 +61,16 @@ for (const asset of ["./avatar.js", "./ambient.js", "./engine.js"]) {
 }
 
 const html = readFileSync('index.html', 'utf8');
-for (const sel of ['id="terminal-frame"', 'id="crt-monitor"', 'class="wellness-svg"', 'id="ambient-toast"', 'id="kiosk-awake"']) {
+for (const sel of [
+  'id="terminal-frame"',
+  'id="crt-monitor"',
+  'class="wellness-svg"',
+  'id="ambient-toast"',
+  'id="kiosk-awake"',
+  'id="cam-chyron"',
+  'id="btn-kiosk-quick"',
+  'crt-hit',
+]) {
   if (!html.includes(sel)) {
     console.error(`index.html missing required marker: ${sel}`);
     process.exit(1);

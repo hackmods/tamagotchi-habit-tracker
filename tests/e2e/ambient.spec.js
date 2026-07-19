@@ -16,8 +16,10 @@ test.describe('ambient rare events', () => {
         return page.evaluate(() => {
           const toast = document.getElementById('ambient-toast');
           const toastVisible = toast && !toast.classList.contains('hidden');
+          const chyron = document.getElementById('cam-chyron');
+          const chyronVisible = chyron && !chyron.classList.contains('hidden') && chyron.textContent.trim().length > 0;
           const ambientClass = [...document.body.classList].some((c) => c.startsWith('ambient-'));
-          return toastVisible || ambientClass;
+          return toastVisible || chyronVisible || ambientClass;
         });
       }, { timeout: 5000 })
       .toBe(true);

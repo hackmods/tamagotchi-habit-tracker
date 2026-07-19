@@ -68,6 +68,8 @@ The app name in `CAPROVER_APP_NAME` **does not exist** on your CapRover server.
 
 The nginx config sets `Cache-Control: no-cache` on `sw.js`. After deploy, users may need one hard refresh (`Ctrl+Shift+R`) to pick up a new service worker.
 
+**When shell assets change** (`index.html`, `styles.css`, `app.js`, `ambient.js`, `engine.js`, `avatar.js`, `fonts/*`, icons), bump `CACHE_NAME` in `sw.js` (e.g. `lumon-terminal-v10` → `v11`) and update the expected value in `scripts/validate-static.js`. CI fails lint if the cache name and shell list drift.
+
 ### Self-signed HTTPS
 
 The workflow calls the CapRover API with `curl -k`, so self-signed captain certificates are accepted. Enable Let's Encrypt in CapRover for production.

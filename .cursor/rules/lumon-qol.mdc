@@ -1,0 +1,16 @@
+---
+description: Lumon Innie-Cam QOL roadmap (P0–P4) — prefer these next when improving the PWA
+alwaysApply: true
+---
+
+# Lumon QOL priorities
+
+When improving this repo, prefer the roadmap in [`.cursor/plans/lumon-qol-p0-p4.plan.md`](.cursor/plans/lumon-qol-p0-p4.plan.md):
+
+- **P0**: Reliable CRT pointer open, one-click kiosk/fullscreen, arm-length idle HUD
+- **P1**: Phone thumb habit UX, desk-as-portal, install naming
+- **P2**: Richer rare ambient (not more frequent), discoverability hint, cam chyron
+- **P3**: Geometry visuals, focus traps/dialogs, self-hosted fonts
+- **P4**: Pointer-path Playwright smoke, `npm start`, ambient session report, SW bump docs
+
+Product defaults: secondary-monitor ambient first; rare ambient stays hours-scale; habit protocols stay; vanilla ES modules.

@@ -11,13 +11,12 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="fonts/fonts.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body data-view="desk">
 
+  <a class="skip-link" href="#crt-monitor">Skip to refinement terminal</a>
   <!-- ═══ CRT DISPLAY ARTIFACTS (decorative, GPU-only) ════════════════ -->
   <div class="crt" aria-hidden="true">
     <div class="crt-scanlines"></div>
@@ -92,6 +91,7 @@
             <div class="pod-chair"></div>
 
             <div id="crt-monitor" class="crt-monitor" role="button" tabindex="0" aria-label="Open Refinement Terminal" aria-expanded="false">
+              <span class="crt-hit" aria-hidden="true"></span>
               <div class="crt-bezel">
                 <div class="crt-screen">
                   <div id="crt-idle-preview" class="crt-idle-preview" aria-hidden="true">
@@ -257,8 +257,17 @@
 
             <section class="util-widget kiosk-widget">
               <p class="cli-h">// KIOSK / STAY AWAKE</p>
-              <label class="toggle-row"><input type="checkbox" id="kiosk-awake"><span>REQUEST SCREEN WAKE LOCK (DESK VIEW)</span></label>
-              <p class="cli-sub">Keeps the secondary monitor awake during long refinement sessions.</p>
+              <label class="toggle-row"><input type="checkbox" id="kiosk-awake"><span>WAKE LOCK (DESK VIEW)</span></label>
+              <label class="toggle-row"><input type="checkbox" id="kiosk-fullscreen"><span>REQUEST FULLSCREEN ON ENGAGE</span></label>
+              <button type="button" id="btn-kiosk-engage" class="btn-cli btn-cli-go">ENGAGE KIOSK MODE</button>
+              <p class="cli-sub">Wake lock + optional fullscreen for secondary-monitor sessions. Desk HUD has a KIOSK shortcut.</p>
+            </section>
+
+            <section class="util-widget" id="ambient-session-report">
+              <p class="cli-h">// AMBIENT SESSION REPORT</p>
+              <p class="cli-sub" id="ambient-report-last">LAST EVENT: —</p>
+              <p class="cli-sub" id="ambient-report-cooldown">COOLDOWN: —</p>
+              <p class="cli-sub" id="ambient-report-counts">TODAY A/B/C: 0 / 0 / 0</p>
             </section>
 
             <section id="finger-trap-widget" class="util-widget hidden">
@@ -308,6 +317,9 @@
           <span class="cam-clock" id="cam-clock">--:--:--</span>
         </div>
         <div class="cam-ambient" id="cam-ambient" aria-hidden="true">STATUS: NOMINAL</div>
+        <div class="cam-chyron hidden" id="cam-chyron" aria-live="polite"></div>
+        <button type="button" id="btn-kiosk-quick" class="kiosk-quick" aria-label="Engage kiosk stay-awake mode" title="Kiosk">KIOSK</button>
+        <p class="phone-portal-hint" aria-hidden="true">TAP ANYWHERE TO OPEN TERMINAL</p>
 
       </div><!-- /scene-stage -->
     </div><!-- /diorama -->
@@ -359,6 +371,7 @@
           <p class="orient-heading">WELCOME, INNIE.</p>
           <p class="orient-body">You are <strong>SUBJECT #4229</strong>. This window is a live <strong>Innie-Cam</strong> feed of Floor 7 MDR. Leave it open on a secondary monitor during long sessions.</p>
           <p class="orient-body">Click the <strong>CRT monitor</strong> to open your Refinement Terminal and log daily protocols. Press <strong>ESC</strong> to return to the camera. Rare departmental events may appear on the desk feed — infrequently.</p>
+          <p class="orient-note">Phone = habit logger (Add to Home Screen as <strong>Innie-Cam</strong>). Extra monitor = ambient MDR feed. Use <strong>KIOSK</strong> for stay-awake.</p>
         </div>
         <div class="orientation-page" data-page="2">
           <p class="orient-heading">DAILY PROTOCOLS</p>

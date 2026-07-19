@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { STATE_KEY, buildState, dismissOrientation, openTerminal } from './helpers.js';
+import { STATE_KEY, buildState, dismissOrientation, openTerminal, openTerminalByPointer } from './helpers.js';
 
 test.describe('SVG avatar smoke', () => {
   test('office scene loads with wellness SVG and Innie-Cam HUD', async ({ page }) => {
@@ -77,5 +77,14 @@ test.describe('core terminal smoke', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator('body')).toHaveAttribute('data-view', 'desk');
     await expect(page.locator('#crt-monitor')).not.toHaveClass(/focused/);
+  });
+
+  test('CRT opens via real pointer click', async ({ page }) => {
+    await page.addInitScript(({ key, value }) => {
+      localStorage.setItem(key, value);
+    }, { key: STATE_KEY, value: JSON.stringify(buildState()) });
+    await page.goto('/');
+    await openTerminalByPointer(page);
+    await expect(page.getByRole('application', { name: /Macrodata Refinement/i })).toBeVisible();
   });
 });

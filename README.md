@@ -6,20 +6,19 @@ A self-contained **Innie-Cam** wellness compliance terminal for monitoring **SUB
 
 - Passive Floor 7 MDR office diorama (Innie-Cam) with rare Severance-tied ambient events
 - Embedded MDR terminal: Data Matrix, Resourcing, Compliance, Utilities
+- Kiosk shortcut (wake lock + optional fullscreen) for long desk sessions
+- Phone portal: tap scene to open terminal; thumb-sized protocol buttons
+- Self-hosted IBM Plex Mono / Silkscreen (offline-first)
 - Clinical metric tracking with delta-time decay and Four Tempers
-- Quota progression, milestones (eraser / finger trap / MDE / waffle prestige)
-- Lumon Procurement (department palettes and node geometries)
-- Kiosk / Stay Awake (Screen Wake Lock) for long desk sessions
-- iOS / Chromium Add to Home Screen (PWA) + offline shell
+- Quota progression, milestones, procurement palettes & geometries
 - Optional archival transmission (hash-code server sync)
 
 ## Quick Start
 
 ```bash
-npx serve -p 8080
+npm start
+# → http://localhost:8080
 ```
-
-Open `http://localhost:8080`
 
 ### Archival server (optional)
 
@@ -32,16 +31,17 @@ node server/sync-server.js 3847
 ```bash
 npm run lint          # required files, SW UTF-8, shell cache markers
 npm run test:unit     # engine + avatar unit tests
-npm run test:smoke    # Playwright core smoke
+npm run test:smoke    # Playwright core smoke (includes pointer CRT open)
 npm test              # unit + full e2e (smoke, responsive, ambient)
 ```
 
-## iOS Install
+## iOS / Desktop Install
 
 1. Deploy static files to HTTPS
-2. Open URL in **Safari**
-3. Tap **Share** → **Add to Home Screen**
-4. Confirm **Innie-Cam**
+2. Open in Safari / Chromium → **Add to Home Screen** / Install
+3. Confirm **Innie-Cam** (phone habit logger or monitor ambient)
+
+Use **KIOSK** on the desk HUD (or UTILITIES → Engage Kiosk) for wake lock on a secondary display.
 
 ## Dev Helpers
 
@@ -54,7 +54,7 @@ npm test              # unit + full e2e (smoke, responsive, ambient)
 | `?ambientDebug=1` | Force next ambient event |
 | `?ambientDebug=A` / `B` / `C` | Force a specific ambient tier |
 
-Ambient events are rare by design (≈45m+ cooldown, 0–2 per long session). Use debug flags for QA.
+Ambient events are rare (≈45m+ cooldown, 0–2 per long session). UTILITIES shows an ambient session report (last event + cooldown).
 
 ## File Structure
 
@@ -65,9 +65,11 @@ app.js                App shell, render, wiring
 engine.js             Pure decay / quota / temper helpers
 ambient.js            Rare desk-event scheduler
 avatar.js             Refinement avatar helpers
+fonts/                Self-hosted typefaces
 sync.js               Archival encryption and sync
-sw.js                 Service worker (offline shell + font cache)
+sw.js                 Service worker (offline shell)
 manifest.webmanifest  PWA manifest
+.cursor/plans/        QOL roadmap
 tests/                Unit + Playwright e2e
 server/sync-server.js Reference archival API
 icons/                App icons

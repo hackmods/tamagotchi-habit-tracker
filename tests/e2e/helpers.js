@@ -53,6 +53,8 @@ export function buildState(overrides = {}) {
       sustenancePauseUntil: null,
     },
     kioskAwake: false,
+    kioskFullscreen: false,
+    ambientHintSeen: true,
     ...overrides,
   };
 }
@@ -67,10 +69,21 @@ export async function dismissOrientation(page) {
 
 export async function openTerminal(page) {
   await dismissOrientation(page);
-  await page.locator('#crt-monitor').evaluate((el) => el.click());
+  await page.locator('#crt-monitor .crt-hit').click();
   await expect(page.locator('body')).toHaveAttribute('data-view', 'terminal');
   await expect(page.getByRole('application', { name: /Macrodata Refinement/i })).toBeVisible();
   await expect(page.locator('#crt-monitor')).toHaveClass(/focused/);
+}
+
+/** Explicit mouse-path open (P4 hardening). */
+export async function openTerminalByPointer(page) {
+  await dismissOrientation(page);
+  const hit = page.locator('#crt-monitor .crt-hit');
+  await hit.scrollIntoViewIfNeeded();
+  const box = await hit.boundingBox();
+  if (!box) throw new Error('CRT hit plate has no bounding box');
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(page.locator('body')).toHaveAttribute('data-view', 'terminal');
 }
 
 export { STATE_KEY };

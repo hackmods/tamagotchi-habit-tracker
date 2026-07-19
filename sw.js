@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lumon-terminal-v9';
+const CACHE_NAME = 'lumon-terminal-v10';
 const SHELL = [
   './',
   './index.html',
@@ -8,6 +8,12 @@ const SHELL = [
   './ambient.js',
   './engine.js',
   './sync.js',
+  './fonts/fonts.css',
+  './fonts/ibm-plex-mono-400.woff2',
+  './fonts/ibm-plex-mono-600.woff2',
+  './fonts/ibm-plex-mono-700.woff2',
+  './fonts/silkscreen-400.woff2',
+  './fonts/silkscreen-700.woff2',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -40,7 +46,8 @@ self.addEventListener('fetch', (event) => {
   const isFont =
     url.hostname === 'fonts.googleapis.com' ||
     url.hostname === 'fonts.gstatic.com' ||
-    event.request.destination === 'font';
+    event.request.destination === 'font' ||
+    url.pathname.includes('/fonts/');
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

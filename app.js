@@ -9,6 +9,7 @@ import {
 import {
   applyAmbientSustenancePause,
   createAmbientScheduler,
+  COOLDOWN_MS,
 } from './ambient.js';
 import {
   AFTERNOON_CUTOFF_H,
@@ -97,6 +98,8 @@ const DEFAULT_STATE = {
   sync: { enabled:false, code:null, apiBase:'', contentHash:null, lastPushedAt:null, lastPulledAt:null },
   ambient: { lastEventAt:null, lastEventId:null, sessionCount:0, dailyDate:null, dailyTiers:{ A:0, B:0, C:0 }, bCreditsToday:0, sustenancePauseUntil:null },
   kioskAwake: false,
+  kioskFullscreen: false,
+  ambientHintSeen: false,
 };
 
 // ─── runtime globals ───────────────────────────────────────────────
@@ -155,12 +158,96 @@ function showToast(msg, { tone = 'dim', sticky = false } = {}){
   el.setAttribute('aria-hidden', 'false');
   clearTimeout(toastTimer);
   if (!sticky) toastTimer = setTimeout(() => hideToast(), 6000);
+  setCamChyron(msg);
 }
 function hideToast(){
   const el = document.getElementById('ambient-toast');
   if (!el) return;
   el.classList.add('hidden');
   el.setAttribute('aria-hidden', 'true');
+}
+function setCamChyron(msg){
+  const el = document.getElementById('cam-chyron');
+  if (!el || !msg) return;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function clearCamChyron(){
+  const el = document.getElementById('cam-chyron');
+  if (!el) return;
+  el.classList.add('hidden');
+  el.textContent = '';
+}
+
+function bumpIdle(){
+  document.body.classList.remove('desk-idle');
+  clearTimeout(idleTimer);
+  if (document.body.dataset.view !== 'desk' || document.hidden) return;
+  idleTimer = setTimeout(() => {
+    if (document.body.dataset.view === 'desk') document.body.classList.add('desk-idle');
+  }, IDLE_MS);
+}
+
+async function engageKiosk(){
+  state.kioskAwake = true;
+  const fsToggle = document.getElementById('kiosk-fullscreen');
+  if (fsToggle) state.kioskFullscreen = fsToggle.checked;
+  saveState();
+  document.body.classList.add('kiosk-awake');
+  const quick = document.getElementById('btn-kiosk-quick');
+  if (quick) quick.setAttribute('aria-pressed', 'true');
+  await syncWakeLock();
+  if (state.kioskFullscreen && document.documentElement.requestFullscreen) {
+    try { await document.documentElement.requestFullscreen(); } catch { /* optional */ }
+  }
+  showToast('KIOSK MODE ENGAGED', { tone: 'ok' });
+  renderAmbientReport();
+}
+async function toggleKioskQuick(){
+  if (state.kioskAwake) {
+    state.kioskAwake = false;
+    saveState();
+    document.body.classList.remove('kiosk-awake');
+    await syncWakeLock();
+    if (document.fullscreenElement) {
+      try { await document.exitFullscreen(); } catch { /* optional */ }
+    }
+    showToast('KIOSK MODE RELEASED', { tone: 'dim' });
+  } else {
+    await engageKiosk();
+  }
+  render();
+}
+
+function renderAmbientReport(){
+  const lastEl = document.getElementById('ambient-report-last');
+  const cdEl = document.getElementById('ambient-report-cooldown');
+  const countsEl = document.getElementById('ambient-report-counts');
+  if (!lastEl || !state?.ambient) return;
+  const amb = state.ambient;
+  lastEl.textContent = amb.lastEventId
+    ? `LAST EVENT: ${amb.lastEventId.toUpperCase()} @ ${amb.lastEventAt ? fmtTime(amb.lastEventAt) : '—'}`
+    : 'LAST EVENT: —';
+  let cd = 'COOLDOWN: READY';
+  if (amb.lastEventAt) {
+    const remain = COOLDOWN_MS - (Date.now() - new Date(amb.lastEventAt).getTime());
+    if (remain > 0) {
+      const m = Math.ceil(remain / 60000);
+      cd = `COOLDOWN: ${m} MIN REMAINING`;
+    }
+  }
+  cdEl.textContent = cd;
+  const t = amb.dailyTiers || { A:0, B:0, C:0 };
+  countsEl.textContent = `TODAY A/B/C: ${t.A || 0} / ${t.B || 0} / ${t.C || 0}`;
+}
+
+function maybeShowAmbientHint(){
+  if (state.ambientHintSeen || document.body.dataset.view !== 'desk') return;
+  state.ambientHintSeen = true;
+  saveState();
+  setTimeout(() => {
+    showToast('DEPARTMENTAL EVENTS ARE RARE — WATCH THE FEED', { tone: 'dim' });
+  }, 2500);
 }
 
 function trapFocus(container){
@@ -179,6 +266,9 @@ function trapFocus(container){
   return () => container.removeEventListener('keydown', onKey);
 }
 let releaseTerminalFocus = null;
+let releaseOrientFocus = null;
+let idleTimer = null;
+const IDLE_MS = 90_000;
 
 async function requestWakeLock(){
   if (!('wakeLock' in navigator)) return;
@@ -225,6 +315,8 @@ function migrateState(raw){
   if (m.onboardingComplete === undefined)             m.onboardingComplete = false;
   if (!m.ambient) m.ambient = structuredClone(DEFAULT_STATE.ambient);
   if (m.kioskAwake === undefined) m.kioskAwake = false;
+  if (m.kioskFullscreen === undefined) m.kioskFullscreen = false;
+  if (m.ambientHintSeen === undefined) m.ambientHintSeen = false;
   return m;
 }
 
@@ -536,6 +628,8 @@ function triggerRefinementBurst(){
 function openTerminal(){
   focusReturnEl = document.activeElement;
   document.body.dataset.view = 'terminal';
+  document.body.classList.remove('desk-idle');
+  clearTimeout(idleTimer);
   ambientScheduler?.pause();
   const crt = document.getElementById('crt-monitor');
   const backdrop = document.getElementById('zoom-backdrop');
@@ -568,6 +662,7 @@ function closeTerminal(){
   backdrop?.setAttribute('aria-hidden', 'true');
   ambientScheduler?.resume();
   syncWakeLock();
+  bumpIdle();
   if (focusReturnEl && typeof focusReturnEl.focus === 'function') focusReturnEl.focus();
   focusReturnEl = null;
 }
@@ -740,6 +835,11 @@ function render(){
 
   const kioskToggle = document.getElementById('kiosk-awake');
   if (kioskToggle) kioskToggle.checked = !!state.kioskAwake;
+  const fsToggle = document.getElementById('kiosk-fullscreen');
+  if (fsToggle) fsToggle.checked = !!state.kioskFullscreen;
+  const quick = document.getElementById('btn-kiosk-quick');
+  if (quick) quick.setAttribute('aria-pressed', state.kioskAwake ? 'true' : 'false');
+  renderAmbientReport();
 }
 
 // ─── live clock (cam + terminal) ───────────────────────────────────
@@ -819,8 +919,23 @@ function useIncentive(id){
 }
 
 // ─── orientation ───────────────────────────────────────────────────
-function showOrientation(){ orientPage = 1; updateOrientPage(); document.getElementById('orientation-modal').classList.remove('hidden'); }
-function dismissOrientation(){ document.getElementById('orientation-modal').classList.add('hidden'); state.onboardingComplete = true; saveState(); }
+function showOrientation(){
+  orientPage = 1;
+  updateOrientPage();
+  const modal = document.getElementById('orientation-modal');
+  modal.classList.remove('hidden');
+  releaseOrientFocus?.();
+  releaseOrientFocus = trapFocus(modal.querySelector('.orientation-inner') || modal);
+}
+function dismissOrientation(){
+  releaseOrientFocus?.();
+  releaseOrientFocus = null;
+  document.getElementById('orientation-modal').classList.add('hidden');
+  state.onboardingComplete = true;
+  saveState();
+  maybeShowAmbientHint();
+  bumpIdle();
+}
 function updateOrientPage(){
   document.querySelectorAll('.orientation-page').forEach(el => el.classList.toggle('active', Number(el.dataset.page)===orientPage));
   document.getElementById('orient-page-indicator').textContent = `${orientPage} / ${ORIENT_PAGES}`;
@@ -938,8 +1053,30 @@ function bindEventListeners(){
     document.body.classList.toggle('kiosk-awake', state.kioskAwake);
     saveState();
     syncWakeLock();
+    render();
+  });
+  document.getElementById('kiosk-fullscreen')?.addEventListener('change', (e) => {
+    state.kioskFullscreen = e.target.checked;
+    saveState();
+  });
+  document.getElementById('btn-kiosk-engage')?.addEventListener('click', () => engageKiosk());
+  document.getElementById('btn-kiosk-quick')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleKioskQuick();
   });
   document.getElementById('ambient-toast')?.addEventListener('click', hideToast);
+  document.getElementById('cam-chyron')?.addEventListener('click', clearCamChyron);
+
+  document.getElementById('office-scene')?.addEventListener('click', (e) => {
+    if (document.body.dataset.view !== 'desk') return;
+    if (e.target.closest('#crt-monitor') || e.target.closest('#btn-kiosk-quick') || e.target.closest('#helly-eraser')) return;
+    const narrow = window.matchMedia('(max-width: 600px)').matches;
+    if (narrow) openTerminal();
+  });
+
+  ['pointerdown', 'keydown', 'mousemove', 'touchstart'].forEach((evt) => {
+    document.addEventListener(evt, () => bumpIdle(), { passive: true });
+  });
 
   // archival
   document.getElementById('archival-enabled').addEventListener('change', (e) => { state.sync.enabled = e.target.checked; saveState(); });
@@ -994,6 +1131,7 @@ async function init(){
 
   pushLog('REFINEMENT STREAM INITIALIZED');
   if (!state.onboardingComplete) showOrientation();
+  else maybeShowAmbientHint();
 
   ambientScheduler = createAmbientScheduler({
     getState: () => state,
@@ -1013,6 +1151,7 @@ async function init(){
   }
 
   syncWakeLock();
+  bumpIdle();
   registerServiceWorker();
 }
 
