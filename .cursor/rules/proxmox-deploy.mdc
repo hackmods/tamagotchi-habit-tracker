@@ -1,0 +1,45 @@
+---
+description: Lab deploy to Proxmox CT 122 + verify/smoke before/after ship
+alwaysApply: true
+---
+
+# Proxmox lab deploy
+
+When a change is **shippable** (shell/UI/engine/SW assets users will load) and the lab is reachable, **validate then deploy to Proxmox**. CapRover CI validate is not a substitute for the lab host.
+
+## Target
+
+| | |
+|--|--|
+| Host | `192.168.0.23` (`pve`) — SSH key `~/.ssh/proxmox_mcp_ed25519` |
+| CT | **122** (`lumon-docker`) — **not** 121 |
+| URL | http://192.168.0.122/ |
+| Serve | host **nginx** → `/var/www/html` (Docker-in-LXC is broken; do not use `docker run`) |
+
+Lab notes (passwords, MCP quirks): `.secrets/proxmox-mcp-deploy-review.md` (gitignored). Never commit secrets / `deploy.tar` / `.build-id` / `proxmox_mcp.log`.
+
+## Before deploy
+
+1. `npm run lint` and `npm run test:unit`
+2. `npm run test:smoke` when Playwright browsers are installed; if missing, install with `npx playwright install chromium` or rely on green CI validate
+3. If `sw.js` / shell assets change: bump `CACHE_NAME` **and** `scripts/validate-static.js`
+
+## Deploy (Windows → CT)
+
+```powershell
+git rev-parse HEAD | Set-Content .build-id -NoNewline
+tar -cf deploy.tar index.html styles.css app.js avatar.js ambient.js audio.js engine.js sync.js sw.js manifest.webmanifest nginx.conf Dockerfile captain-definition .build-id icons fonts
+scp -i $env:USERPROFILE\.ssh\proxmox_mcp_ed25519 deploy.tar root@192.168.0.23:/tmp/lumon-deploy.tar
+ssh -i $env:USERPROFILE\.ssh\proxmox_mcp_ed25519 root@192.168.0.23 "pct push 122 /tmp/lumon-deploy.tar /tmp/lumon-deploy.tar && pct exec 122 -- bash -lc 'find /var/www/html -mindepth 1 -delete; tar -xf /tmp/lumon-deploy.tar -C /var/www/html; chown -R www-data:www-data /var/www/html; rm -f /tmp/lumon-deploy.tar' && rm -f /tmp/lumon-deploy.tar"
+```
+
+Or: `user-proxmox` MCP `execute_lxc_command` on node `pve` / vmid `122` for in-CT checks after `scp` + `pct push`.
+
+## After deploy
+
+- `curl.exe -sI http://192.168.0.122/` → 200
+- `curl.exe -s http://192.168.0.122/sw.js` → expected `CACHE_NAME`
+- `curl.exe -s http://192.168.0.122/.build-id` → matches `git rev-parse HEAD`
+- Tell the user to hard-refresh the desk monitor (`Ctrl+Shift+R`) after SW bumps
+
+Skip deploy only if Proxmox/SSH is unreachable; say so and leave local + CI green.
