@@ -1,0 +1,29 @@
+---
+description: Project brain for Lumon Innie-Cam PWA — read on every session
+alwaysApply: true
+---
+
+# Lumon Innie-Cam — session continuity
+
+**Repo:** `tamagotchi-habit-tracker` (package `lumon-wellness-terminal`)  
+**Stack:** Vanilla HTML/CSS/ES modules. No framework. PWA + Playwright.
+
+## Read these first (in order)
+
+1. [`.cursor/knowledge/project-state.md`](../knowledge/project-state.md) — what shipped, branch, how to run/test
+2. [`.cursor/knowledge/severance-facts.md`](../knowledge/severance-facts.md) — show/world voice
+3. [`.cursor/knowledge/show-app-continuity.md`](../knowledge/show-app-continuity.md) — show ↔ app map
+4. [`.cursor/plans/lumon-qol-p0-p4.plan.md`](../plans/lumon-qol-p0-p4.plan.md) — QOL roadmap (done)
+5. [`.cursor/knowledge/next-work.md`](../knowledge/next-work.md) — recommended next slices
+
+## Product defaults (do not reopen without ask)
+
+- **Primary surface:** always-on secondary monitor (Innie-Cam desk ambient)
+- **Phone:** first-class habit logger (portal + thumb UI) — equal polish planned, monitor ships first
+- **Ambient:** rare (45m+ cooldown, 0–2/session); tiers A cosmetic / B micro-reward / C gameplay
+- **Habit core:** keep protocols/temper/quota engine; extend via ambient + copy, don’t rewrite
+- **Stack:** stay vanilla ES modules
+
+## Voice
+
+Clinical Lumon handbook. Prefer refinement / compliance / Board / workstation / file / temper. Avoid generic habit-tracker or purple cyber aesthetics.
