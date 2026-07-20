@@ -28,7 +28,7 @@ Lab notes (passwords, MCP quirks): `.secrets/proxmox-mcp-deploy-review.md` (giti
 
 ```powershell
 git rev-parse HEAD | Set-Content .build-id -NoNewline
-tar -cf deploy.tar index.html styles.css app.js avatar.js ambient.js audio.js engine.js sync.js sw.js manifest.webmanifest nginx.conf Dockerfile captain-definition .build-id icons fonts
+tar -cf deploy.tar index.html styles.css app.js avatar.js ambient.js audio.js engine.js campus.js campusLooks.js sidequests.js sync.js sw.js manifest.webmanifest nginx.conf Dockerfile captain-definition .build-id icons fonts
 scp -i $env:USERPROFILE\.ssh\proxmox_mcp_ed25519 deploy.tar root@192.168.0.23:/tmp/lumon-deploy.tar
 ssh -i $env:USERPROFILE\.ssh\proxmox_mcp_ed25519 root@192.168.0.23 "pct push 122 /tmp/lumon-deploy.tar /tmp/lumon-deploy.tar && pct exec 122 -- bash -lc 'find /var/www/html -mindepth 1 -delete; tar -xf /tmp/lumon-deploy.tar -C /var/www/html; chown -R www-data:www-data /var/www/html; rm -f /tmp/lumon-deploy.tar' && rm -f /tmp/lumon-deploy.tar"
 ```
