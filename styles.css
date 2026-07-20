@@ -108,7 +108,7 @@ body[data-view="terminal"] .office-scene .light-panel { animation-play-state: pa
 .diorama {
   width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
-  perspective: 820px;
+  perspective: 1400px;
 }
 
 .scene-stage {
@@ -125,18 +125,18 @@ body[data-view="terminal"] .office-scene .light-panel { animation-play-state: pa
 }
 
 /* ── ceiling light matrix ───────────────────────────────────────── */
-.ceiling { position: absolute; top: 0; left: 0; right: 0; height: 36%; background: var(--ceiling); overflow: hidden; z-index: 1; }
+.ceiling { position: absolute; top: 0; left: 0; right: 0; height: 32%; background: var(--ceiling); overflow: hidden; z-index: 1; }
 .ceiling::after {
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(180deg, rgba(100,120,100,.14), rgba(255,255,255,0) 65%);
 }
 .ceiling-grid {
-  position: absolute; inset: -8% -12% 0 -12%;
+  position: absolute; inset: -2% -6% 8% -6%;
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   grid-template-rows: repeat(4, 1fr);
   gap: 4px;
-  transform: perspective(480px) rotateX(54deg);
+  transform: perspective(900px) rotateX(28deg);
   transform-origin: 50% 0%;
 }
 .light-panel { background: var(--light-panel); border: 1px solid var(--ceiling-frame); box-shadow: inset 0 0 8px rgba(255,255,255,.55); }
@@ -151,7 +151,7 @@ body[data-view="terminal"] .office-scene .light-panel { animation-play-state: pa
 /* ── walls ──────────────────────────────────────────────────────── */
 .wall { position: absolute; z-index: 2; }
 .wall-back {
-  top: 28%; left: 10%; right: 10%; height: 28%;
+  top: 24%; left: 12%; right: 12%; height: 30%;
   background: linear-gradient(180deg, var(--wall), var(--wall-shade));
   border-bottom: 3px solid var(--wall-dark);
   box-shadow: inset 0 -20px 40px rgba(0,0,0,.06);
@@ -160,10 +160,10 @@ body[data-view="terminal"] .office-scene .light-panel { animation-play-state: pa
   content: ''; position: absolute; inset: 0;
   background: repeating-linear-gradient(90deg, transparent 0, transparent calc(12.5% - 1px), rgba(120,130,118,.32) 12.5%);
 }
-.wall-left  { top: 14%; left: 0; width: 14%; height: 54%; background: linear-gradient(90deg, #a8b0a4, var(--wall)); transform: perspective(560px) rotateY(38deg); transform-origin: left center; }
-.wall-right { top: 14%; right: 0; width: 14%; height: 54%; background: linear-gradient(270deg, #a8b0a4, var(--wall)); transform: perspective(560px) rotateY(-38deg); transform-origin: right center; }
+.wall-left  { top: 12%; left: 0; width: 12%; height: 52%; background: linear-gradient(90deg, #a8b0a4, var(--wall)); transform: perspective(900px) rotateY(18deg); transform-origin: left center; }
+.wall-right { top: 12%; right: 0; width: 12%; height: 52%; background: linear-gradient(270deg, #a8b0a4, var(--wall)); transform: perspective(900px) rotateY(-18deg); transform-origin: right center; }
 
-.floor { position: absolute; left: 0; right: 0; bottom: 0; height: 48%; z-index: 3;
+.floor { position: absolute; left: 0; right: 0; bottom: 0; height: 52%; z-index: 3;
   background: linear-gradient(180deg, var(--carpet-dark) 0%, var(--carpet) 28%, var(--carpet-light) 100%); }
 .floor-grain { position: absolute; inset: 0; opacity: .55;
   background:
@@ -198,10 +198,10 @@ body[data-view="terminal"] .office-scene .light-panel { animation-play-state: pa
 /* ── 4-pod cross desk cluster ───────────────────────────────────── */
 .pod-cross {
   position: absolute;
-  left: 50%; top: 54%;
-  width: min(72%, 560px);
-  height: min(50%, 360px);
-  transform: translate(-50%, -50%) rotateX(14deg);
+  left: 50%; top: 56%;
+  width: min(68%, 540px);
+  height: min(48%, 340px);
+  transform: translate(-50%, -50%) rotateX(4deg);
   transform-style: preserve-3d;
   z-index: 5;
 }
@@ -304,7 +304,7 @@ body[data-view="terminal"] .crt-monitor .terminal-frame {
 }
 .crt-monitor:hover:not(.focused), .crt-monitor:focus-visible:not(.focused) {
   transform: translateY(-4px) scale(1.05);
-  filter: drop-shadow(0 0 12px rgba(0,255,120,.45));
+  filter: drop-shadow(0 0 12px rgba(0,229,255,.4));
   outline: none;
 }
 .crt-bezel {
@@ -336,12 +336,30 @@ body[data-view="terminal"] .crt-monitor .terminal-frame {
 
 /* camera HUD */
 .cam-hud { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-family: var(--font-pixel); font-size: .5rem; letter-spacing: .1em; color: rgba(255,255,255,.85); text-shadow: 0 1px 3px rgba(0,0,0,.6); z-index: 12; }
+.cam-hud::before,
+.cam-hud::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  border: 1px solid rgba(255,255,255,.35);
+  pointer-events: none;
+}
+.cam-hud::before { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+.cam-hud::after { top: 8px; right: 8px; border-left: none; border-bottom: none; }
 .cam-rec { display: inline-flex; align-items: center; gap: 6px; color: #ff5a5a; }
 .cam-rec-dot { width: 8px; height: 8px; background: #ff3b3b; border-radius: 50%; box-shadow: 0 0 8px #ff3b3b; animation: rec-blink 2s steps(1) infinite; }
 @keyframes rec-blink { 0%,49%{opacity:1;}50%,100%{opacity:.25;} }
 .cam-feed-id { opacity: .8; }
 .cam-clock { color: var(--term-green); text-shadow: 0 0 6px rgba(0,255,120,.5); }
 .cam-ambient { position: absolute; bottom: 10px; left: 14px; font-family: var(--font-pixel); font-size: .46rem; letter-spacing: .1em; color: rgba(255,255,255,.7); text-shadow: 0 1px 3px rgba(0,0,0,.6); z-index: 12; }
+.cam-ambient::before {
+  content: '';
+  position: absolute;
+  left: -6px; bottom: -6px;
+  width: 14px; height: 14px;
+  border: 1px solid rgba(255,255,255,.28);
+  border-right: none; border-top: none;
+}
 
 /* ── zoom backdrop + terminal focus (View 2) ────────────────────── */
 .zoom-backdrop {
