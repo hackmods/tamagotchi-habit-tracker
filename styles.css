@@ -1204,19 +1204,47 @@ body.kiosk-awake .cam-feed-id::after { content: ' · KIOSK'; color: var(--term-a
       "vitals-collapse";
   }
   .temper-rail, .vitals-rail {
-    position: absolute; left: 0; right: 0; top: 0; z-index: 3;
-    max-height: 45%; display: none; border: 1px solid var(--border-color);
+    position: absolute; left: 0; right: 0; top: 0; z-index: 8;
+    max-height: min(48%, 300px); display: none;
+    border: 1px solid var(--term-green-dim);
+    border-top: none;
+    box-shadow: 0 12px 28px rgba(0,0,0,.55);
+    background: var(--bg-panel);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  .temper-rail.open, .vitals-rail.open { display: block; }
+  .temper-rail.open, .vitals-rail.open {
+    display: block;
+    animation: rail-flyout .18s ease-out;
+  }
+  body.rail-flyout-open .terminal-workspace.mdr-frame::after {
+    content: '';
+    position: absolute; inset: 0; z-index: 7;
+    background: rgba(0, 8, 10, .42);
+    pointer-events: auto;
+  }
   .rail-toggle { display: block; }
   .temper-rail .rail-toggle, .vitals-rail .rail-toggle { display: none; }
   .mdr-frame::before {
     content: '';
     grid-area: rail-toggles;
-    /* placeholder — toggles injected in header on phone via JS/CSS sibling */
+    /* placeholder — toggles live in titlebar on phone */
   }
   .btn-toggle-rails {
     display: flex; gap: 4px; padding: 4px 8px; grid-area: rail-toggles;
+  }
+  #btn-toggle-tempers-bar,
+  #btn-toggle-vitals-bar {
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: .5rem;
+    letter-spacing: .08em;
+  }
+  #btn-toggle-tempers-bar.active,
+  #btn-toggle-vitals-bar.active {
+    color: var(--bg-void);
+    background: var(--term-green);
+    border-color: var(--term-green);
   }
   .protocol-bins { position: sticky; bottom: 0; z-index: 2; }
   .protocol-bin { min-height: 52px; padding: 8px 2px; }
@@ -1232,6 +1260,11 @@ body.kiosk-awake .cam-feed-id::after { content: ' · KIOSK'; color: var(--term-a
   }
   .btn-return { font-size: .48rem; padding: 8px 10px; min-height: 44px; }
   .tt-lumon { display: none; }
+}
+
+@keyframes rail-flyout {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 @media (max-width: 380px) {
@@ -1597,4 +1630,5 @@ body[data-room="perpetuity"][data-look-combined="cold"] .perpetuity-shrine {
   body.desk-idle:not(.ambient-gaze) .wellness-figure {
     animation: none !important;
   }
+  .temper-rail.open, .vitals-rail.open { animation: none !important; }
 }

@@ -12,7 +12,8 @@ Prioritize in order unless the user redirects. Keep Severance voice + continuity
 ## High value next slices
 
 ### 1. Phone equal polish
-- Rail toggles UX; bin micro-labels; A2HS timing
+- Bin micro-labels; A2HS timing
+- ~~Rail toggles UX~~ (TEMPERS/VITALS titlebar fly-outs)
 
 ### 2. Snapshot golden baselines
 - Commit Playwright screenshot baselines if CI needs them

@@ -791,6 +791,7 @@ function openTerminal(){
 function closeTerminal(){
   releaseTerminalFocus?.();
   releaseTerminalFocus = null;
+  closeRailFlyouts();
   document.body.dataset.view = 'desk';
   const crt = document.getElementById('crt-monitor');
   const backdrop = document.getElementById('zoom-backdrop');
@@ -806,6 +807,43 @@ function closeTerminal(){
   bumpIdle();
   if (focusReturnEl && typeof focusReturnEl.focus === 'function') focusReturnEl.focus();
   focusReturnEl = null;
+}
+
+function syncRailFlyoutButtons(){
+  const temperOpen = document.getElementById('temper-rail')?.classList.contains('open');
+  const vitalsOpen = document.getElementById('vitals-rail')?.classList.contains('open');
+  const tBtn = document.getElementById('btn-toggle-tempers-bar');
+  const vBtn = document.getElementById('btn-toggle-vitals-bar');
+  if (tBtn) {
+    tBtn.classList.toggle('active', !!temperOpen);
+    tBtn.setAttribute('aria-expanded', temperOpen ? 'true' : 'false');
+  }
+  if (vBtn) {
+    vBtn.classList.toggle('active', !!vitalsOpen);
+    vBtn.setAttribute('aria-expanded', vitalsOpen ? 'true' : 'false');
+  }
+  document.body.classList.toggle('rail-flyout-open', !!(temperOpen || vitalsOpen));
+}
+
+function closeRailFlyouts(){
+  document.getElementById('temper-rail')?.classList.remove('open');
+  document.getElementById('vitals-rail')?.classList.remove('open');
+  syncRailFlyoutButtons();
+}
+
+function toggleRailFlyout(which){
+  const temper = document.getElementById('temper-rail');
+  const vitals = document.getElementById('vitals-rail');
+  if (which === 'temper') {
+    const next = !temper?.classList.contains('open');
+    temper?.classList.toggle('open', next);
+    vitals?.classList.remove('open');
+  } else {
+    const next = !vitals?.classList.contains('open');
+    vitals?.classList.toggle('open', next);
+    temper?.classList.remove('open');
+  }
+  syncRailFlyoutButtons();
 }
 
 // ─── center mode + protocol bins ───────────────────────────────────
@@ -1245,6 +1283,10 @@ function bindEventListeners(){
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (document.body.dataset.view === 'terminal') {
+        if (document.body.classList.contains('rail-flyout-open')) {
+          closeRailFlyouts();
+          return;
+        }
         closeTerminal();
         return;
       }
@@ -1315,13 +1357,18 @@ function bindEventListeners(){
     const bin = e.target.closest('.protocol-bin');
     if (bin?.dataset.protocol) selectProtocolBin(bin.dataset.protocol);
   });
-  document.getElementById('btn-toggle-tempers-bar')?.addEventListener('click', () => {
-    document.getElementById('temper-rail')?.classList.toggle('open');
-    document.getElementById('vitals-rail')?.classList.remove('open');
+  document.getElementById('btn-toggle-tempers-bar')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleRailFlyout('temper');
   });
-  document.getElementById('btn-toggle-vitals-bar')?.addEventListener('click', () => {
-    document.getElementById('vitals-rail')?.classList.toggle('open');
-    document.getElementById('temper-rail')?.classList.remove('open');
+  document.getElementById('btn-toggle-vitals-bar')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleRailFlyout('vitals');
+  });
+  document.querySelector('.terminal-workspace')?.addEventListener('click', (e) => {
+    if (!document.body.classList.contains('rail-flyout-open')) return;
+    if (e.target.closest('#temper-rail, #vitals-rail')) return;
+    closeRailFlyouts();
   });
   document.getElementById('btn-dismiss-a2hs')?.addEventListener('click', () => {
     state.uiTips.a2hsDismissed = true; saveState(); maybeShowUiTips();
