@@ -14,15 +14,18 @@ alwaysApply: true
 2. [`.cursor/knowledge/severance-facts.md`](../knowledge/severance-facts.md) — show/world voice
 3. [`.cursor/knowledge/show-app-continuity.md`](../knowledge/show-app-continuity.md) — show ↔ app map
 4. [`.cursor/knowledge/visual-direction.md`](../knowledge/visual-direction.md) — stills → craft
-5. [`.cursor/knowledge/engine-design.md`](../knowledge/engine-design.md) — habit engine v2
-6. [`.cursor/knowledge/next-work.md`](../knowledge/next-work.md) — recommended next slices
+5. [`.cursor/knowledge/engine-design.md`](../knowledge/engine-design.md) — habit engine
+6. [`.cursor/knowledge/floor-campus.md`](../knowledge/floor-campus.md) — multi-room campus
+7. [`.cursor/knowledge/sidequests.md`](../knowledge/sidequests.md) — slow invitations
+8. [`.cursor/knowledge/next-work.md`](../knowledge/next-work.md) — recommended next slices
 
 ## Product defaults (do not reopen without ask)
 
 - **Primary surface:** always-on secondary monitor (Innie-Cam desk ambient)
 - **Phone:** first-class habit logger (portal + thumb UI) — equal polish planned, monitor ships first
-- **Ambient:** rare (45m+ cooldown, 0–2/session); tiers A cosmetic / B micro-reward / C gameplay
-- **Habit core:** engine v2 protocol-bin snapshot (`engine.js`); same five protocols/targets; extend via ambient + copy, don’t add parallel math in `app.js`
+- **Ambient:** rare (45m+ cooldown, 0–2/session); tiers A cosmetic / B micro-reward / C gameplay; filter by `?room=`
+- **Habit core:** protocol-bin snapshot (`engine.js`); same five protocols/targets; terminal **MDR-only**; extend via ambient + campus + copy, don’t add parallel math in `app.js`
+- **Campus:** soft corridor nav + department standing + hours-scale sidequests (`campus.js` / `sidequests.js`)
 - **Stack:** stay vanilla ES modules
 
 ## Voice

@@ -1,6 +1,6 @@
-/** Habit engine v2 — protocol-bin core (unit-testable, no DOM). */
+/** Habit engine — protocol-bin core (unit-testable, no DOM). stateVersion 3 = campus. */
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 export const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
 export const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
@@ -161,8 +161,8 @@ function ensureAwards(log) {
 }
 
 /**
- * Migrate persisted state to engine v2 shape.
- * App may still deep-merge defaults; this normalizes awards + version.
+ * Migrate persisted state to current shape (v3 campus).
+ * App may still deep-merge defaults; this normalizes awards + campus + version.
  */
 export function migrateState(raw, defaults = null) {
   if (!raw) {
@@ -171,6 +171,15 @@ export function migrateState(raw, defaults = null) {
       base.stateVersion = STATE_VERSION;
       base.dailyLog = { ...freshDailyLog(), ...base.dailyLog, awards: freshAwards() };
       if (!base.uiTips) base.uiTips = { a2hsDismissed: false, kioskTipDismissed: false };
+      if (!base.campus) {
+        base.campus = { room: 'mdr', corridorUnlocked: true, perpetuityUnlocked: false };
+      }
+      if (!base.departments) {
+        base.departments = { mdr: 0, od: 0, wellness: 0, breakroom: 0 };
+      }
+      if (!base.sidequests) {
+        base.sidequests = { active: null, completed: [], cooldowns: {} };
+      }
     }
     return base;
   }
@@ -179,7 +188,7 @@ export function migrateState(raw, defaults = null) {
   }
 
   const s = defaults ? { ...structuredClone(defaults), ...raw } : { ...raw };
-  // shallow-fix nested objects callers expect
+  // shallow-merge nested objects callers expect
   if (defaults) {
     s.subject = { ...defaults.subject, ...raw.subject };
     s.fileState = { ...defaults.fileState, ...raw.fileState };
@@ -188,6 +197,9 @@ export function migrateState(raw, defaults = null) {
     s.incentives = { ...defaults.incentives, ...raw.incentives };
     s.ambient = { ...defaults.ambient, ...raw.ambient };
     s.sync = { ...defaults.sync, ...raw.sync };
+    s.campus = { ...defaults.campus, ...raw.campus };
+    s.departments = { ...defaults.departments, ...raw.departments };
+    s.sidequests = { ...defaults.sidequests, ...raw.sidequests };
   }
 
   if (s.metrics?.sustenanceLevel === undefined) s.metrics.sustenanceLevel = 100;
@@ -200,8 +212,9 @@ export function migrateState(raw, defaults = null) {
     if (s.dailyLog.compliancePenaltyApplied === undefined) s.dailyLog.compliancePenaltyApplied = false;
 
     const needsBitflagMigrate =
-      raw.stateVersion !== STATE_VERSION &&
-      (raw.dailyLog?.awards === undefined || raw.stateVersion === undefined || raw.stateVersion < STATE_VERSION);
+      raw.dailyLog?.awards === undefined ||
+      raw.stateVersion === undefined ||
+      raw.stateVersion < 2;
     if (needsBitflagMigrate && (raw.dailyLog?.quotasAwarded || raw.dailyLog?.awards === undefined)) {
       s.dailyLog.awards = awardsFromBitflags(raw.dailyLog?.quotasAwarded || 0);
     }
@@ -211,6 +224,23 @@ export function migrateState(raw, defaults = null) {
   if (s.uiTips.a2hsDismissed === undefined) s.uiTips.a2hsDismissed = false;
   if (s.uiTips.kioskTipDismissed === undefined) s.uiTips.kioskTipDismissed = false;
   if (s.audioEnabled === undefined) s.audioEnabled = false;
+
+  if (!s.campus) s.campus = { room: 'mdr', corridorUnlocked: true, perpetuityUnlocked: false };
+  if (s.campus.corridorUnlocked === undefined) s.campus.corridorUnlocked = true;
+  if (s.campus.perpetuityUnlocked === undefined) s.campus.perpetuityUnlocked = false;
+  if (!s.campus.room) s.campus.room = 'mdr';
+
+  if (!s.departments) s.departments = { mdr: 0, od: 0, wellness: 0, breakroom: 0 };
+  for (const id of ['mdr', 'od', 'wellness', 'breakroom']) {
+    if (typeof s.departments[id] !== 'number') s.departments[id] = 0;
+  }
+
+  if (!s.sidequests) s.sidequests = { active: null, completed: [], cooldowns: {} };
+  if (!Array.isArray(s.sidequests.completed)) s.sidequests.completed = [];
+  if (!s.sidequests.cooldowns || typeof s.sidequests.cooldowns !== 'object') {
+    s.sidequests.cooldowns = {};
+  }
+
   s.stateVersion = STATE_VERSION;
   return s;
 }

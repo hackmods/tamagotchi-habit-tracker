@@ -23,11 +23,15 @@ Outie actions (water, movement, doses, meals) are *translated* into innie metric
 | Floating scary numbers | `.mdr-num` drift field + idle CRT preview digits |
 | Four Tempers bins | Left temper rail WO/FC/DR/MA + digit quadrants |
 | Five file progress boxes | Footer **protocol bins** (hydrate / activity / AM / PM / sustenance) from engine snapshot |
-| Security / hallway cam | Cam HUD: `REC · INNIE-CAM · FLOOR 7 · MDR` |
+| Security / hallway cam | Cam HUD: `REC · INNIE-CAM · FLOOR 7 · {ROOM}`; `?room=` campus |
+| Endless corridor | `#room-hallway` vanishing green corridor + door nav |
 | Intercom / PA | Ambient toast + lasting `#cam-chyron` |
-| Break Room dread | Palette `breakroom`; rare compliance drill / diversion events |
-| Wellness session | East-pod figure gaze; `wellness` palette |
-| O&D / design culture | Procurement palettes & node geometries |
+| Break Room dread | `#room-breakroom` + palette `breakroom`; apology hold; drill ambient |
+| Wellness session | `#room-wellness` + east-pod gaze; sit action; `wellness` palette |
+| O&D / design culture | `#room-od` cart; procurement palettes & node geometries |
+| Perpetuity shrine | Rare `#room-perpetuity` gated by standing + invitation |
+| Department politics | `state.departments` standing; UTILITIES readout |
+| Slow floor errands | `sidequests.js` invitations (not daily habits) |
 
 Center stage modes: **MATRIX** (default) · **protocol** (bin expand) · **UTILITIES** (titlebar).
 

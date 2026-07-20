@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="fonts/fonts.css">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-view="desk">
+<body data-view="desk" data-room="mdr">
 
   <a class="skip-link" href="#crt-monitor">Skip to refinement terminal</a>
   <!-- ═══ CRT DISPLAY ARTIFACTS (decorative, GPU-only) ════════════════ -->
@@ -49,8 +49,12 @@
 
         <div class="pod-visitor" id="pod-visitor" aria-hidden="true"></div>
 
+        <!-- Soft corridor / door peeks (MDR desk) -->
+        <button type="button" id="nav-corridor" class="room-peek room-peek-n" data-goto="hallway" aria-label="Enter hallway corridor">CORRIDOR</button>
+        <button type="button" id="nav-wellness-door" class="room-peek room-peek-e" data-goto="wellness" aria-label="Enter wellness suite">WELLNESS</button>
+
         <!-- MDR workstation island (4 desks · CRT faces camera) -->
-        <div class="pod-cross" aria-hidden="false">
+        <div class="pod-cross room-layer" id="room-mdr" data-room-panel="mdr" aria-hidden="false">
           <div class="island-core" aria-hidden="true">
             <span class="island-arm island-arm-n"></span>
             <span class="island-arm island-arm-s"></span>
@@ -257,6 +261,13 @@
               <p class="cli-sub">Wake lock + optional fullscreen for secondary-monitor sessions. Desk HUD has a KIOSK shortcut.</p>
             </section>
 
+            <section class="util-widget" id="campus-standing-report">
+              <p class="cli-h">// DEPARTMENT STANDING</p>
+              <p class="cli-sub" id="dept-standing-line">MDR +0 · O&amp;D +0 · WELL +0 · BR +0</p>
+              <p class="cli-sub" id="quest-hud-line">INVITATION: NONE</p>
+              <p class="cli-sub" id="campus-room-line">ROOM: MDR</p>
+            </section>
+
             <section class="util-widget" id="ambient-session-report">
               <p class="cli-h">// AMBIENT SESSION REPORT</p>
               <p class="cli-sub" id="ambient-report-last">LAST EVENT: —</p>
@@ -323,11 +334,73 @@
 
           </div><!-- /pod-s -->
 
-        </div><!-- /pod-cross -->
+        </div><!-- /pod-cross / room-mdr -->
+
+        <!-- Hallway corridor -->
+        <div class="room-layer room-hallway" id="room-hallway" data-room-panel="hallway" hidden aria-hidden="true">
+          <div class="hall-vanishing" aria-hidden="true">
+            <div class="hall-floor"></div>
+            <div class="hall-ceiling"></div>
+            <div class="hall-wall hall-wall-l"></div>
+            <div class="hall-wall hall-wall-r"></div>
+            <div class="hall-end"></div>
+          </div>
+          <nav class="room-doors" aria-label="Corridor doors">
+            <button type="button" class="room-door" data-goto="mdr">MDR</button>
+            <button type="button" class="room-door" data-goto="wellness">WELLNESS</button>
+            <button type="button" class="room-door" data-goto="breakroom">BREAK ROOM</button>
+            <button type="button" class="room-door" data-goto="od">O&amp;D</button>
+            <button type="button" class="room-door room-door-rare" data-goto="perpetuity" id="door-perpetuity" hidden>PERPETUITY</button>
+          </nav>
+          <p class="room-caption">ENDLESS CORRIDOR — PLEASE KEEP TO THE RIGHT</p>
+        </div>
+
+        <!-- Wellness suite -->
+        <div class="room-layer room-wellness" id="room-wellness" data-room-panel="wellness" hidden aria-hidden="true">
+          <div class="wellness-chamber" aria-hidden="true">
+            <div class="wellness-plant"></div>
+            <div class="wellness-chair" id="wellness-sit" role="button" tabindex="0" aria-label="Sit for wellness session"></div>
+            <div class="wellness-lamp"></div>
+          </div>
+          <p class="room-caption">WELLNESS — YOU ARE A VALUED MEMBER OF THE TEAM</p>
+          <button type="button" class="btn-room-action" id="btn-wellness-sit">SIT</button>
+        </div>
+
+        <!-- Break room -->
+        <div class="room-layer room-breakroom" id="room-breakroom" data-room-panel="breakroom" hidden aria-hidden="true">
+          <div class="breakroom-table" aria-hidden="true">
+            <div class="apology-plaque">FORGIVE ME FOR THE HARM I HAVE CAUSED THIS WORLD</div>
+          </div>
+          <p class="room-caption">BREAK ROOM — COMPLIANCE APOLOGY REQUIRED</p>
+          <button type="button" class="btn-room-action" id="btn-apology-hold">HOLD APOLOGY</button>
+        </div>
+
+        <!-- Optics & Design -->
+        <div class="room-layer room-od" id="room-od" data-room-panel="od" hidden aria-hidden="true">
+          <div class="od-studio" aria-hidden="true">
+            <div class="od-cart" id="od-cart" role="button" tabindex="0" aria-label="Acknowledge design cart"></div>
+            <div class="od-swatch od-swatch-a"></div>
+            <div class="od-swatch od-swatch-b"></div>
+          </div>
+          <p class="room-caption">OPTICS &amp; DESIGN — FORM IS COMPLIANCE</p>
+          <button type="button" class="btn-room-action" id="btn-od-ack">ACKNOWLEDGE CART</button>
+        </div>
+
+        <!-- Perpetuity (rare) -->
+        <div class="room-layer room-perpetuity" id="room-perpetuity" data-room-panel="perpetuity" hidden aria-hidden="true">
+          <div class="perpetuity-shrine" aria-hidden="true">
+            <div class="kier-bust"></div>
+            <div class="perpetuity-plinth"></div>
+          </div>
+          <p class="room-caption">PERPETUITY WING — INDUSTRY · HONOR · CONTINUITY</p>
+          <button type="button" class="btn-room-action" id="btn-kier-unlock">ACKNOWLEDGE FOUNDER</button>
+        </div>
+
+        <button type="button" id="btn-return-mdr" class="btn-return-mdr hidden" aria-label="Return to MDR workstation">↩ MDR</button>
 
         <div class="cam-hud" aria-hidden="true">
           <span class="cam-rec"><span class="cam-rec-dot"></span>REC</span>
-          <span class="cam-feed-id">INNIE-CAM · FLOOR 7 · MDR</span>
+          <span class="cam-feed-id" id="cam-feed-id">INNIE-CAM · FLOOR 7 · MDR</span>
           <span class="cam-clock" id="cam-clock">--:--:--</span>
         </div>
         <div class="cam-ambient" id="cam-ambient" aria-hidden="true">STATUS: NOMINAL</div>

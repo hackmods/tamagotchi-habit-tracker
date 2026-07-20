@@ -36,6 +36,19 @@ Craft rules for desk ambient + MDR terminal. Pair with `show-app-continuity.md` 
 | Temper bins | `--woe`, `--frolic`, `--dread`, `--malice` |
 | Scale | `--ui-scale` consumed on `#terminal-frame` |
 
+## Campus rooms (craft)
+
+| Room | Look |
+|------|------|
+| MDR | Compact island on carpet (existing) |
+| Hallway | Vanishing corridor, sage floor plane, door chips |
+| Wellness | Warm radial chamber, plant + chair + lamp |
+| Break room | Dim table + apology plaque |
+| O&D | Cool studio + cart + swatches |
+| Perpetuity | Dark shrine + bust (rare) |
+
+Soft peeks (CORRIDOR / WELLNESS) on MDR only — not a minimap. Follow-up: drive room tints from standing / tempers / invitations.
+
 ## Decision log
 
 - **2026-07-19 — Frame IA:** Replaced peer tabs with MDR header + Cold Harbor temper/vitals rails + five protocol bins so the shell matches the stills and the engine snapshot API.

@@ -45,6 +45,27 @@ import {
   playIntercomChirp,
   playAmbientCue,
 } from './audio.js';
+import {
+  parseRoomFromUrl,
+  syncRoomToUrl,
+  canEnterRoom,
+  camFeedLabel,
+  standingReadout,
+  ensureCampus,
+  ensureDepartments,
+  ROOM_LABELS,
+  freshCampus,
+  freshDepartments,
+} from './campus.js';
+import {
+  ensureSidequests,
+  freshSidequests,
+  startQuest,
+  advanceQuest,
+  questHudLine,
+  getActiveQuest,
+  canStart,
+} from './sidequests.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    LUMON INNIE-CAM — application logic
@@ -117,6 +138,9 @@ const DEFAULT_STATE = {
   ambientHintSeen: false,
   audioEnabled: false,
   uiTips: { a2hsDismissed: false, kioskTipDismissed: false },
+  campus: freshCampus(),
+  departments: freshDepartments(),
+  sidequests: freshSidequests(),
 };
 
 // ─── runtime globals ───────────────────────────────────────────────
@@ -629,10 +653,109 @@ function triggerRefinementBurst(){
   burstTimer = setTimeout(() => node.classList.remove('refining'), 900);
 }
 
+// ─── campus rooms ──────────────────────────────────────────────────
+function currentRoom(){
+  return ensureCampus(state).room || 'mdr';
+}
+
+function applyRoomVisuals(room){
+  document.body.dataset.room = room;
+  document.querySelectorAll('[data-room-panel]').forEach((el) => {
+    const on = el.dataset.roomPanel === room;
+    el.hidden = !on;
+    el.setAttribute('aria-hidden', on ? 'false' : 'true');
+  });
+  const feed = document.getElementById('cam-feed-id');
+  if (feed) feed.textContent = camFeedLabel(room);
+  const ret = document.getElementById('btn-return-mdr');
+  if (ret) ret.classList.toggle('hidden', room === 'mdr');
+  const perpDoor = document.getElementById('door-perpetuity');
+  if (perpDoor) {
+    const unlocked = !!state.campus?.perpetuityUnlocked;
+    perpDoor.hidden = !unlocked;
+  }
+  const title = document.querySelector('title');
+  if (title) title.textContent = `Lumon Innie-Cam — Floor 7 / ${ROOM_LABELS[room] || 'MDR'}`;
+}
+
+function enterRoom(room, { syncUrl = true, toast = true } = {}){
+  ensureCampus(state);
+  ensureDepartments(state);
+  ensureSidequests(state);
+  if (!canEnterRoom(state, room)) {
+    showToast('ACCESS RESTRICTED — STANDING INSUFFICIENT', { tone: 'warn' });
+    return false;
+  }
+  if (document.body.dataset.view === 'terminal' && room !== 'mdr') {
+    closeTerminal();
+  }
+  state.campus.room = room;
+  applyRoomVisuals(room);
+  if (syncUrl) syncRoomToUrl(room);
+  saveState();
+
+  // Quest step hooks on enter
+  if (room === 'wellness') maybeAdvanceQuest('enter', 'Entered wellness suite');
+  if (room === 'breakroom') maybeAdvanceQuest('enter', 'Entered break room');
+  if (room === 'od') maybeAdvanceQuest('enter', 'Entered Optics & Design');
+  if (room === 'hallway') {
+    maybeAdvanceQuest('notice', 'Corridor notice observed');
+    maybeAdvanceQuest('hall', 'Hallway cart route noted');
+    maybeAdvanceQuest('signal', 'Perpetuity signal detected');
+  }
+
+  if (toast && room !== 'mdr') {
+    showToast(`FEED: ${ROOM_LABELS[room] || room.toUpperCase()}`, { tone: 'dim' });
+  }
+  renderCampusReport();
+  return true;
+}
+
+function maybeAdvanceQuest(stepId, logLine){
+  const result = advanceQuest(state, stepId, now());
+  if (!result.advanced) return;
+  if (logLine) pushLog(logLine);
+  if (result.completed) {
+    pushLog(`INVITATION COMPLETE: ${result.title}`);
+    showToast(`INVITATION COMPLETE — ${result.title}`, { tone: 'ok' });
+  } else {
+    showToast(`INVITATION ADVANCED`, { tone: 'amber' });
+  }
+  saveState();
+  render();
+}
+
+function maybeStartQuestFromAmbient(questId, toastMsg){
+  if (!canStart(state, questId, now())) return false;
+  if (!startQuest(state, questId, now())) return false;
+  pushLog(`INVITATION ISSUED: ${questId}`);
+  if (toastMsg) showToast(toastMsg, { tone: 'amber' });
+  saveState();
+  render();
+  return true;
+}
+
+function renderCampusReport(){
+  ensureCampus(state);
+  ensureDepartments(state);
+  ensureSidequests(state);
+  const standing = document.getElementById('dept-standing-line');
+  if (standing) standing.textContent = standingReadout(state);
+  const quest = document.getElementById('quest-hud-line');
+  if (quest) quest.textContent = questHudLine(state);
+  const roomLine = document.getElementById('campus-room-line');
+  if (roomLine) roomLine.textContent = `ROOM: ${ROOM_LABELS[currentRoom()] || 'MDR'}`;
+}
+
 // ─── view toggle: desk ⇄ terminal ──────────────────────────────────
 function openTerminal(){
+  if (currentRoom() !== 'mdr') {
+    showToast('REFINEMENT TERMINAL — MDR WORKSTATION ONLY', { tone: 'warn' });
+    return;
+  }
   focusReturnEl = document.activeElement;
   document.body.dataset.view = 'terminal';
+  maybeAdvanceQuest('crt', 'CRT refinement session opened');
   document.body.classList.remove('desk-idle');
   setCrtWorkingPresence(false);
   clearTimeout(idleTimer);
@@ -934,6 +1057,7 @@ function render(){
   const audioToggle = document.getElementById('audio-enabled');
   if (audioToggle) audioToggle.checked = !!state.audioEnabled;
   renderAmbientReport();
+  renderCampusReport();
   maybeShowUiTips();
 }
 
@@ -1108,9 +1232,64 @@ function bindEventListeners(){
     closeTerminal();
   });
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (document.body.dataset.view === 'terminal') {
+        closeTerminal();
+        return;
+      }
+      if (currentRoom() !== 'mdr') {
+        enterRoom('mdr', { toast: true });
+        return;
+      }
+    }
     if (document.body.dataset.view !== 'terminal') return;
-    if (e.key === 'Escape') closeTerminal();
     if (e.altKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); toggleLogSidebar(); }
+  });
+
+  // Campus navigation
+  document.querySelectorAll('[data-goto]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const room = btn.dataset.goto;
+      if (room) enterRoom(room);
+    });
+  });
+  document.getElementById('btn-return-mdr')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    enterRoom('mdr');
+  });
+  document.getElementById('btn-wellness-sit')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    maybeAdvanceQuest('sit', 'Wellness sit completed');
+    maybeAdvanceQuest('gaze', 'Wellness gaze acknowledged');
+  });
+  document.getElementById('wellness-sit')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    maybeAdvanceQuest('sit', 'Wellness sit completed');
+  });
+  document.getElementById('btn-apology-hold')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    maybeAdvanceQuest('hold', 'Apology held');
+    maybeAdvanceQuest('summons', 'Apology summons answered');
+  });
+  document.getElementById('btn-od-ack')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    maybeAdvanceQuest('ack', 'Design cart acknowledged');
+    maybeAdvanceQuest('od-cart', 'O&D cart inspected');
+  });
+  document.getElementById('od-cart')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    maybeAdvanceQuest('ack', 'Design cart acknowledged');
+    maybeAdvanceQuest('od-cart', 'O&D cart inspected');
+  });
+  document.getElementById('btn-kier-unlock')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    maybeAdvanceQuest('unlock', 'Founder acknowledged');
+  });
+  window.addEventListener('popstate', () => {
+    const room = parseRoomFromUrl();
+    if (canEnterRoom(state, room)) enterRoom(room, { syncUrl: false, toast: false });
+    else enterRoom('mdr', { syncUrl: true, toast: false });
   });
 
   // center modes + protocol bins
@@ -1215,8 +1394,10 @@ function bindEventListeners(){
   document.getElementById('office-scene')?.addEventListener('click', (e) => {
     if (document.body.dataset.view !== 'desk') return;
     if (e.target.closest('#crt-monitor') || e.target.closest('#btn-kiosk-quick') || e.target.closest('#helly-eraser')) return;
+    if (e.target.closest('[data-goto]') || e.target.closest('.btn-room-action') || e.target.closest('#btn-return-mdr')) return;
+    if (e.target.closest('.room-layer:not(#room-mdr)')) return;
     const narrow = window.matchMedia('(max-width: 600px)').matches;
-    if (narrow) openTerminal();
+    if (narrow && currentRoom() === 'mdr') openTerminal();
   });
 
   ['pointerdown', 'keydown', 'mousemove', 'touchstart'].forEach((evt) => {
@@ -1282,6 +1463,16 @@ async function init(){
   buildScene();
   const crt = document.getElementById('crt-monitor');
   if (crt) crtHome = { parent: crt.parentElement, next: crt.nextSibling };
+
+  const bootParams = new URLSearchParams(window.location.search);
+  const urlRoom = parseRoomFromUrl();
+  const savedRoom = state.campus?.room || 'mdr';
+  const bootRoom = bootParams.has('room') ? urlRoom : savedRoom;
+  ensureCampus(state);
+  state.campus.room = canEnterRoom(state, bootRoom) ? bootRoom : 'mdr';
+  applyRoomVisuals(state.campus.room);
+  syncRoomToUrl(state.campus.room);
+
   render();
   switchCenterMode('matrix');
   toggleLogSidebar(true);
@@ -1313,6 +1504,17 @@ async function init(){
         playIntercomChirp();
       }
       playAmbientCue(state.ambient?.lastEventId);
+      // Rare ambient may issue floor invitations
+      const id = state.ambient?.lastEventId;
+      if (id === 'wellness-gaze') maybeStartQuestFromAmbient('wellness-invitation', 'WELLNESS INVITATION ISSUED');
+      if (id === 'pod-visitor' || id === 'corridor-footfall') {
+        maybeStartQuestFromAmbient('lost-refiner', 'MISPLACED REFINER — CHECK CORRIDOR');
+      }
+      if (id === 'compliance-drill' || id === 'apology-loop') {
+        maybeStartQuestFromAmbient('breakroom-apology', 'BREAK ROOM APOLOGY REQUIRED');
+      }
+      if (id === 'od-cart-pass') maybeStartQuestFromAmbient('od-cart', 'DESIGN CART IN TRANSIT');
+      if (id === 'kier-whisper') maybeStartQuestFromAmbient('kier-shrine', 'PERPETUITY SIGNAL');
     },
   });
   ambientScheduler.start();

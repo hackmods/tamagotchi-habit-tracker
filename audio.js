@@ -234,5 +234,20 @@ export function playAmbientCue(eventId) {
     beepSquare(523, 0.08, t + 0.14, 0.03);
     return;
   }
+  if (eventId === 'corridor-footfall' || eventId === 'od-cart-pass') {
+    beepSquare(196, 0.08, t, 0.035);
+    beepSquare(146.83, 0.12, t + 0.1, 0.03);
+    return;
+  }
+  if (eventId === 'wellness-tone' || eventId === 'kier-whisper') {
+    beepSquare(392, 0.12, t, 0.028);
+    beepSquare(329.63, 0.16, t + 0.14, 0.025);
+    return;
+  }
+  if (eventId === 'apology-loop') {
+    beepSquare(164.81, 0.18, t, 0.04);
+    beepSquare(130.81, 0.22, t + 0.16, 0.035);
+    return;
+  }
   beepSquare(330, 0.1, t, 0.03);
 }

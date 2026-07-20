@@ -4,7 +4,7 @@ const STATE_KEY = 'lumon-compliance-state';
 
 export function buildState(overrides = {}) {
   return {
-    stateVersion: 2,
+    stateVersion: 3,
     subject: {
       subjectNumber: 4229,
       cumulativeQuota: 0,
@@ -66,6 +66,9 @@ export function buildState(overrides = {}) {
     ambientHintSeen: true,
     audioEnabled: false,
     uiTips: { a2hsDismissed: true, kioskTipDismissed: true },
+    campus: { room: 'mdr', corridorUnlocked: true, perpetuityUnlocked: false },
+    departments: { mdr: 0, od: 0, wellness: 0, breakroom: 0 },
+    sidequests: { active: null, completed: [], cooldowns: {} },
     ...overrides,
   };
 }

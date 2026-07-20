@@ -4,20 +4,18 @@
 
 **Lumon Wellness Compliance Terminal / Innie-Cam** — Severance-themed wellness habit PWA.
 
-- **Desk view:** passive Floor 7 MDR office diorama (camera feed)
-- **Terminal:** MDR/Cold Harbor frame (header · rails · center · protocol bins 01–05)
-- Outie habits → innie metrics via **engine v2** protocol-bin snapshot
-- Four Tempers drive MDR digit feel; rare ambient events entertain during long coding sessions
+- **Desk view:** Floor 7 campus (MDR island default + hallway / wellness / breakroom / O&D / rare perpetuity)
+- **Terminal:** MDR/Cold Harbor frame — protocols only while `room === mdr`
+- Outie habits → innie metrics via **engine** protocol-bin snapshot (`stateVersion` **3**)
+- Department standing + slow sidequests; rare ambient filtered by room
 
 ## Recent commits (main)
 
 | Commit | Summary |
 |--------|---------|
-| *(this pass)* | Engine v2 + MDR frame UI + QOL (archival/install/audio/visual) |
+| *(this pass)* | Floor campus: `?room=`, standing, sidequests, room scenes |
+| *(prior)* | Engine v2 + MDR frame UI + QOL; MDR island landing; desk flatten |
 | `bfcd902` | Desk idle presence + RESOURCING checklist + optional floor audio |
-| `403bf27` | Severance knowledge base + Lumon voice / MDR temper digit pass |
-| `82e8e1a` | P0–P4 QOL (CRT hit, kiosk, phone portal, fonts, session report) |
-| `3f4c904` | Monitor PWA overhaul (ambient.js, engine.js, multi-size, smoke fix) |
 
 Branch tracks `origin/main`. Do not commit `.git-status.txt` or `proxmox_mcp.log`.
 
@@ -25,19 +23,17 @@ Branch tracks `origin/main`. Do not commit `.git-status.txt` or `proxmox_mcp.log
 
 | Path | Role |
 |------|------|
-| `index.html` | Desk diorama + CRT-embedded MDR frame shell |
-| `styles.css` | Design system **v10** — frame grid, `--ui-scale`, phosphor |
-| `app.js` | View layer, kiosk, idle presence, wiring |
-| `engine.js` | **v2** protocol-bin core: tick / record / snapshot / migrate |
-| `ambient.js` | Rare event scheduler A/B/C |
-| `audio.js` | Optional Web Audio floor hum + motifs + ambient cues (default off) |
-| `avatar.js` | File-progress avatar helpers |
-| `sw.js` | Offline shell — **CACHE_NAME `lumon-terminal-v14`** |
-| `fonts/` | Self-hosted IBM Plex Mono + Silkscreen (latin woff2) |
-| `tests/e2e/` | smoke, responsive, visual (1920 screenshots), ambient |
-| `tests/unit/` | avatar + engine v2 |
-| `.cursor/knowledge/visual-direction.md` | Stills → craft |
-| `.cursor/knowledge/engine-design.md` | Habit engine v2 contract |
+| `index.html` | Desk diorama + room layers + CRT MDR frame |
+| `styles.css` | Frame + campus room scenes |
+| `app.js` | Views, room router, quest hooks, kiosk |
+| `engine.js` | Protocol-bin core; migrate → v3 campus fields |
+| `campus.js` | Rooms, URL sync, department standing |
+| `sidequests.js` | Invitation catalog + progress |
+| `ambient.js` | Rare A/B/C events with `rooms` filter |
+| `audio.js` | Optional floor audio + ambient cues |
+| `sw.js` | Offline shell — **CACHE_NAME `lumon-terminal-v15`** |
+| `.cursor/knowledge/floor-campus.md` | Campus contract |
+| `.cursor/knowledge/sidequests.md` | Invitation design |
 
 ## Commands
 
@@ -49,23 +45,20 @@ npm run test:smoke
 npm test           # unit + all e2e
 ```
 
-Debug query params: `?reset=1`, `?debugTime=HH:MM`, `?ambientDebug=1|A|B|C`, `?syncApi=`
+Debug query params: `?reset=1`, `?debugTime=HH:MM`, `?ambientDebug=1|A|B|C`, `?syncApi=`, `?room=hallway|wellness|…`
 
 ## Architecture notes
 
-- CRT is `div#crt-monitor[role=button]` with `.crt-hit` plate (not a `<button>` — nested controls must stay valid)
-- Terminal reparents CRT to `document.body` when focused; ESC restores to south pod
-- State key: `localStorage['lumon-compliance-state']` — `stateVersion: 2` with explicit `dailyLog.awards`
-- Ambient persists cooldowns on `state.ambient`; pause when terminal focused / tab hidden
-- Kiosk: wake lock + optional fullscreen; desk HUD `KIOSK` button + UTILITIES engage
-- Phone ≤600px: tap scene opens terminal (“desk as portal”); sticky protocol bins
+- CRT reparents to `document.body` when focused; ESC → desk; from non-MDR room ESC → MDR
+- State: `localStorage['lumon-compliance-state']` — `stateVersion: 3` with `campus`, `departments`, `sidequests`
+- Ambient pauses in terminal / hidden tab; room-scoped event pools
+- Phone ≤600px: tap MDR scene opens terminal; room peeks still work
 
 ## CI / deploy
 
-- `.github/workflows/deploy.yml` — lint → unit → Playwright Chromium → Docker on `main`/`PR`; CapRover upload only when secrets are set (otherwise skipped)
-- **Lab host:** Proxmox CT **122** (`lumon-docker`, `http://192.168.0.122/`) via host nginx → `/var/www/html` (not Docker-in-LXC)
-- Bumping shell assets requires bumping `sw.js` `CACHE_NAME` **and** `scripts/validate-static.js` expected value (see `docs/DEPLOY-CAPROVER.md`)
+- `.github/workflows/deploy.yml` — lint → unit → Playwright → Docker; CapRover when secrets set
+- Bumping shell assets: bump `sw.js` `CACHE_NAME` **and** `scripts/validate-static.js` expected value
 
 ## Tests status
 
-Last green target: lint + unit + smoke + responsive + visual.
+Target green: lint + unit (incl. campus) + smoke + responsive + visual + campus e2e.

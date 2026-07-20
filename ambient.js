@@ -22,8 +22,18 @@ const REDUCED_MOTION =
  * @property {string} id
  * @property {Tier} tier
  * @property {number} weight
+ * @property {string[]} [rooms] — if set, only fire in these campus rooms
  * @property {(ctx: AmbientContext) => void} run
  */
+
+function currentRoom(state) {
+  return state?.campus?.room || 'mdr';
+}
+
+function eventAllowedInRoom(ev, room) {
+  if (!ev.rooms || !ev.rooms.length) return room === 'mdr';
+  return ev.rooms.includes(room);
+}
 
 /**
  * @typedef {object} AmbientContext
@@ -92,6 +102,7 @@ export const AMBIENT_EVENTS = [
     id: 'ballast-failure',
     tier: 'A',
     weight: 12,
+    rooms: ['mdr'],
     run(ctx) {
       ctx.pulseScene('ambient-ballast', 10000);
       ctx.showToast('CEILING BALLAST FAULT — FLOOR 7 MDR', { tone: 'warn' });
@@ -102,6 +113,7 @@ export const AMBIENT_EVENTS = [
     id: 'eraser-pass',
     tier: 'A',
     weight: 10,
+    rooms: ['mdr'],
     run(ctx) {
       ctx.pulseScene('ambient-eraser-pass', 8000);
       ctx.pushLog('AMBIENT: ERASER PATH OBSERVED');
@@ -111,6 +123,7 @@ export const AMBIENT_EVENTS = [
     id: 'pod-visitor',
     tier: 'A',
     weight: 10,
+    rooms: ['mdr', 'hallway'],
     run(ctx) {
       ctx.pulseScene('ambient-visitor', 9000);
       ctx.showToast('UNIDENTIFIED REFINER CROSSING — NORTH POD', { tone: 'dim' });
@@ -121,6 +134,7 @@ export const AMBIENT_EVENTS = [
     id: 'wellness-gaze',
     tier: 'A',
     weight: 8,
+    rooms: ['mdr', 'wellness'],
     run(ctx) {
       ctx.pulseScene('ambient-gaze', 6000);
       ctx.pushLog('AMBIENT: WELLNESS GAZE');
@@ -130,6 +144,7 @@ export const AMBIENT_EVENTS = [
     id: 'intercom',
     tier: 'A',
     weight: 9,
+    rooms: ['mdr', 'hallway', 'breakroom', 'od'],
     run(ctx) {
       ctx.showToast('PLEASE RETURN TO YOUR WORKSTATION', { tone: 'amber', sticky: true });
       ctx.pushLog('DEPARTMENTAL PA — RETURN TO WORKSTATION');
@@ -139,6 +154,7 @@ export const AMBIENT_EVENTS = [
     id: 'numbers-huddle',
     tier: 'A',
     weight: 8,
+    rooms: ['mdr'],
     run(ctx) {
       ctx.pulseScene('ambient-numbers', 7000);
       ctx.pushLog('AMBIENT: NUMBERS HUDDLE');
@@ -148,6 +164,7 @@ export const AMBIENT_EVENTS = [
     id: 'night-shift',
     tier: 'A',
     weight: 6,
+    rooms: ['mdr', 'hallway'],
     run(ctx) {
       const h = ctx.now().getHours();
       if (h < 22 && h >= 6) {
@@ -162,6 +179,7 @@ export const AMBIENT_EVENTS = [
     id: 'contraband-recovered',
     tier: 'B',
     weight: 6,
+    rooms: ['mdr'],
     run(ctx) {
       ctx.pulseScene('ambient-eraser-hot', 20000);
       const eraser = document.getElementById('helly-eraser');
@@ -207,6 +225,7 @@ export const AMBIENT_EVENTS = [
     id: 'coffee-service',
     tier: 'B',
     weight: 5,
+    rooms: ['mdr', 'breakroom', 'hallway'],
     run(ctx) {
       const n = awardCredits(ctx, 1, 'COFFEE SERVICE');
       ctx.pulseScene('ambient-coffee', 6000);
@@ -217,6 +236,7 @@ export const AMBIENT_EVENTS = [
     id: 'quota-encouragement',
     tier: 'B',
     weight: 5,
+    rooms: ['mdr'],
     run(ctx) {
       awardXp(ctx, 8, 'QUOTA ENCOURAGEMENT');
       ctx.showToast('THE BOARD NOTES YOUR THROUGHPUT', { tone: 'ok' });
@@ -227,6 +247,7 @@ export const AMBIENT_EVENTS = [
     id: 'melon-courtesy',
     tier: 'B',
     weight: 4,
+    rooms: ['mdr', 'wellness'],
     run(ctx) {
       ctx.pulseScene('ambient-melon', 5000);
       if (ctx.state.unlockedPalettes?.includes('melon-bar')) {
@@ -240,6 +261,7 @@ export const AMBIENT_EVENTS = [
     id: 'compliance-drill',
     tier: 'C',
     weight: 3,
+    rooms: ['mdr', 'breakroom'],
     run(ctx) {
       const until = new Date(ctx.now().getTime() + 12 * 60 * 1000);
       const existing = ctx.state.incentives.complianceFreezeUntil
@@ -257,6 +279,7 @@ export const AMBIENT_EVENTS = [
     id: 'protocol-reminder',
     tier: 'C',
     weight: 3,
+    rooms: ['mdr'],
     run(ctx) {
       const log = ctx.state.dailyLog;
       const missing = !log.morningDoseAt || !log.complianceDoseAt;
@@ -279,6 +302,7 @@ export const AMBIENT_EVENTS = [
     id: 'temper-spike',
     tier: 'C',
     weight: 3,
+    rooms: ['mdr'],
     run(ctx) {
       ctx.pulseScene('ambient-temper', 15000);
       const q = ctx.state.metrics.quotaProgression;
@@ -292,6 +316,7 @@ export const AMBIENT_EVENTS = [
     id: 'mde-tease',
     tier: 'C',
     weight: 2,
+    rooms: ['mdr'],
     run(ctx) {
       const pct = (ctx.state.fileState.quota / 1000) * 100;
       const hit = ctx.state.fileState.milestonesHit?.includes('mde');
@@ -309,6 +334,7 @@ export const AMBIENT_EVENTS = [
     id: 'redistribution',
     tier: 'C',
     weight: 1,
+    rooms: ['mdr', 'od'],
     run(ctx) {
       awardXp(ctx, 15, 'DEPARTMENTAL REDISTRIBUTION');
       ctx.showToast('DEPARTMENTAL REDISTRIBUTION — MINOR QUOTA STEP', { tone: 'ok' });
@@ -319,6 +345,7 @@ export const AMBIENT_EVENTS = [
     id: 'breakroom-diversion',
     tier: 'C',
     weight: 2,
+    rooms: ['mdr', 'breakroom'],
     run(ctx) {
       const until = new Date(ctx.now().getTime() + 5 * 60 * 1000);
       ctx.state.ambient.sustenancePauseUntil = until.toISOString();
@@ -327,14 +354,71 @@ export const AMBIENT_EVENTS = [
       ctx.render();
     },
   },
+  {
+    id: 'corridor-footfall',
+    tier: 'A',
+    weight: 10,
+    rooms: ['hallway'],
+    run(ctx) {
+      ctx.pulseScene('ambient-corridor', 8000);
+      ctx.showToast('FOOTFALL — CORRIDOR EAST', { tone: 'dim' });
+      ctx.pushLog('AMBIENT: CORRIDOR FOOTFALL');
+    },
+  },
+  {
+    id: 'od-cart-pass',
+    tier: 'A',
+    weight: 8,
+    rooms: ['hallway', 'od'],
+    run(ctx) {
+      ctx.pulseScene('ambient-od-cart', 7000);
+      ctx.showToast('DESIGN CART IN TRANSIT', { tone: 'dim' });
+      ctx.pushLog('AMBIENT: O&D CART');
+    },
+  },
+  {
+    id: 'wellness-tone',
+    tier: 'A',
+    weight: 8,
+    rooms: ['wellness'],
+    run(ctx) {
+      ctx.pulseScene('ambient-wellness-tone', 10000);
+      ctx.showToast('WELLNESS SESSION — BREATHE NOMINALLY', { tone: 'ok' });
+      ctx.pushLog('AMBIENT: WELLNESS TONE');
+    },
+  },
+  {
+    id: 'apology-loop',
+    tier: 'A',
+    weight: 7,
+    rooms: ['breakroom'],
+    run(ctx) {
+      ctx.pulseScene('ambient-apology', 12000);
+      ctx.showToast('FORGIVE ME FOR THE HARM I HAVE CAUSED…', { tone: 'warn', sticky: true });
+      ctx.pushLog('AMBIENT: APOLOGY LOOP');
+    },
+  },
+  {
+    id: 'kier-whisper',
+    tier: 'B',
+    weight: 3,
+    rooms: ['perpetuity', 'hallway'],
+    run(ctx) {
+      ctx.pulseScene('ambient-kier', 9000);
+      ctx.showToast('THE FOUNDER REMEMBERS INDUSTRY', { tone: 'amber' });
+      ctx.pushLog('AMBIENT: KIER WHISPER');
+    },
+  },
 ];
 
 export function pickAmbientEvent(state, now, rng, forceTier = null) {
   const amb = ensureAmbientState(state, now);
+  const room = currentRoom(state);
   const pool = AMBIENT_EVENTS.filter((ev) => {
     if (forceTier && ev.tier !== forceTier) return false;
     if (amb.dailyTiers[ev.tier] >= DAILY_CAP[ev.tier]) return false;
     if (ev.id === amb.lastEventId) return false;
+    if (!eventAllowedInRoom(ev, room)) return false;
     return true;
   });
   if (!pool.length) return null;
@@ -389,6 +473,11 @@ export function createAmbientScheduler(hooks) {
       'ambient-melon',
       'ambient-temper',
       'ambient-mde-tease',
+      'ambient-corridor',
+      'ambient-od-cart',
+      'ambient-wellness-tone',
+      'ambient-apology',
+      'ambient-kier',
     );
   }
 
