@@ -11,19 +11,18 @@ Prioritize in order unless the user redirects. Keep Severance voice + continuity
 
 ## High value next slices
 
-### 1. Rooms ↔ gameplay looks (planned)
-- Standing / active invitation / dominant temper tint each room’s lighting, carpet, door heat
-- MDR CRT idle preview + hallway vanishing respond to metrics without new habit math
-- See plan: rooms-into-gameplay-looks (follow-up)
-
-### 2. Phone equal polish
+### 1. Phone equal polish
 - Rail toggles UX; bin micro-labels; A2HS timing
 
-### 3. Snapshot golden baselines
+### 2. Snapshot golden baselines
 - Commit Playwright screenshot baselines if CI needs them
 
-### 4. Temper digit deepening
+### 3. Temper digit deepening
 - More dominant-temper digit behaviors tied to bin shortfall micros
+
+## Recently shipped (looks)
+
+- **Rooms ↔ gameplay looks** — `campusLooks.js` drives temper/pressure/standing/`quest-beacon` CSS from existing state
 
 ## Lumon / Severance alignment (ongoing)
 

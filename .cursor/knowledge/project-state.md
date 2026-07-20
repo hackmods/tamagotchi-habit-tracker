@@ -28,10 +28,11 @@ Branch tracks `origin/main`. Do not commit `.git-status.txt` or `proxmox_mcp.log
 | `app.js` | Views, room router, quest hooks, kiosk |
 | `engine.js` | Protocol-bin core; migrate → v3 campus fields |
 | `campus.js` | Rooms, URL sync, department standing |
+| `campusLooks.js` | Gameplay → CSS look signals / beacons |
 | `sidequests.js` | Invitation catalog + progress |
 | `ambient.js` | Rare A/B/C events with `rooms` filter |
 | `audio.js` | Optional floor audio + ambient cues |
-| `sw.js` | Offline shell — **CACHE_NAME `lumon-terminal-v15`** |
+| `sw.js` | Offline shell — **CACHE_NAME `lumon-terminal-v16`** |
 | `.cursor/knowledge/floor-campus.md` | Campus contract |
 | `.cursor/knowledge/sidequests.md` | Invitation design |
 

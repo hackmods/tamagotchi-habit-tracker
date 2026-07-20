@@ -25,9 +25,10 @@ Severed-floor **campus** around the MDR desk: URL room routing, light corridor n
 ## Modules
 
 - [`campus.js`](../../campus.js) — room ids, parse/set URL, standing clamp, labels
+- [`campusLooks.js`](../../campusLooks.js) — temper / pressure / standing bands / quest beacons → CSS
 - [`sidequests.js`](../../sidequests.js) — quest catalog + progress helpers
 - [`engine.js`](../../engine.js) — `stateVersion` 3: `campus`, `departments`, `sidequests`
-- [`app.js`](../../app.js) — apply room, gate terminal, UTILITIES standing, quest hooks
+- [`app.js`](../../app.js) — apply room, gate terminal, UTILITIES standing, quest hooks, look signals
 - [`ambient.js`](../../ambient.js) — `rooms: string[]` filter on events
 
 ## State (`stateVersion` 3)

@@ -1404,6 +1404,120 @@ body.ambient-kier .kier-bust { filter: brightness(1.25); }
   50% { transform: translateX(6px); }
 }
 
+/* ═══ Gameplay → looks (standing / temper / pressure / beacons) ════ */
+.quest-beacon {
+  box-shadow: 0 0 0 2px rgba(255, 176, 0, .55), 0 0 14px rgba(255, 176, 0, .35) !important;
+  border-color: rgba(255, 176, 0, .75) !important;
+  animation: quest-beacon-pulse 2.4s ease-in-out infinite;
+}
+.crt-monitor.quest-beacon {
+  outline: 2px solid rgba(255, 176, 0, .55);
+  outline-offset: 4px;
+}
+.wellness-figure.quest-beacon,
+.wellness-chair.quest-beacon,
+.kier-bust.quest-beacon {
+  filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 176, 0, .5));
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+@keyframes quest-beacon-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.12); }
+}
+
+/* MDR — temper / pressure */
+body[data-look-temper="frolic"][data-room="mdr"] .island-core {
+  filter: saturate(1.05) brightness(1.02);
+}
+body[data-look-temper="woe"][data-room="mdr"] .island-core {
+  filter: saturate(.85) hue-rotate(-12deg) brightness(.96);
+}
+body[data-look-temper="dread"][data-room="mdr"] .island-core {
+  filter: saturate(.9) hue-rotate(8deg) brightness(.92);
+}
+body[data-look-temper="malice"][data-room="mdr"] .island-core {
+  filter: saturate(1.1) hue-rotate(-25deg) contrast(1.05);
+}
+body[data-look-temper="frolic"] .crt-idle-preview .crt-logo { color: var(--frolic); }
+body[data-look-temper="woe"] .crt-idle-preview .crt-logo { color: var(--woe); }
+body[data-look-temper="dread"] .crt-idle-preview .crt-logo { color: var(--dread); }
+body[data-look-temper="malice"] .crt-idle-preview .crt-logo { color: var(--malice); }
+
+body[data-look-pressure="thin"][data-room="mdr"] .floor {
+  filter: saturate(.75) brightness(.92);
+}
+body[data-look-pressure="breach"][data-room="mdr"] .floor {
+  filter: saturate(.55) brightness(.78) contrast(1.08);
+}
+body[data-look-pressure="breach"] .cam-ambient { color: var(--malice); }
+body[data-look-pressure="thin"] .cam-ambient { color: var(--dread); }
+
+/* Standing bands — hallway */
+body[data-room="hallway"][data-standing-od="warm"] .hall-wall-r {
+  filter: brightness(1.18) saturate(1.1);
+}
+body[data-room="hallway"][data-standing-od="cold"] .hall-wall-r {
+  filter: brightness(.85) saturate(.7);
+}
+body[data-room="hallway"][data-standing-breakroom="cold"] .hall-end {
+  filter: brightness(.7) saturate(.6);
+  box-shadow: inset 0 0 50px rgba(40, 20, 20, .45);
+}
+body[data-room="hallway"][data-standing-breakroom="warm"] .hall-end {
+  filter: brightness(1.08);
+}
+
+/* Wellness */
+body[data-room="wellness"][data-standing-wellness="warm"] .wellness-lamp {
+  box-shadow: 0 0 36px rgba(245, 230, 168, .7);
+}
+body[data-room="wellness"][data-standing-wellness="cold"] .wellness-chamber {
+  filter: saturate(.7) brightness(.88) hue-rotate(-8deg);
+}
+body[data-room="wellness"][data-look-temper="frolic"] .wellness-chamber {
+  filter: brightness(1.05) saturate(1.08);
+}
+body[data-room="wellness"][data-look-temper="woe"] .wellness-chamber,
+body[data-room="wellness"][data-look-temper="dread"] .wellness-chamber {
+  filter: brightness(.9) saturate(.75) hue-rotate(-10deg);
+}
+
+/* Break room */
+body[data-room="breakroom"][data-look-pressure="breach"] .apology-plaque,
+body[data-room="breakroom"][data-look-temper="malice"] .apology-plaque {
+  color: #f0e8e0;
+  text-shadow: 0 0 10px rgba(200, 60, 50, .45);
+}
+body[data-room="breakroom"][data-standing-breakroom="cold"] .floor {
+  filter: brightness(.45) saturate(.55);
+}
+body[data-room="breakroom"][data-standing-breakroom="warm"] .breakroom-table {
+  border-color: #3a4a38;
+  background: #323830;
+}
+
+/* O&D */
+body[data-room="od"][data-standing-od="warm"] .od-swatch {
+  filter: saturate(1.25) brightness(1.08);
+}
+body[data-room="od"][data-standing-od="cold"] .od-studio {
+  filter: saturate(.65) brightness(.92);
+}
+body[data-room="od"][data-standing-od="warm"] .od-cart {
+  border-color: #3a5a7a;
+  box-shadow: 4px 4px 0 rgba(0, 40, 80, .18);
+}
+
+/* Perpetuity */
+body[data-room="perpetuity"][data-look-combined="warm"] .kier-bust {
+  filter: brightness(1.2) sepia(.25);
+  background: linear-gradient(180deg, #e0d4a8, #a89060);
+}
+body[data-room="perpetuity"][data-look-combined="cold"] .perpetuity-shrine {
+  filter: brightness(.85) saturate(.8);
+}
+
 @media (max-width: 600px) {
   .room-peek { font-size: .36rem; padding: 5px 8px; }
   .room-caption { font-size: .38rem; bottom: 64px; }
@@ -1414,6 +1528,7 @@ body.ambient-kier .kier-bust { filter: brightness(1.25); }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .crt-flicker { display: none; }
   .pod-visitor { display: none; }
+  .quest-beacon { animation: none !important; }
   body.desk-idle:not(.ambient-gaze) .wellness-figure {
     animation: none !important;
   }

@@ -47,7 +47,18 @@ Craft rules for desk ambient + MDR terminal. Pair with `show-app-continuity.md` 
 | O&D | Cool studio + cart + swatches |
 | Perpetuity | Dark shrine + bust (rare) |
 
-Soft peeks (CORRIDOR / WELLNESS) on MDR only — not a minimap. Follow-up: drive room tints from standing / tempers / invitations.
+Soft peeks (CORRIDOR / WELLNESS) on MDR only — not a minimap.
+
+## Gameplay → looks
+
+Presentation-only signals from [`campusLooks.js`](../../campusLooks.js) (no new habit math):
+
+| Signal | Body attr | Effect |
+|--------|-----------|--------|
+| Dominant temper | `data-look-temper` | MDR island filter + CRT idle logo tint |
+| Vitals pressure | `data-look-pressure` | Carpet / cam status (nominal · thin · breach) |
+| Dept standing | `data-standing-{dept}` | Room lighting (cold · neutral · warm) |
+| Active invitation | `data-quest-beacon` + `.quest-beacon` | Soft amber pulse on next prop/door |
 
 ## Decision log
 

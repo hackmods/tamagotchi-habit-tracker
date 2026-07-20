@@ -50,8 +50,8 @@
         <div class="pod-visitor" id="pod-visitor" aria-hidden="true"></div>
 
         <!-- Soft corridor / door peeks (MDR desk) -->
-        <button type="button" id="nav-corridor" class="room-peek room-peek-n" data-goto="hallway" aria-label="Enter hallway corridor">CORRIDOR</button>
-        <button type="button" id="nav-wellness-door" class="room-peek room-peek-e" data-goto="wellness" aria-label="Enter wellness suite">WELLNESS</button>
+        <button type="button" id="nav-corridor" class="room-peek room-peek-n" data-goto="hallway" data-beacon="corridor" aria-label="Enter hallway corridor">CORRIDOR</button>
+        <button type="button" id="nav-wellness-door" class="room-peek room-peek-e" data-goto="wellness" data-beacon="wellness-peek" aria-label="Enter wellness suite">WELLNESS</button>
 
         <!-- MDR workstation island (4 desks · CRT faces camera) -->
         <div class="pod-cross room-layer" id="room-mdr" data-room-panel="mdr" aria-hidden="false">
@@ -80,7 +80,7 @@
             <div class="pod-partition"></div>
             <div class="pod-desk"></div>
             <div class="pod-chair"></div>
-            <div class="wellness-figure" id="mark-figure" aria-hidden="true">
+            <div class="wellness-figure" id="mark-figure" aria-hidden="true" data-beacon="mark-figure">
               <svg class="wellness-svg" viewBox="0 0 14 20" shape-rendering="crispEdges">
                 <rect x="4" y="0" width="6" height="3" fill="#3a2e20"/>
                 <rect x="4" y="3" width="6" height="4" fill="#d8a98a"/>
@@ -98,7 +98,7 @@
             <div class="pod-desk"></div>
             <div class="pod-chair"></div>
 
-            <div id="crt-monitor" class="crt-monitor" role="button" tabindex="0" aria-label="Open Refinement Terminal" aria-expanded="false">
+            <div id="crt-monitor" class="crt-monitor" role="button" tabindex="0" aria-label="Open Refinement Terminal" aria-expanded="false" data-beacon="crt">
               <span class="crt-hit" aria-hidden="true"></span>
               <div class="crt-bezel">
                 <div class="crt-screen">
@@ -346,11 +346,11 @@
             <div class="hall-end"></div>
           </div>
           <nav class="room-doors" aria-label="Corridor doors">
-            <button type="button" class="room-door" data-goto="mdr">MDR</button>
-            <button type="button" class="room-door" data-goto="wellness">WELLNESS</button>
-            <button type="button" class="room-door" data-goto="breakroom">BREAK ROOM</button>
-            <button type="button" class="room-door" data-goto="od">O&amp;D</button>
-            <button type="button" class="room-door room-door-rare" data-goto="perpetuity" id="door-perpetuity" hidden>PERPETUITY</button>
+            <button type="button" class="room-door" data-goto="mdr" data-beacon="door-hallway">MDR</button>
+            <button type="button" class="room-door" data-goto="wellness" data-beacon="door-wellness">WELLNESS</button>
+            <button type="button" class="room-door" data-goto="breakroom" data-beacon="door-breakroom">BREAK ROOM</button>
+            <button type="button" class="room-door" data-goto="od" data-beacon="door-od">O&amp;D</button>
+            <button type="button" class="room-door room-door-rare" data-goto="perpetuity" id="door-perpetuity" data-beacon="door-perpetuity" hidden>PERPETUITY</button>
           </nav>
           <p class="room-caption">ENDLESS CORRIDOR — PLEASE KEEP TO THE RIGHT</p>
         </div>
@@ -359,11 +359,11 @@
         <div class="room-layer room-wellness" id="room-wellness" data-room-panel="wellness" hidden aria-hidden="true">
           <div class="wellness-chamber" aria-hidden="true">
             <div class="wellness-plant"></div>
-            <div class="wellness-chair" id="wellness-sit" role="button" tabindex="0" aria-label="Sit for wellness session"></div>
+            <div class="wellness-chair" id="wellness-sit" role="button" tabindex="0" aria-label="Sit for wellness session" data-beacon="wellness-sit"></div>
             <div class="wellness-lamp"></div>
           </div>
           <p class="room-caption">WELLNESS — YOU ARE A VALUED MEMBER OF THE TEAM</p>
-          <button type="button" class="btn-room-action" id="btn-wellness-sit">SIT</button>
+          <button type="button" class="btn-room-action" id="btn-wellness-sit" data-beacon="wellness-action">SIT</button>
         </div>
 
         <!-- Break room -->
@@ -372,28 +372,28 @@
             <div class="apology-plaque">FORGIVE ME FOR THE HARM I HAVE CAUSED THIS WORLD</div>
           </div>
           <p class="room-caption">BREAK ROOM — COMPLIANCE APOLOGY REQUIRED</p>
-          <button type="button" class="btn-room-action" id="btn-apology-hold">HOLD APOLOGY</button>
+          <button type="button" class="btn-room-action" id="btn-apology-hold" data-beacon="apology-hold">HOLD APOLOGY</button>
         </div>
 
         <!-- Optics & Design -->
         <div class="room-layer room-od" id="room-od" data-room-panel="od" hidden aria-hidden="true">
           <div class="od-studio" aria-hidden="true">
-            <div class="od-cart" id="od-cart" role="button" tabindex="0" aria-label="Acknowledge design cart"></div>
+            <div class="od-cart" id="od-cart" role="button" tabindex="0" aria-label="Acknowledge design cart" data-beacon="od-cart"></div>
             <div class="od-swatch od-swatch-a"></div>
             <div class="od-swatch od-swatch-b"></div>
           </div>
           <p class="room-caption">OPTICS &amp; DESIGN — FORM IS COMPLIANCE</p>
-          <button type="button" class="btn-room-action" id="btn-od-ack">ACKNOWLEDGE CART</button>
+          <button type="button" class="btn-room-action" id="btn-od-ack" data-beacon="od-ack">ACKNOWLEDGE CART</button>
         </div>
 
         <!-- Perpetuity (rare) -->
         <div class="room-layer room-perpetuity" id="room-perpetuity" data-room-panel="perpetuity" hidden aria-hidden="true">
           <div class="perpetuity-shrine" aria-hidden="true">
-            <div class="kier-bust"></div>
+            <div class="kier-bust" data-beacon="kier-bust"></div>
             <div class="perpetuity-plinth"></div>
           </div>
           <p class="room-caption">PERPETUITY WING — INDUSTRY · HONOR · CONTINUITY</p>
-          <button type="button" class="btn-room-action" id="btn-kier-unlock">ACKNOWLEDGE FOUNDER</button>
+          <button type="button" class="btn-room-action" id="btn-kier-unlock" data-beacon="kier-unlock">ACKNOWLEDGE FOUNDER</button>
         </div>
 
         <button type="button" id="btn-return-mdr" class="btn-return-mdr hidden" aria-label="Return to MDR workstation">↩ MDR</button>

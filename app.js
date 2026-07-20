@@ -66,6 +66,7 @@ import {
   getActiveQuest,
   canStart,
 } from './sidequests.js';
+import { deriveCampusLooks, applyCampusLooks } from './campusLooks.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    LUMON INNIE-CAM — application logic
@@ -708,6 +709,7 @@ function enterRoom(room, { syncUrl = true, toast = true } = {}){
     showToast(`FEED: ${ROOM_LABELS[room] || room.toUpperCase()}`, { tone: 'dim' });
   }
   renderCampusReport();
+  renderCampusLooks();
   return true;
 }
 
@@ -745,6 +747,14 @@ function renderCampusReport(){
   if (quest) quest.textContent = questHudLine(state);
   const roomLine = document.getElementById('campus-room-line');
   if (roomLine) roomLine.textContent = `ROOM: ${ROOM_LABELS[currentRoom()] || 'MDR'}`;
+}
+
+function renderCampusLooks(snap = null){
+  const looks = deriveCampusLooks(state, snap || deriveTerminalSnapshot(state, now()));
+  applyCampusLooks(looks);
+  // Keep legacy temper attr for existing CRT idle CSS
+  document.body.dataset.temper = looks.temper;
+  return looks;
 }
 
 // ─── view toggle: desk ⇄ terminal ──────────────────────────────────
@@ -1058,6 +1068,7 @@ function render(){
   if (audioToggle) audioToggle.checked = !!state.audioEnabled;
   renderAmbientReport();
   renderCampusReport();
+  renderCampusLooks(snap);
   maybeShowUiTips();
 }
 
