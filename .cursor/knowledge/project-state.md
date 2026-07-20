@@ -32,7 +32,7 @@ Branch tracks `origin/main`. Do not commit `.git-status.txt` or `proxmox_mcp.log
 | `sidequests.js` | Invitation catalog + progress |
 | `ambient.js` | Rare A/B/C events with `rooms` filter |
 | `audio.js` | Optional floor audio + ambient cues |
-| `sw.js` | Offline shell — **CACHE_NAME `lumon-terminal-v16`** |
+| `sw.js` | Offline shell — **CACHE_NAME `lumon-terminal-v17`** |
 | `.cursor/knowledge/floor-campus.md` | Campus contract |
 | `.cursor/knowledge/sidequests.md` | Invitation design |
 

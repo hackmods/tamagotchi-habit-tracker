@@ -102,7 +102,9 @@ body[data-view="terminal"] .office-scene {
   pointer-events: none;
 }
 body[data-view="terminal"] .office-scene .helly-eraser,
-body[data-view="terminal"] .office-scene .wellness-figure,
+body[data-view="terminal"] .office-scene .innie-figure,
+body[data-view="terminal"] .office-scene .innie-svg,
+body[data-view="terminal"] .office-scene .innie-arm,
 body[data-view="terminal"] .office-scene .light-panel { animation-play-state: paused !important; }
 
 .diorama {
@@ -305,20 +307,67 @@ body[data-view="terminal"] .office-scene .light-panel { animation-play-state: pa
 }
 @keyframes mini-screen-pulse { 0%,100%{opacity:.7;}50%{opacity:.95;} }
 
-.wellness-figure {
+/* ── MDR refiners (coworkers at every desk) ─────────────────────── */
+.innie-figure {
   position: absolute; bottom: 22%; left: 50%;
   width: 34%; min-width: 26px; max-width: 44px;
   transform: translateX(-50%);
   transform-origin: 50% 100%;
-  animation: wellness-breathe 5.5s ease-in-out infinite;
+  animation: innie-glance var(--innie-glance, 46s) ease-in-out infinite;
+  animation-delay: calc(var(--innie-phase, 0s) + 8s);
   filter: drop-shadow(2px 3px 0 rgba(0,0,0,.2));
   z-index: 2;
+  pointer-events: none;
 }
-.wellness-svg { width: 100%; height: auto; display: block; }
-@keyframes wellness-breathe {
-  0%,100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-  35% { transform: translateX(-50%) translateY(-2px) rotate(-.6deg); }
-  65% { transform: translateX(-50%) translateY(-3px) rotate(.4deg); }
+.pod-n .innie-figure { bottom: 20%; width: 30%; opacity: .92; }
+.pod-w .innie-figure { bottom: 20%; }
+.pod-s .innie-helly {
+  left: 22%;
+  bottom: 26%;
+  width: 28%;
+  min-width: 22px;
+  max-width: 36px;
+  z-index: 4;
+}
+.innie-svg,
+.wellness-svg {
+  width: 100%; height: auto; display: block;
+  transform-origin: 50% 100%;
+  animation: innie-breathe 5.5s ease-in-out infinite;
+  animation-delay: var(--innie-phase, 0s);
+}
+.innie-arm {
+  position: absolute;
+  right: 8%;
+  top: 42%;
+  width: 28%;
+  height: 10%;
+  background: #c9a88a;
+  border-radius: 1px;
+  transform-origin: 0% 50%;
+  animation: innie-type var(--innie-type, 4s) ease-in-out infinite;
+  animation-delay: var(--innie-phase, 0s);
+  box-shadow: 1px 1px 0 rgba(0,0,0,.25);
+}
+.innie-dylan .innie-arm { background: #c49a78; }
+.innie-helly .innie-arm { background: #e0b090; }
+.innie-mark .innie-arm { background: #d8a98a; }
+@keyframes innie-breathe {
+  0%,100% { transform: translateY(0) rotate(0deg); }
+  35% { transform: translateY(-2px) rotate(-.6deg); }
+  65% { transform: translateY(-3px) rotate(.4deg); }
+}
+@keyframes innie-glance {
+  0%, 78%, 100% { transform: translateX(-50%) rotate(0deg); }
+  84% { transform: translateX(-50%) rotate(-3.5deg); }
+  90% { transform: translateX(-50%) rotate(2.5deg); }
+  94% { transform: translateX(-50%) rotate(0deg); }
+}
+@keyframes innie-type {
+  0%, 100% { transform: rotate(-8deg) translateY(0); opacity: .85; }
+  25% { transform: rotate(6deg) translateY(1px); opacity: 1; }
+  50% { transform: rotate(-4deg) translateY(0); opacity: .9; }
+  75% { transform: rotate(10deg) translateY(1px); opacity: 1; }
 }
 
 .crt-monitor {
@@ -1027,9 +1076,19 @@ body:not(.desk-idle) .cam-hud,
 body:not(.desk-idle) .cam-ambient,
 body:not(.desk-idle) .kiosk-quick { transition: opacity .4s ease; }
 
-/* Desk idle presence — Mark paces; CRT “works” (not ambient-event spam) */
-body.desk-idle:not(.ambient-gaze) .wellness-figure {
+/* Desk idle presence — refiners stay busy; Mark paces (not ambient spam) */
+body.desk-idle:not(.ambient-gaze) .innie-mark {
   animation: mark-pace 32s ease-in-out infinite;
+}
+body.desk-idle .innie-figure .innie-arm {
+  animation-duration: calc(var(--innie-type, 4s) * .72);
+}
+body.desk-idle .innie-svg {
+  animation-duration: 4.2s;
+}
+body.desk-idle .pod-crt-mini::after {
+  animation-duration: 2.8s;
+  box-shadow: inset 0 0 10px rgba(0,229,255,.35);
 }
 @keyframes mark-pace {
   0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
@@ -1082,9 +1141,11 @@ body.ambient-eraser-hot .helly-eraser {
 }
 .helly-eraser.interactive:focus-visible { outline: 2px solid var(--term-green); }
 
+body.ambient-gaze .innie-mark,
 body.ambient-gaze .wellness-figure {
   animation: gaze-cam 6s ease-in-out forwards;
 }
+body.ambient-gaze .innie-mark .innie-arm { animation-play-state: paused; }
 @keyframes gaze-cam {
   0%,100% { transform: translateX(-50%) scaleY(1); }
   40%,70% { transform: translateX(-50%) rotate(-8deg) scale(1.05); }
@@ -1529,6 +1590,10 @@ body[data-room="perpetuity"][data-look-combined="cold"] .perpetuity-shrine {
   .crt-flicker { display: none; }
   .pod-visitor { display: none; }
   .quest-beacon { animation: none !important; }
+  .innie-figure,
+  .innie-svg,
+  .innie-arm,
+  body.desk-idle:not(.ambient-gaze) .innie-mark,
   body.desk-idle:not(.ambient-gaze) .wellness-figure {
     animation: none !important;
   }

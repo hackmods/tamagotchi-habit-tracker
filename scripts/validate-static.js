@@ -69,8 +69,8 @@ if (sw.includes(0) && sw.length > 100 && sw.filter((b) => b === 0).length > sw.l
   process.exit(1);
 }
 const swText = sw.toString('utf8');
-if (!swText.includes("CACHE_NAME = 'lumon-terminal-v16'")) {
-  console.error('sw.js CACHE_NAME should be bumped when shell assets change (expected lumon-terminal-v16)');
+if (!swText.includes("CACHE_NAME = 'lumon-terminal-v17'")) {
+  console.error('sw.js CACHE_NAME should be bumped when shell assets change (expected lumon-terminal-v17)');
   process.exit(1);
 }
 for (const asset of ['./avatar.js', './ambient.js', './engine.js', './audio.js', './campus.js', './campusLooks.js', './sidequests.js', './fonts/fonts.css']) {
@@ -84,7 +84,12 @@ const html = readFileSync('index.html', 'utf8');
 for (const sel of [
   'id="terminal-frame"',
   'id="crt-monitor"',
-  'class="wellness-svg"',
+  'wellness-svg',
+  'innie-figure',
+  'innie-irving',
+  'innie-dylan',
+  'innie-helly',
+  'id="mark-figure"',
   'id="ambient-toast"',
   'id="kiosk-awake"',
   'id="cam-chyron"',
