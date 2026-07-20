@@ -43,3 +43,4 @@ Craft rules for desk ambient + MDR terminal. Pair with `show-app-continuity.md` 
 - **2026-07-19 — Phosphor:** Default terminal tokens nudged cyan-on-teal (MDR still); temper colors + department palettes retained.
 - **2026-07-19 — Scale:** `--ui-scale` now sets `#terminal-frame` font-size; tablet band 601–1100px added.
 - **2026-07-19 — Desk camera:** Flattened diorama angle (ceiling 54°→28°, walls 38°→18°, pod tip 14°→4°, softer perspective) toward elevated frontal stills; cam HUD corner brackets.
+- **2026-07-19 — Landing island:** Replaced scattered 4-grid with compact MDR island (shared partition cross, quiet N/W/E, hero south CRT, more carpet negative space).

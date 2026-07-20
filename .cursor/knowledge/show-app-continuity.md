@@ -17,8 +17,8 @@ Outie actions (water, movement, doses, meals) are *translated* into innie metric
 
 | Show element | App implementation |
 |--------------|-------------------|
-| MDR open-plan office | Pseudo-3D diorama: sage carpet, ceiling light grid, 4-pod desks |
-| Mark’s workstation cluster | Pod cross (N/W/E/S); interactive CRT on south pod |
+| MDR open-plan office | Pseudo-3D diorama: sage carpet, ceiling light grid, compact **MDR island** (4 desks around partition cross) |
+| Mark’s workstation cluster | Island N/W/E/S; interactive CRT on south (camera-facing) hero desk |
 | Refinement terminal | `#terminal-frame` MDR/Cold Harbor **frame**: header · temper rail · center stage · vitals rail · bins `01`–`05` |
 | Floating scary numbers | `.mdr-num` drift field + idle CRT preview digits |
 | Four Tempers bins | Left temper rail WO/FC/DR/MA + digit quadrants |

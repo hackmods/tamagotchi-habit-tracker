@@ -32,7 +32,7 @@ Branch tracks `origin/main`. Do not commit `.git-status.txt` or `proxmox_mcp.log
 | `ambient.js` | Rare event scheduler A/B/C |
 | `audio.js` | Optional Web Audio floor hum + motifs + ambient cues (default off) |
 | `avatar.js` | File-progress avatar helpers |
-| `sw.js` | Offline shell — **CACHE_NAME `lumon-terminal-v13`** |
+| `sw.js` | Offline shell — **CACHE_NAME `lumon-terminal-v14`** |
 | `fonts/` | Self-hosted IBM Plex Mono + Silkscreen (latin woff2) |
 | `tests/e2e/` | smoke, responsive, visual (1920 screenshots), ambient |
 | `tests/unit/` | avatar + engine v2 |
